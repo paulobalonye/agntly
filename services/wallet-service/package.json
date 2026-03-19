@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./repositories/wallet-repository": {
+      "import": "./dist/repositories/wallet-repository.js",
+      "types": "./dist/repositories/wallet-repository.d.ts"
+    }
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
