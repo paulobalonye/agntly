@@ -1,14 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { createApiResponse, createErrorResponse } from '@agntly/shared';
+import { createApiResponse, createErrorResponse, createDbConnection } from '@agntly/shared';
 import { WalletService } from '../services/wallet-service.js';
+import { WalletRepository } from '../repositories/wallet-repository.js';
 
 const createSchema = z.object({ agentId: z.string().min(1).optional(), label: z.string().optional() });
 const fundSchema = z.object({ amountUsd: z.number().positive(), method: z.enum(['card', 'ach', 'usdc']) });
 const withdrawSchema = z.object({ amount: z.string(), destination: z.string(), instant: z.boolean().optional() });
 
 export const walletRoutes: FastifyPluginAsync = async (app) => {
-  const walletService = new WalletService();
+  const db = createDbConnection();
+  const walletService = new WalletService(new WalletRepository(db));
 
   app.post('/', async (request, reply) => {
     const parsed = createSchema.safeParse(request.body);
