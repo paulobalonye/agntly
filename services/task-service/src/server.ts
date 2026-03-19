@@ -1,12 +1,21 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { SERVICE_PORTS } from '@agntly/shared';
+import { SERVICE_PORTS, createDbConnection, EventBus } from '@agntly/shared';
 import { healthRoutes } from './routes/health.js';
 import { taskRoutes } from './routes/tasks.js';
+import { TaskRepository } from './repositories/task-repository.js';
+import { TaskService } from './services/task-service.js';
+
+const db = createDbConnection();
+const eventBus = new EventBus('task-service');
+const taskRepo = new TaskRepository(db);
+const taskService = new TaskService(taskRepo, eventBus);
 
 const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
 });
+
+app.decorate('taskService', taskService);
 
 await app.register(cors, { origin: true });
 await app.register(healthRoutes);
