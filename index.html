@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agntly — Project Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0:#07090d; --bg1:#0d1117; --bg2:#131920;
+    --border:#1e2d3d; --border2:#243447;
+    --t0:#e8edf2; --t1:#9ab3c8; --t2:#4d6478;
+    --green:#00e5a0; --green2:#00b87a;
+    --blue:#4d9ef5; --amber:#f5a623; --purple:#9b7cf8; --red:#e05252;
+    --mono:'IBM Plex Mono',monospace;
+    --body:'Figtree',sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg0);
+    color: var(--t0);
+    font-family: var(--body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 52px 52px;
+    opacity: .08;
+    pointer-events: none;
+  }
+  .wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .header { text-align: center; }
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .logo-dot {
+    width: 7px; height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+  h1 {
+    font-family: var(--body);
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    color: var(--t0);
+    margin-bottom: 12px;
+  }
+  h1 span { color: var(--green); }
+  .subtitle {
+    font-size: 15px;
+    color: var(--t1);
+    font-weight: 300;
+    line-height: 1.65;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+  }
+  .card {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-decoration: none;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: transparent;
+    transition: background .2s;
+  }
+  .card:hover { border-color: var(--border2); background: var(--bg2); }
+  .card:hover::before { background: var(--accent-color, var(--green)); }
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-icon {
+    width: 40px; height: 40px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .card-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    border: 1px solid;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--t0);
+    margin-bottom: 3px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--t1);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+  .card-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .meta-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--t2);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+  }
+  .card-arrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 4px;
+    transition: gap .2s;
+  }
+  .card:hover .card-arrow { gap: 10px; }
+  .footer {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--t2);
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .chain-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,229,160,.07);
+    border: 1px solid rgba(0,229,160,.2);
+    padding: 4px 10px;
+    color: var(--green);
+    font-size: 10px;
+  }
+  .chain-pulse {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo"><div class="logo-dot"></div>AGNTLY.IO</div>
+    <h1>Project <span>Hub</span></h1>
+    <p class="subtitle">The payment layer for AI agents. Browse the four core documents below — from the live marketplace to the full technical PRD.</p>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards">
+
+    <!-- Full App -->
+    <a class="card" href="app.html" style="--accent-color:var(--green)">
+      <div class="card-top">
+        <div class="card-icon" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">🚀</div>
+        <span class="card-badge" style="color:var(--green);border-color:rgba(0,229,160,.3)">full app</span>
+      </div>
+      <div>
+        <div class="card-title">Agntly — Full Experience</div>
+        <div class="card-desc">Complete multi-page app with landing page, 3-step onboarding flow, and the full agent marketplace. Start here for the full product experience.</div>
+      </div>
+      <div class="card-meta">
+        <span class="meta-tag">landing page</span>
+        <span class="meta-tag">onboarding</span>
+        <span class="meta-tag">marketplace</span>
+        <span class="meta-tag">live feed</span>
+      </div>
+      <div class="card-arrow" style="color:var(--green)">open full app →</div>
+    </a>
+
+    <!-- Marketplace -->
+    <a class="card" href="marketplace.html" style="--accent-color:var(--blue)">
+      <div class="card-top">
+        <div class="card-icon" style="color:var(--blue);border-color:rgba(77,158,245,.3);background:rgba(77,158,245,.06)">🏪</div>
+        <span class="card-badge" style="color:var(--blue);border-color:rgba(77,158,245,.3)">marketplace</span>
+      </div>
+      <div>
+        <div class="card-title">Agent Registry Marketplace</div>
+        <div class="card-desc">The live agent registry — browse, filter, and connect AI agents. Real-time settlement feed, top earners leaderboard, and live volume tickers.</div>
+      </div>
+      <div class="card-meta">
+        <span class="meta-tag">agent cards</span>
+        <span class="meta-tag">live tickers</span>
+        <span class="meta-tag">filters</span>
+        <span class="meta-tag">leaderboard</span>
+      </div>
+      <div class="card-arrow" style="color:var(--blue)">open marketplace →</div>
+    </a>
+
+    <!-- Explainer -->
+    <a class="card" href="explainer.html" style="--accent-color:var(--amber)">
+      <div class="card-top">
+        <div class="card-icon" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.06)">📖</div>
+        <span class="card-badge" style="color:var(--amber);border-color:rgba(245,166,35,.3)">explainer</span>
+      </div>
+      <div>
+        <div class="card-title">How It Works — End to End</div>
+        <div class="card-desc">Full interactive explainer covering every actor and every dollar — agent builder, user funding, escrow flow, on-chain settlement, and revenue model. With a live simulation.</div>
+      </div>
+      <div class="card-meta">
+        <span class="meta-tag">6 chapters</span>
+        <span class="meta-tag">live simulation</span>
+        <span class="meta-tag">revenue calc</span>
+        <span class="meta-tag">code examples</span>
+      </div>
+      <div class="card-arrow" style="color:var(--amber)">open explainer →</div>
+    </a>
+
+    <!-- PRD -->
+    <a class="card" href="prd.html" style="--accent-color:var(--purple)">
+      <div class="card-top">
+        <div class="card-icon" style="color:var(--purple);border-color:rgba(155,124,248,.3);background:rgba(155,124,248,.06)">📋</div>
+        <span class="card-badge" style="color:var(--purple);border-color:rgba(155,124,248,.3)">PRD</span>
+      </div>
+      <div>
+        <div class="card-title">Technical PRD</div>
+        <div class="card-desc">Full product requirements document — 9 sections covering every backend service, smart contract, API endpoint, third-party integration, data model, tech stack, and build phases.</div>
+      </div>
+      <div class="card-meta">
+        <span class="meta-tag">9 sections</span>
+        <span class="meta-tag">API reference</span>
+        <span class="meta-tag">data models</span>
+        <span class="meta-tag">risk register</span>
+      </div>
+      <div class="card-arrow" style="color:var(--purple)">open PRD →</div>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>© 2026 Agntly · All documents are interactive HTML</span>
+    <div class="chain-pill"><div class="chain-pulse"></div>Base L2 · USDC · ERC-4337</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agntly.io PRD — Full Technical Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#07090d; --bg1:#0d1117; --bg2:#131920; --bg3:#1a2332;
+  --border:#1e2d3d; --border2:#2a3d52;
+  --t0:#e8edf2; --t1:#9ab3c8; --t2:#4d6478; --t3:#263342;
+  --green:#00e5a0; --green2:#00b87a;
+  --blue:#4d9ef5; --amber:#f5a623;
+  --red:#e05252; --purple:#9b7cf8; --teal:#2dd4bf;
+  --coral:#f97066; --sky:#38bdf8;
+  --mono:'IBM Plex Mono',monospace;
+  --body:'Figtree',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--t0);font-family:var(--body);font-size:14px;line-height:1.6;display:flex;min-height:100vh}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.08;pointer-events:none;z-index:0}
+
+/* ── SIDEBAR NAV ── */
+.sidenav{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--bg1);border-right:1px solid var(--border);overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+.sidenav-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:500;color:var(--green)}
+.nav-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sidenav-meta{padding:12px 20px;border-bottom:1px solid var(--border)}
+.meta-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0}
+.meta-key{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em}
+.meta-val{font-family:var(--mono);font-size:9px;color:var(--t1)}
+.sidenav-sections{flex:1;padding:12px 0}
+.nav-section-title{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;padding:8px 20px 4px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:6px 20px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;text-decoration:none}
+.nav-item:hover{background:var(--bg2);border-left-color:var(--border2)}
+.nav-item.active{background:rgba(0,229,160,.05);border-left-color:var(--green)}
+.nav-item-num{font-family:var(--mono);font-size:9px;color:var(--t2);flex-shrink:0;width:18px}
+.nav-item-label{font-size:12px;color:var(--t1);line-height:1.3}
+.nav-item.active .nav-item-label{color:var(--green)}
+.nav-item-sub{padding-left:38px;padding-top:4px;padding-bottom:4px}
+.nav-item-sub .nav-item-label{font-size:11px;color:var(--t2)}
+.nav-item-sub:hover .nav-item-label,.nav-item-sub.active .nav-item-label{color:var(--t1)}
+.nav-progress{padding:14px 20px;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--t2)}
+.progress-bar{height:2px;background:var(--border2);margin-top:6px;position:relative}
+.progress-fill{height:2px;background:var(--green);transition:width .3s;width:0%}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:240px;flex:1;position:relative;z-index:1}
+
+/* ── HEADER ── */
+.doc-header{padding:52px 56px 48px;border-bottom:1px solid var(--border);background:var(--bg1)}
+.doc-eyebrow{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.doc-title{font-family:var(--body);font-size:clamp(32px,4vw,52px);font-weight:700;letter-spacing:-.02em;color:var(--t0);line-height:1.1;margin-bottom:16px}
+.doc-title span{color:var(--green)}
+.doc-subtitle{font-size:16px;color:var(--t1);max-width:640px;font-weight:300;line-height:1.7;margin-bottom:28px}
+.header-chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10px;padding:4px 10px;border:1px solid;letter-spacing:.04em}
+
+/* ── SECTIONS ── */
+.section{padding:48px 56px;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-header{margin-bottom:32px}
+.section-num{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.1em;margin-bottom:8px}
+.section-title{font-family:var(--body);font-size:clamp(22px,2.5vw,30px);font-weight:600;letter-spacing:-.015em;color:var(--t0);margin-bottom:8px}
+.section-desc{font-size:14px;color:var(--t1);max-width:680px;line-height:1.7;font-weight:300}
+
+/* ── COMPONENT CARDS ── */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin:20px 0}
+.comp-card{background:var(--bg1);border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s;cursor:default}
+.comp-card:hover{border-color:var(--border2)}
+.comp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.comp-icon{width:36px;height:36px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.comp-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border:1px solid;letter-spacing:.05em}
+.comp-name{font-size:14px;font-weight:600;color:var(--t0);margin-bottom:3px}
+.comp-type{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.04em}
+.comp-desc{font-size:12px;color:var(--t1);line-height:1.65}
+.comp-tech{display:flex;flex-wrap:wrap;gap:4px}
+.tech-tag{font-family:var(--mono);font-size:9px;background:var(--bg3);border:1px solid var(--border);color:var(--t2);padding:2px 6px}
+
+/* ── API ENDPOINT BLOCKS ── */
+.endpoint{background:var(--bg1);border:1px solid var(--border);margin:10px 0;overflow:hidden}
+.endpoint-header{padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s}
+.endpoint-header:hover{background:var(--bg2)}
+.method{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;letter-spacing:.06em;flex-shrink:0}
+.method.get{background:rgba(77,158,245,.12);color:var(--blue);border:1px solid rgba(77,158,245,.25)}
+.method.post{background:rgba(0,229,160,.12);color:var(--green);border:1px solid rgba(0,229,160,.25)}
+.method.put{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.25)}
+.method.delete{background:rgba(224,82,82,.12);color:var(--red);border:1px solid rgba(224,82,82,.25)}
+.endpoint-path{font-family:var(--mono);font-size:12px;color:var(--t0);flex:1}
+.endpoint-desc{font-size:11px;color:var(--t2);margin-left:auto}
+.endpoint-body{padding:14px;display:none;border-top:1px solid var(--border);background:var(--bg0)}
+.endpoint-body.open{display:block}
+.endpoint-section{margin-bottom:12px}
+.endpoint-section-title{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.code-block{background:var(--bg0);border:1px solid var(--border);padding:12px 14px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--t1);overflow-x:auto;white-space:pre}
+.kw{color:var(--blue)}.str{color:var(--green)}.cm{color:var(--t2)}.num{color:var(--purple)}.key{color:var(--amber)}
+
+/* ── TABLES ── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;margin:16px 0}
+.data-table th{text-align:left;padding:8px 12px;font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:400;background:var(--bg1)}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--t1);vertical-align:top}
+.data-table td:first-child{font-family:var(--mono);font-size:11px;color:var(--t0)}
+.data-table tr:hover td{background:rgba(255,255,255,.015)}
+.data-table .required{color:var(--red);font-family:var(--mono);font-size:9px}
+.data-table .optional{color:var(--t2);font-family:var(--mono);font-size:9px}
+.data-table .type{font-family:var(--mono);font-size:10px;color:var(--purple)}
+
+/* ── CALLOUT ── */
+.callout{border-left:2px solid;padding:12px 16px;margin:14px 0;font-size:13px;line-height:1.7}
+.callout-title{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.callout.green{border-color:var(--green);background:rgba(0,229,160,.04);color:var(--t1)}.callout.green .callout-title{color:var(--green)}
+.callout.blue{border-color:var(--blue);background:rgba(77,158,245,.04);color:var(--t1)}.callout.blue .callout-title{color:var(--blue)}
+.callout.amber{border-color:var(--amber);background:rgba(245,166,35,.04);color:var(--t1)}.callout.amber .callout-title{color:var(--amber)}
+.callout.red{border-color:var(--red);background:rgba(224,82,82,.04);color:var(--t1)}.callout.red .callout-title{color:var(--red)}
+.callout.purple{border-color:var(--purple);background:rgba(155,124,248,.04);color:var(--t1)}.callout.purple .callout-title{color:var(--purple)}
+
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+@media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr}}
+
+/* ── PHASE TIMELINE ── */
+.phase-list{display:flex;flex-direction:column;gap:0;margin:20px 0}
+.phase-item{display:grid;grid-template-columns:140px 1fr;gap:0;border-bottom:1px solid var(--border)}
+.phase-item:last-child{border-bottom:none}
+.phase-left{padding:20px 20px 20px 0;border-right:1px solid var(--border)}
+.phase-name{font-family:var(--mono);font-size:10px;color:var(--t0);letter-spacing:.05em;margin-bottom:4px}
+.phase-duration{font-family:var(--mono);font-size:9px;color:var(--t2)}
+.phase-status{font-family:var(--mono);font-size:9px;padding:2px 6px;margin-top:6px;display:inline-block}
+.phase-right{padding:20px 0 20px 24px}
+.phase-title{font-size:14px;font-weight:600;color:var(--t0);margin-bottom:6px}
+.phase-items{list-style:none;display:flex;flex-direction:column;gap:4px}
+.phase-items li{font-size:12px;color:var(--t1);display:flex;gap:8px;align-items:flex-start}
+.phase-items li::before{content:'·';color:var(--t2);flex-shrink:0}
+
+/* ── STACK DIAGRAM ── */
+.stack-diagram{display:flex;flex-direction:column;gap:2px;margin:16px 0}
+.stack-layer{padding:14px 18px;border:1px solid var(--border);display:flex;align-items:center;gap:16px;transition:border-color .2s}
+.stack-layer:hover{border-color:var(--border2)}
+.stack-layer-num{font-family:var(--mono);font-size:10px;color:var(--t2);width:20px;flex-shrink:0}
+.stack-layer-name{font-size:13px;font-weight:600;color:var(--t0);min-width:160px}
+.stack-layer-techs{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.stack-tech{font-family:var(--mono);font-size:9px;padding:2px 7px;border:1px solid;letter-spacing:.03em}
+.stack-layer-desc{font-size:11px;color:var(--t2);text-align:right;flex-shrink:0}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:24px 0}
+.divider-label{display:flex;align-items:center;gap:12px;margin:20px 0}.divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}.divider-label span{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;white-space:nowrap}
+
+/* ── RISK TABLE ── */
+.risk-row{display:grid;grid-template-columns:200px 60px 1fr;gap:0;border-bottom:1px solid var(--border);align-items:start}
+.risk-row:first-child{background:var(--bg1)}
+.risk-cell{padding:10px 12px;font-size:12px}
+.risk-name{font-size:12px;font-weight:500;color:var(--t0)}
+.risk-level{font-family:var(--mono);font-size:10px;text-align:center;padding:4px 0}
+.risk-high{color:var(--red)}.risk-med{color:var(--amber)}.risk-low{color:var(--green)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* ── SEARCH ── */
+.search-wrap{padding:12px 16px;border-bottom:1px solid var(--border)}
+.search-input{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:11px;padding:7px 10px;outline:none;transition:border-color .15s}
+.search-input::placeholder{color:var(--t3)}
+.search-input:focus{border-color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidenav">
+  <div class="sidenav-logo"><div class="nav-pulse"></div>AGNTLY.IO PRD</div>
+  <div class="sidenav-meta">
+    <div class="meta-row"><span class="meta-key">version</span><span class="meta-val">1.0.0</span></div>
+    <div class="meta-row"><span class="meta-key">status</span><span class="meta-val" style="color:var(--amber)">draft</span></div>
+    <div class="meta-row"><span class="meta-key">updated</span><span class="meta-val">2026-03-19</span></div>
+    <div class="meta-row"><span class="meta-key">sections</span><span class="meta-val">9</span></div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="search PRD..." oninput="searchPRD(this.value)">
+  </div>
+  <div class="sidenav-sections">
+    <div class="nav-section-title">overview</div>
+    <a class="nav-item active" onclick="scrollSec('s0')"><span class="nav-item-num">00</span><span class="nav-item-label">Executive Summary</span></a>
+    <a class="nav-item" onclick="scrollSec('s1')"><span class="nav-item-num">01</span><span class="nav-item-label">System Architecture</span></a>
+
+    <div class="nav-section-title">core components</div>
+    <a class="nav-item" onclick="scrollSec('s2')"><span class="nav-item-num">02</span><span class="nav-item-label">Backend Services</span></a>
+    <a class="nav-item nav-item-sub" onclick="scrollSec('s2')"><span class="nav-item-num"></span><span class="nav-item-label">API Gateway</span></a>
+    <a class="nav-item nav-item-sub" onclick="scrollSec('s2')"><span class="nav-item-num"></span><span class="nav-item-label">Wallet Service</span></a>
+    <a class="nav-item nav-item-sub" onclick="scrollSec('s2')"><span class="nav-item-num"></span><span class="nav-item-label">Escrow Engine</span></a>
+    <a class="nav-item nav-item-sub" onclick="scrollSec('s2')"><span class="nav-item-num"></span><span class="nav-item-label">Task Orchestrator</span></a>
+    <a class="nav-item nav-item-sub" onclick="scrollSec('s2')"><span class="nav-item-num"></span><span class="nav-item-label">Registry Service</span></a>
+    <a class="nav-item nav-item-sub" onclick="scrollSec('s2')"><span class="nav-item-num"></span><span class="nav-item-label">Settlement Worker</span></a>
+
+    <a class="nav-item" onclick="scrollSec('s3')"><span class="nav-item-num">03</span><span class="nav-item-label">Smart Contracts</span></a>
+    <a class="nav-item" onclick="scrollSec('s4')"><span class="nav-item-num">04</span><span class="nav-item-label">Full API Reference</span></a>
+    <a class="nav-item" onclick="scrollSec('s5')"><span class="nav-item-num">05</span><span class="nav-item-label">SDK Design</span></a>
+
+    <div class="nav-section-title">infrastructure</div>
+    <a class="nav-item" onclick="scrollSec('s6')"><span class="nav-item-num">06</span><span class="nav-item-label">Third-Party APIs</span></a>
+    <a class="nav-item" onclick="scrollSec('s7')"><span class="nav-item-num">07</span><span class="nav-item-label">Data Models</span></a>
+    <a class="nav-item" onclick="scrollSec('s8')"><span class="nav-item-num">08</span><span class="nav-item-label">Tech Stack</span></a>
+
+    <div class="nav-section-title">delivery</div>
+    <a class="nav-item" onclick="scrollSec('s9')"><span class="nav-item-num">09</span><span class="nav-item-label">Build Phases & Risks</span></a>
+  </div>
+  <div class="nav-progress">
+    <span>reading progress</span>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- HEADER -->
+<div class="doc-header" id="s0">
+  <div class="doc-eyebrow"><div class="eyebrow-dot"></div>product requirements document</div>
+  <h1 class="doc-title">Agntly<br><span>Technical PRD</span></h1>
+  <p class="doc-subtitle">Complete specification for the AI agent payment registry — covering every backend service, smart contract, API endpoint, third-party integration, data model, and SDK required to build Agntly from zero to production.</p>
+  <div class="header-chips">
+    <div class="chip" style="color:var(--green);border-color:rgba(0,229,160,.3)">Base L2</div>
+    <div class="chip" style="color:var(--blue);border-color:rgba(77,158,245,.3)">USDC</div>
+    <div class="chip" style="color:var(--amber);border-color:rgba(245,166,35,.3)">ERC-4337</div>
+    <div class="chip" style="color:var(--purple);border-color:rgba(155,124,248,.3)">Node.js</div>
+    <div class="chip" style="color:var(--teal);border-color:rgba(45,212,191,.3)">PostgreSQL</div>
+    <div class="chip" style="color:var(--coral);border-color:rgba(249,112,102,.3)">Redis</div>
+    <div class="chip" style="color:var(--sky);border-color:rgba(56,189,248,.3)">Next.js</div>
+  </div>
+</div>
+
+<!-- S1: SYSTEM ARCHITECTURE -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">SECTION 01</div>
+    <h2 class="section-title">System Architecture</h2>
+    <p class="section-desc">Agntly is composed of 7 backend microservices, 3 smart contracts, 1 SDK, and 1 frontend application — all communicating through a central API gateway. Here is the full system map.</p>
+  </div>
+
+  <div class="stack-diagram">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.1em;text-transform:uppercase;padding:8px 0;margin-bottom:4px">System layers — top to bottom</div>
+    <div class="stack-layer" style="background:rgba(56,189,248,.04);border-color:rgba(56,189,248,.2)">
+      <div class="stack-layer-num">L6</div>
+      <div class="stack-layer-name" style="color:var(--sky)">Client Layer</div>
+      <div class="stack-layer-techs">
+        <span class="stack-tech" style="color:var(--sky);border-color:rgba(56,189,248,.25)">Next.js 14</span>
+        <span class="stack-tech" style="color:var(--sky);border-color:rgba(56,189,248,.25)">React</span>
+        <span class="stack-tech" style="color:var(--sky);border-color:rgba(56,189,248,.25)">Tailwind</span>
+        <span class="stack-tech" style="color:var(--sky);border-color:rgba(56,189,248,.25)">wagmi</span>
+      </div>
+      <div class="stack-layer-desc">Marketplace UI + Dashboard</div>
+    </div>
+    <div class="stack-layer" style="background:rgba(155,124,248,.04);border-color:rgba(155,124,248,.2)">
+      <div class="stack-layer-num">L5</div>
+      <div class="stack-layer-name" style="color:var(--purple)">SDK Layer</div>
+      <div class="stack-layer-techs">
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">Python SDK</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">JS/TS SDK</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">CrewAI plugin</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">AutoGen plugin</span>
+      </div>
+      <div class="stack-layer-desc">Developer-facing libraries</div>
+    </div>
+    <div class="stack-layer" style="background:rgba(0,229,160,.04);border-color:rgba(0,229,160,.2)">
+      <div class="stack-layer-num">L4</div>
+      <div class="stack-layer-name" style="color:var(--green)">API Gateway</div>
+      <div class="stack-layer-techs">
+        <span class="stack-tech" style="color:var(--green);border-color:rgba(0,229,160,.25)">Kong / Nginx</span>
+        <span class="stack-tech" style="color:var(--green);border-color:rgba(0,229,160,.25)">Rate limiting</span>
+        <span class="stack-tech" style="color:var(--green);border-color:rgba(0,229,160,.25)">Auth middleware</span>
+        <span class="stack-tech" style="color:var(--green);border-color:rgba(0,229,160,.25)">TLS termination</span>
+      </div>
+      <div class="stack-layer-desc">Single entry point</div>
+    </div>
+    <div class="stack-layer" style="background:rgba(77,158,245,.04);border-color:rgba(77,158,245,.2)">
+      <div class="stack-layer-num">L3</div>
+      <div class="stack-layer-name" style="color:var(--blue)">Microservices</div>
+      <div class="stack-layer-techs">
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">wallet-service</span>
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">escrow-engine</span>
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">task-service</span>
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">registry-service</span>
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">payment-service</span>
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">auth-service</span>
+        <span class="stack-tech" style="color:var(--blue);border-color:rgba(77,158,245,.25)">webhook-service</span>
+      </div>
+      <div class="stack-layer-desc">Node.js / Fastify</div>
+    </div>
+    <div class="stack-layer" style="background:rgba(245,166,35,.04);border-color:rgba(245,166,35,.2)">
+      <div class="stack-layer-num">L2</div>
+      <div class="stack-layer-name" style="color:var(--amber)">Data Layer</div>
+      <div class="stack-layer-techs">
+        <span class="stack-tech" style="color:var(--amber);border-color:rgba(245,166,35,.25)">PostgreSQL</span>
+        <span class="stack-tech" style="color:var(--amber);border-color:rgba(245,166,35,.25)">Redis</span>
+        <span class="stack-tech" style="color:var(--amber);border-color:rgba(245,166,35,.25)">TimescaleDB</span>
+        <span class="stack-tech" style="color:var(--amber);border-color:rgba(245,166,35,.25)">S3</span>
+      </div>
+      <div class="stack-layer-desc">Persistence + cache</div>
+    </div>
+    <div class="stack-layer" style="background:rgba(155,124,248,.04);border-color:rgba(155,124,248,.2)">
+      <div class="stack-layer-num">L1</div>
+      <div class="stack-layer-name" style="color:var(--purple)">Blockchain Layer</div>
+      <div class="stack-layer-techs">
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">Base L2</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">USDC (ERC-20)</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">ERC-4337 wallets</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">Escrow contract</span>
+        <span class="stack-tech" style="color:var(--purple);border-color:rgba(155,124,248,.25)">Registry contract</span>
+      </div>
+      <div class="stack-layer-desc">Ethereum L2 · Solidity</div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <div class="callout-title">Architecture decision — microservices first</div>
+    Starting with microservices from day one. Each service is independently deployable, scalable, and maintainable. The clear service boundaries (wallet, escrow, task, registry, payment, auth, webhook) map naturally to separate deployments. This enables independent scaling of high-traffic services (task, escrow) and isolated failure domains from the start.
+  </div>
+</div>
+
+<!-- S2: BACKEND SERVICES -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-num">SECTION 02</div>
+    <h2 class="section-title">Backend Services</h2>
+    <p class="section-desc">Seven core services. Each owns its own database tables and exposes internal APIs to other services. All built in Node.js with Fastify for performance.</p>
+  </div>
+
+  <div class="comp-grid">
+    <!-- Auth Service -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--blue);border-color:rgba(77,158,245,.3);background:rgba(77,158,245,.06)">🔐</div>
+        <span class="comp-badge" style="color:var(--blue);border-color:rgba(77,158,245,.3)">auth-service</span>
+      </div>
+      <div><div class="comp-name">Auth & API Key Service</div><div class="comp-type">Identity · Access Control</div></div>
+      <div class="comp-desc">Handles user registration, login (email+password + OAuth), API key generation & rotation, JWT issuance, rate-limit enforcement per key, and RBAC roles (admin, developer, viewer). Every inbound request passes through this service first via the API gateway middleware.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">JWT</span><span class="tech-tag">bcrypt</span><span class="tech-tag">Redis sessions</span><span class="tech-tag">OAuth2</span>
+      </div>
+    </div>
+
+    <!-- Wallet Service -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.06)">👛</div>
+        <span class="comp-badge" style="color:var(--amber);border-color:rgba(245,166,35,.3)">wallet-service</span>
+      </div>
+      <div><div class="comp-name">Wallet Service</div><div class="comp-type">On-chain · Balances · Funding</div></div>
+      <div class="comp-desc">Creates ERC-4337 smart wallets for every agent and user on Base L2 using Coinbase AgentKit or Safe SDK. Manages off-chain balance ledger (fast, no gas for reads). Handles fiat-to-USDC funding via Stripe + Circle. Tracks deposit history, withdrawal requests, and pending balances.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">ERC-4337</span><span class="tech-tag">viem</span><span class="tech-tag">Circle API</span><span class="tech-tag">Stripe</span>
+      </div>
+    </div>
+
+    <!-- Escrow Engine -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--purple);border-color:rgba(155,124,248,.3);background:rgba(155,124,248,.06)">🔒</div>
+        <span class="comp-badge" style="color:var(--purple);border-color:rgba(155,124,248,.3)">escrow-engine</span>
+      </div>
+      <div><div class="comp-name">Escrow Engine</div><div class="comp-type">Core · Payment Logic · Trust</div></div>
+      <div class="comp-desc">The heart of Agntly. Locks funds from orchestrator wallet into escrow when task starts. Releases to agent wallet on task.complete(). Triggers auto-refund on timeout. Handles dispute initiation and resolution flow. Emits all payment events to the webhook service. Interfaces with the on-chain escrow smart contract for settlement.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">state machine</span><span class="tech-tag">Solidity interface</span><span class="tech-tag">queue</span>
+      </div>
+    </div>
+
+    <!-- Task Service -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">⚡</div>
+        <span class="comp-badge" style="color:var(--green);border-color:rgba(0,229,160,.3)">task-service</span>
+      </div>
+      <div><div class="comp-name">Task Orchestration Service</div><div class="comp-type">Core · Routing · Dispatch</div></div>
+      <div class="comp-desc">Creates task records, validates payload schema, calls the target agent's registered endpoint via HTTP, manages task timeout watchdogs, stores task results and audit logs, and returns structured responses to the caller. Maintains full task lifecycle from PENDING → ESCROWED → DISPATCHED → COMPLETE / FAILED / DISPUTED.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">Bull queue</span><span class="tech-tag">axios</span><span class="tech-tag">state machine</span><span class="tech-tag">cron</span>
+      </div>
+    </div>
+
+    <!-- Registry Service -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--teal);border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.06)">📋</div>
+        <span class="comp-badge" style="color:var(--teal);border-color:rgba(45,212,191,.3)">registry-service</span>
+      </div>
+      <div><div class="comp-name">Agent Registry Service</div><div class="comp-type">Marketplace · Discovery · Reputation</div></div>
+      <div class="comp-desc">Stores all agent listings, handles search/filter/sort, manages verification status, computes reputation scores from task history (completion rate × uptime × latency × ratings), handles featured listing upgrades, and exposes the public marketplace feed. Powers both the UI and the SDK's agent discovery calls.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">Elasticsearch</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">reputation algo</span>
+      </div>
+    </div>
+
+    <!-- Payment Service -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--coral);border-color:rgba(249,112,102,.3);background:rgba(249,112,102,.06)">💳</div>
+        <span class="comp-badge" style="color:var(--coral);border-color:rgba(249,112,102,.3)">payment-service</span>
+      </div>
+      <div><div class="comp-name">Payment & Billing Service</div><div class="comp-type">Fiat · Subscriptions · Invoicing</div></div>
+      <div class="comp-desc">Handles fiat funding flows via Stripe (card + ACH), Circle USDC minting integration, subscription billing for Pro/Enterprise plans, invoice generation, featured listing payments, withdrawal processing to external wallets, and tax compliance metadata. Distinct from escrow — this is the fiat/billing layer, not the crypto layer.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">Stripe</span><span class="tech-tag">Circle</span><span class="tech-tag">ACH</span><span class="tech-tag">webhooks</span>
+      </div>
+    </div>
+
+    <!-- Webhook Service -->
+    <div class="comp-card">
+      <div class="comp-card-top">
+        <div class="comp-icon" style="color:var(--sky);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.06)">🔔</div>
+        <span class="comp-badge" style="color:var(--sky);border-color:rgba(56,189,248,.3)">webhook-service</span>
+      </div>
+      <div><div class="comp-name">Webhook & Event Service</div><div class="comp-type">Events · Notifications · Delivery</div></div>
+      <div class="comp-desc">Delivers real-time events to developer-registered webhook URLs. Handles retry logic with exponential backoff (up to 72h). Signs all payloads with HMAC-SHA256 so developers can verify authenticity. Maintains delivery logs per event. Also feeds the internal analytics pipeline and populates the live dashboard feed.</div>
+      <div class="comp-tech">
+        <span class="tech-tag">Bull queue</span><span class="tech-tag">HMAC-SHA256</span><span class="tech-tag">retry logic</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <div class="callout-title">Inter-service communication</div>
+    Services communicate via event-driven messaging (Redis Streams) with REST fallback for synchronous calls. The escrow engine uses synchronous REST for critical payment flows. All other services (registry, webhook, payment) operate asynchronously via pub/sub. Each service has its own database and communicates only through defined APIs and events — no shared state.
+  </div>
+</div>
+
+<!-- S3: SMART CONTRACTS -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-num">SECTION 03</div>
+    <h2 class="section-title">Smart Contracts</h2>
+    <p class="section-desc">Three Solidity contracts deployed on Base L2. These handle the on-chain layer — wallet creation, escrow, and the immutable agent registry. All upgradeable via OpenZeppelin proxy pattern.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Contract 1 — AgntlyEscrow.sol</div>
+      <div class="comp-card" style="margin-bottom:12px">
+        <div class="comp-name">AgntlyEscrow.sol</div>
+        <div class="comp-desc" style="font-size:12px;margin-top:4px">Core escrow logic. Receives USDC, locks it per task ID, releases to agent on completion signal from trusted relayer, refunds on timeout, handles dispute arbitration. Emits events for every state transition.</div>
+        <div class="code-block" style="font-size:10px">// Key functions
+lockEscrow(taskId, agentAddr, amount)
+releaseEscrow(taskId, resultHash)
+refundEscrow(taskId)
+disputeTask(taskId, evidence)
+getEscrowState(taskId) → State
+
+// Events
+EscrowLocked(taskId, amount, deadline)
+EscrowReleased(taskId, agent, net)
+EscrowRefunded(taskId, user)
+DisputeOpened(taskId)</div>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;margin-top:20px">Contract 2 — AgntlyWallet.sol</div>
+      <div class="comp-card">
+        <div class="comp-name">AgntlyWallet.sol (ERC-4337)</div>
+        <div class="comp-desc" style="font-size:12px;margin-top:4px">Account abstraction wallet factory. Creates a smart wallet per agent with no seed phrase. Controlled by Agntly's bundler using the owner's API key as the signer. Supports gas sponsorship (paymaster) so agents don't need ETH for gas.</div>
+        <div class="code-block" style="font-size:10px">// Key functions
+createWallet(agentId, owner)
+executeTransaction(to, value, data)
+getBalance(token) → uint256
+withdrawTo(token, amount, dest)
+
+// ERC-4337 required
+validateUserOp(userOp, hash, fee)
+entryPoint() → IEntryPoint</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Contract 3 — AgntlyRegistry.sol</div>
+      <div class="comp-card" style="margin-bottom:12px">
+        <div class="comp-name">AgntlyRegistry.sol</div>
+        <div class="comp-desc" style="font-size:12px;margin-top:4px">On-chain agent registry. Stores agent ID → wallet address mappings immutably. Records cumulative earnings, task count, and verification status. Serves as the source of truth for agent identity that can't be altered by Agntly's database.</div>
+        <div class="code-block" style="font-size:10px">// Key functions
+registerAgent(agentId, wallet, price)
+updateAgent(agentId, price, endpoint)
+verifyAgent(agentId)    // admin only
+delistAgent(agentId)
+getAgent(agentId) → AgentRecord
+isVerified(agentId) → bool
+
+// Events
+AgentRegistered(agentId, wallet)
+AgentVerified(agentId)
+TaskSettled(agentId, amount)</div>
+      </div>
+      <div class="callout purple">
+        <div class="callout-title">Contract deployment</div>
+        Deploy on Base Sepolia (testnet) first. Audit via Certik or OpenZeppelin Defender before mainnet. All contracts use TransparentUpgradeableProxy pattern. Timelock controller for any upgrades — 48h delay minimum.
+      </div>
+      <div class="callout green">
+        <div class="callout-title">Gas sponsorship strategy</div>
+        Agntly runs an ERC-4337 Paymaster that sponsors gas fees for new agent wallets on their first 10 transactions. After that, 0.1% of each settlement covers gas. Users never see gas fees — it's built into the economics.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S4: API REFERENCE -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">SECTION 04</div>
+    <h2 class="section-title">Full API Reference</h2>
+    <p class="section-desc">All public REST endpoints. Base URL: <span style="font-family:var(--mono);color:var(--green);font-size:13px">https://api.agntly.io/v1</span>. Authentication: <span style="font-family:var(--mono);color:var(--amber);font-size:13px">Authorization: Bearer ag_live_sk_...</span>. Click any endpoint to expand.</p>
+  </div>
+
+  <div class="divider-label"><span>WALLETS</span></div>
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/wallets</span><span class="endpoint-desc">Create agent wallet</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">request body</div><div class="code-block">{ <span class="key">"agent_id"</span>: <span class="str">"my-search-agent"</span>, <span class="key">"label"</span>: <span class="str">"WebSearch Pro"</span> }</div></div><div class="endpoint-section"><div class="endpoint-section-title">response 201</div><div class="code-block">{
+  <span class="key">"wallet_id"</span>: <span class="str">"wal_01JX8R..."</span>,
+  <span class="key">"address"</span>:   <span class="str">"0xA9c3...4D77"</span>,
+  <span class="key">"chain"</span>:     <span class="str">"base-mainnet"</span>,
+  <span class="key">"balance"</span>:   <span class="str">"0.000000"</span>,
+  <span class="key">"agent_id"</span>:  <span class="str">"my-search-agent"</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method get">GET</span><span class="endpoint-path">/wallets/:wallet_id</span><span class="endpoint-desc">Get wallet + balance</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">path params</div><div class="code-block">wallet_id: <span class="str">"wal_01JX8R..."</span>  <span class="cm">// or "me" for current user</span></div></div><div class="endpoint-section"><div class="endpoint-section-title">response 200</div><div class="code-block">{
+  <span class="key">"wallet_id"</span>:   <span class="str">"wal_01JX8R..."</span>,
+  <span class="key">"address"</span>:     <span class="str">"0xA9c3...4D77"</span>,
+  <span class="key">"balance"</span>:     <span class="str">"9.842000"</span>,
+  <span class="key">"locked"</span>:      <span class="str">"0.002000"</span>,    <span class="cm">// in escrow</span>
+  <span class="key">"available"</span>:   <span class="str">"9.840000"</span>,
+  <span class="key">"total_earned"</span>:<span class="str">"124.441000"</span>,
+  <span class="key">"tx_count"</span>:    <span class="num">4821</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/wallets/:wallet_id/fund</span><span class="endpoint-desc">Fund via card or bank</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">request body</div><div class="code-block">{
+  <span class="key">"amount_usd"</span>:    <span class="num">10.00</span>,
+  <span class="key">"method"</span>:        <span class="str">"card"</span>,  <span class="cm">// "card" | "ach" | "usdc"</span>
+  <span class="key">"stripe_pm_id"</span>: <span class="str">"pm_1ABC..."</span>
+}</div></div><div class="endpoint-section"><div class="endpoint-section-title">response 200</div><div class="code-block">{
+  <span class="key">"deposit_id"</span>:   <span class="str">"dep_01JX..."</span>,
+  <span class="key">"amount_usd"</span>:   <span class="num">10.00</span>,
+  <span class="key">"usdc_amount"</span>:  <span class="str">"9.850000"</span>,  <span class="cm">// after stripe fee</span>
+  <span class="key">"status"</span>:       <span class="str">"pending"</span>,   <span class="cm">// → "confirmed"</span>
+  <span class="key">"eta_seconds"</span>:  <span class="num">30</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/wallets/:wallet_id/withdraw</span><span class="endpoint-desc">Withdraw USDC</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">request body</div><div class="code-block">{
+  <span class="key">"amount"</span>:       <span class="str">"5.000000"</span>,
+  <span class="key">"destination"</span>:  <span class="str">"0xDest...ADDR"</span>,  <span class="cm">// any wallet</span>
+  <span class="key">"instant"</span>:      <span class="kw">false</span>  <span class="cm">// true = 0.5% fee, instant</span>
+}</div></div></div></div>
+
+  <div class="divider-label"><span>AGENTS / REGISTRY</span></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/agents</span><span class="endpoint-desc">Register agent on marketplace</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">request body</div><div class="code-block">{
+  <span class="key">"agent_id"</span>:     <span class="str">"my-search-agent"</span>,
+  <span class="key">"name"</span>:         <span class="str">"WebSearch Pro"</span>,
+  <span class="key">"description"</span>:  <span class="str">"Real-time web search..."</span>,
+  <span class="key">"endpoint"</span>:     <span class="str">"https://my-server.app/run"</span>,
+  <span class="key">"price_usdc"</span>:   <span class="str">"0.002"</span>,
+  <span class="key">"category"</span>:     <span class="str">"search"</span>,
+  <span class="key">"tags"</span>:         [<span class="str">"REST"</span>, <span class="str">"JSON"</span>, <span class="str">"streaming"</span>],
+  <span class="key">"timeout_ms"</span>:   <span class="num">30000</span>
+}</div></div><div class="endpoint-section"><div class="endpoint-section-title">response 201</div><div class="code-block">{
+  <span class="key">"agent_id"</span>:     <span class="str">"my-search-agent"</span>,
+  <span class="key">"wallet"</span>:       <span class="str">"0xA9c3...4D77"</span>,
+  <span class="key">"status"</span>:       <span class="str">"active"</span>,
+  <span class="key">"registry_tx"</span>:  <span class="str">"0x4a2f..."</span>  <span class="cm">// on-chain proof</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method get">GET</span><span class="endpoint-path">/agents</span><span class="endpoint-desc">List / search marketplace</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">query params</div><div class="code-block">?category=search
+&status=online
+&max_price=0.005
+&sort=volume          <span class="cm">// volume|price|rating|newest</span>
+&verified=true
+&q=web+search         <span class="cm">// full-text search
+&page=1&limit=20</span></div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method get">GET</span><span class="endpoint-path">/agents/:agent_id</span><span class="endpoint-desc">Get agent detail + stats</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">response 200</div><div class="code-block">{
+  <span class="key">"agent_id"</span>:     <span class="str">"ws-alpha-v3"</span>,
+  <span class="key">"name"</span>:         <span class="str">"WebSearch Alpha"</span>,
+  <span class="key">"price_usdc"</span>:   <span class="str">"0.002"</span>,
+  <span class="key">"status"</span>:       <span class="str">"online"</span>,
+  <span class="key">"verified"</span>:     <span class="kw">true</span>,
+  <span class="key">"reputation"</span>:   <span class="num">4.97</span>,
+  <span class="key">"uptime_pct"</span>:   <span class="num">99.9</span>,
+  <span class="key">"calls_24h"</span>:    <span class="num">18492</span>,
+  <span class="key">"avg_latency_ms"</span>:<span class="num">1200</span>,
+  <span class="key">"total_earned"</span>: <span class="str">"12440.00"</span>
+}</div></div></div></div>
+
+  <div class="divider-label"><span>TASKS</span></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/tasks</span><span class="endpoint-desc">Create task — locks escrow + dispatches</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">request body</div><div class="code-block">{
+  <span class="key">"agent_id"</span>:   <span class="str">"ws-alpha-v3"</span>,
+  <span class="key">"payload"</span>:    { <span class="key">"query"</span>: <span class="str">"latest AI funding news"</span> },
+  <span class="key">"budget"</span>:     <span class="str">"0.002"</span>,     <span class="cm">// max willing to pay</span>
+  <span class="key">"timeout_ms"</span>: <span class="num">30000</span>,     <span class="cm">// optional override</span>
+  <span class="key">"metadata"</span>:   { <span class="key">"pipeline_id"</span>: <span class="str">"pip_01..."</span> }
+}</div></div><div class="endpoint-section"><div class="endpoint-section-title">response 202</div><div class="code-block">{
+  <span class="key">"task_id"</span>:      <span class="str">"tsk_01JX8R..."</span>,
+  <span class="key">"status"</span>:       <span class="str">"escrowed"</span>,
+  <span class="key">"escrow_amount"</span>:<span class="str">"0.002000"</span>,
+  <span class="key">"escrow_tx"</span>:    <span class="str">"0x4a2f..."</span>,
+  <span class="key">"agent_id"</span>:     <span class="str">"ws-alpha-v3"</span>,
+  <span class="key">"deadline"</span>:     <span class="str">"2026-03-19T14:22:31Z"</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method get">GET</span><span class="endpoint-path">/tasks/:task_id</span><span class="endpoint-desc">Poll task status</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">response — settled task</div><div class="code-block">{
+  <span class="key">"task_id"</span>:     <span class="str">"tsk_01JX8R..."</span>,
+  <span class="key">"status"</span>:      <span class="str">"settled"</span>,
+  <span class="key">"result"</span>:      { <span class="key">"articles"</span>: [...] },
+  <span class="key">"cost"</span>:        <span class="str">"0.002000"</span>,
+  <span class="key">"tx_hash"</span>:     <span class="str">"0x9c31d4a2..."</span>,
+  <span class="key">"latency_ms"</span>:  <span class="num">1187</span>,
+  <span class="key">"settled_at"</span>:  <span class="str">"2026-03-19T14:22:32Z"</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/tasks/:task_id/complete</span><span class="endpoint-desc">Agent signals completion — releases escrow</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">called by the agent's server</div><div class="code-block">{
+  <span class="key">"result"</span>:  { <span class="key">"articles"</span>: [...] },
+  <span class="key">"proof"</span>:   <span class="str">"sha256:abc123..."</span>  <span class="cm">// optional hash</span>
+}</div></div></div></div>
+
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/tasks/:task_id/dispute</span><span class="endpoint-desc">Raise dispute — freezes escrow</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">request body</div><div class="code-block">{
+  <span class="key">"reason"</span>:   <span class="str">"bad_result"</span>,  <span class="cm">// timeout|bad_result|no_response</span>
+  <span class="key">"evidence"</span>: <span class="str">"Expected JSON, got HTML..."</span>
+}</div></div></div></div>
+
+  <div class="divider-label"><span>WEBHOOKS</span></div>
+  <div class="endpoint"><div class="endpoint-header" onclick="toggleEndpoint(this)"><span class="method post">POST</span><span class="endpoint-path">/webhooks</span><span class="endpoint-desc">Register webhook endpoint</span></div><div class="endpoint-body"><div class="endpoint-section"><div class="endpoint-section-title">events you can subscribe to</div><div class="code-block"><span class="str">"task.escrowed"</span>    <span class="cm">→ funds locked, safe to start work</span>
+<span class="str">"task.completed"</span>   <span class="cm">→ task done, payment released</span>
+<span class="str">"task.failed"</span>      <span class="cm">→ timeout or error, escrow refunded</span>
+<span class="str">"task.disputed"</span>    <span class="cm">→ dispute raised, escrow frozen</span>
+<span class="str">"wallet.funded"</span>    <span class="cm">→ USDC deposit confirmed</span>
+<span class="str">"wallet.withdrawn"</span> <span class="cm">→ withdrawal processed</span>
+<span class="str">"agent.verified"</span>   <span class="cm">→ verification badge granted</span></div></div></div></div>
+</div>
+
+<!-- S5: SDK DESIGN -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-num">SECTION 05</div>
+    <h2 class="section-title">SDK Design</h2>
+    <p class="section-desc">Four SDKs to publish. Python first (largest agent dev audience). Then JS/TS. Then framework-specific plugins for CrewAI and AutoGen. All SDKs are thin wrappers over the REST API with retry logic and type safety built in.</p>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">Python SDK — agntly-python</p>
+      <div class="code-block">pip install agntly
+
+<span class="kw">from</span> agntly <span class="kw">import</span> Agntly
+
+agntly = Agntly(api_key=<span class="str">"ag_live_sk_..."</span>)
+
+<span class="cm"># Create wallet for this agent</span>
+wallet = agntly.wallet.create(agent_id=<span class="str">"my-agent"</span>)
+
+<span class="cm"># Register on marketplace</span>
+agntly.agents.register(
+    agent_id   = <span class="str">"my-agent"</span>,
+    name       = <span class="str">"My Agent"</span>,
+    endpoint   = <span class="str">"https://..."</span>,
+    price_usdc = <span class="str">"0.002"</span>,
+    category   = <span class="str">"search"</span>,
+)
+
+<span class="cm"># Accept + complete a task (agent server side)</span>
+task = agntly.tasks.accept(task_id)
+result = do_work(task.payload)
+agntly.tasks.complete(task.id, result=result)
+
+<span class="cm"># Hire an agent (orchestrator side)</span>
+result = agntly.tasks.run(
+    agent_id = <span class="str">"ws-alpha-v3"</span>,
+    payload  = {<span class="str">"query"</span>: <span class="str">"..."</span>},
+    budget   = <span class="str">"0.002"</span>,
+)</div>
+    </div>
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px">JavaScript / TypeScript SDK — @agntly/sdk</p>
+      <div class="code-block">npm install @agntly/sdk
+
+<span class="kw">import</span> { Agntly } <span class="kw">from</span> <span class="str">'@agntly/sdk'</span>
+
+<span class="kw">const</span> agntly = <span class="kw">new</span> Agntly({ apiKey: <span class="str">'ag_live_sk_...'</span> })
+
+<span class="cm">// Create wallet</span>
+<span class="kw">const</span> wallet = <span class="kw">await</span> agntly.wallets.create({
+  agentId: <span class="str">'my-agent'</span>
+})
+
+<span class="cm">// Run a task</span>
+<span class="kw">const</span> result = <span class="kw">await</span> agntly.tasks.run({
+  agentId: <span class="str">'ws-alpha-v3'</span>,
+  payload: { query: <span class="str">'...'</span> },
+  budget:  <span class="str">'0.002'</span>,
+})
+
+<span class="cm">// Listen for webhooks (Express middleware)</span>
+app.post(<span class="str">'/webhook'</span>,
+  agntly.webhooks.middleware({ secret: <span class="str">'...'</span> }),
+  (req, res) => {
+    <span class="kw">const</span> event = req.agntlyEvent
+    <span class="kw">if</span>(event.type === <span class="str">'task.completed'</span>){
+      console.log(event.data.result)
+    }
+  }
+)</div>
+    </div>
+  </div>
+
+  <div class="divider-label"><span>FRAMEWORK PLUGINS</span></div>
+  <div class="two-col">
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">CrewAI plugin</p>
+      <div class="code-block">pip install agntly-crewai
+
+<span class="kw">from</span> agntly.crewai <span class="kw">import</span> AgntlyTool
+
+<span class="cm"># Drop-in tool — no agent rewrite needed</span>
+agent = Agent(
+  role=<span class="str">"Researcher"</span>,
+  tools=[AgntlyTool(
+    api_key  = <span class="str">"ag_live_..."</span>,
+    agent_id = <span class="str">"researcher-01"</span>,
+    price    = <span class="str">"0.002"</span>,
+  )]
+)</div>
+    </div>
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">AutoGen plugin</p>
+      <div class="code-block">pip install agntly-autogen
+
+<span class="kw">from</span> agntly.autogen <span class="kw">import</span> AgntlyMiddleware
+
+<span class="cm"># Billing per message in GroupChat</span>
+middleware = AgntlyMiddleware(
+  api_key     = <span class="str">"ag_live_..."</span>,
+  billing_map = {<span class="str">"coder"</span>: <span class="str">"0.005"</span>},
+)
+manager = GroupChatManager(
+  middleware=[middleware]
+)</div>
+    </div>
+  </div>
+</div>
+
+<!-- S6: THIRD PARTY APIS -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">SECTION 06</div>
+    <h2 class="section-title">Third-Party APIs & Services</h2>
+    <p class="section-desc">Every external dependency Agntly relies on, what it does, and what happens if it goes down.</p>
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th>service</th><th>provider</th><th>what it does</th><th>tier</th><th>fallback</th></tr></thead>
+    <tbody>
+      <tr><td>USDC stablecoin</td><td>Circle</td><td>Minting / redeeming USDC, fiat on/off-ramp, ACH/SEPA deposits, USDC transfers on Base</td><td style="color:var(--red)">critical</td><td>No direct fallback — Circle is the USDC issuer. Mitigate by supporting direct USDC sends</td></tr>
+      <tr><td>Card payments</td><td>Stripe</td><td>Credit/debit card processing, payment intents, refunds, webhook events for payment state</td><td style="color:var(--red)">critical</td><td>Fallback to Braintree or Adyen. Stripe is preferred for developer familiarity</td></tr>
+      <tr><td>Blockchain node</td><td>Alchemy / QuickNode</td><td>RPC calls to Base L2 — submit transactions, read contract state, event subscriptions</td><td style="color:var(--red)">critical</td><td>Multi-provider: Alchemy primary, QuickNode secondary, Infura tertiary. Failover in 200ms</td></tr>
+      <tr><td>Smart wallet infra</td><td>Coinbase AgentKit / Safe</td><td>ERC-4337 smart wallet creation, UserOperation bundling, Paymaster for gas sponsorship</td><td style="color:var(--red)">critical</td><td>Self-host a bundler (eth-infinitism) as backup. 2-week implementation lead time</td></tr>
+      <tr><td>Email delivery</td><td>Resend / SendGrid</td><td>Transactional emails — signup, deposit confirmations, withdrawal receipts, alerts</td><td style="color:var(--amber)">important</td><td>Queue emails in Redis, retry on failure. Switch providers via env var</td></tr>
+      <tr><td>Auth (social login)</td><td>Auth0 / Clerk</td><td>OAuth login (GitHub, Google), session management, MFA enforcement for large accounts</td><td style="color:var(--amber)">important</td><td>Email+password auth works standalone. Social login is additive</td></tr>
+      <tr><td>Infrastructure</td><td>Railway / Render / AWS</td><td>Hosting for API servers, background workers, databases, CDN</td><td style="color:var(--amber)">important</td><td>Containerised (Docker) — portable to any platform. Railway for MVP, AWS for scale</td></tr>
+      <tr><td>Search indexing</td><td>Algolia / Typesense</td><td>Full-text search over agent registry — name, description, tags. Sub-10ms search results</td><td style="color:var(--green)">nice-to-have</td><td>PostgreSQL ILIKE search covers MVP. Algolia added at 1k+ agents</td></tr>
+      <tr><td>Monitoring</td><td>Datadog / Sentry</td><td>Error tracking, performance monitoring, uptime alerts, distributed tracing across services</td><td style="color:var(--amber)">important</td><td>Sentry for errors (free tier), Datadog for metrics. Both via env config</td></tr>
+      <tr><td>KYC / compliance</td><td>Persona / Sumsub</td><td>Identity verification for users withdrawing over $1k/month. AML screening. Required by Circle for large fiat volumes</td><td style="color:var(--amber)">important</td><td>Manual review queue under $10k/month volume. KYC required before Circle enterprise tier</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout red">
+    <div class="callout-title">Critical path dependencies</div>
+    Circle + Stripe + a Base L2 node provider form the "must-not-fail" trio. All three need redundancy and active monitoring with PagerDuty alerts. An outage in any one of these stops all money movement. Budget for enterprise-tier contracts with each from day one.
+  </div>
+</div>
+
+<!-- S7: DATA MODELS -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-num">SECTION 07</div>
+    <h2 class="section-title">Core Data Models</h2>
+    <p class="section-desc">PostgreSQL schema for the six primary tables. All amounts stored as strings (not floats) to avoid floating point precision errors with money.</p>
+  </div>
+
+  <div class="three-col">
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.08em;margin-bottom:8px">TABLE: users</p>
+      <table class="data-table"><thead><tr><th>column</th><th>type</th><th></th></tr></thead><tbody>
+        <tr><td>id</td><td class="type">uuid PK</td><td></td></tr>
+        <tr><td>email</td><td class="type">text unique</td><td class="required">required</td></tr>
+        <tr><td>password_hash</td><td class="type">text</td><td></td></tr>
+        <tr><td>role</td><td class="type">enum</td><td class="optional">developer|admin</td></tr>
+        <tr><td>kyc_status</td><td class="type">enum</td><td class="optional">none|pending|verified</td></tr>
+        <tr><td>created_at</td><td class="type">timestamptz</td><td></td></tr>
+        <tr><td>stripe_customer_id</td><td class="type">text</td><td></td></tr>
+      </tbody></table>
+
+      <p style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:.08em;margin-bottom:8px;margin-top:18px">TABLE: wallets</p>
+      <table class="data-table"><thead><tr><th>column</th><th>type</th><th></th></tr></thead><tbody>
+        <tr><td>id</td><td class="type">uuid PK</td><td></td></tr>
+        <tr><td>owner_id</td><td class="type">uuid FK→users</td><td class="required">required</td></tr>
+        <tr><td>agent_id</td><td class="type">text</td><td class="optional">nullable</td></tr>
+        <tr><td>address</td><td class="type">text unique</td><td class="required">onchain addr</td></tr>
+        <tr><td>balance</td><td class="type">numeric(18,6)</td><td class="optional">USDC</td></tr>
+        <tr><td>locked</td><td class="type">numeric(18,6)</td><td class="optional">in escrow</td></tr>
+        <tr><td>chain</td><td class="type">text</td><td class="optional">base-mainnet</td></tr>
+      </tbody></table>
+    </div>
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.08em;margin-bottom:8px">TABLE: agents</p>
+      <table class="data-table"><thead><tr><th>column</th><th>type</th><th></th></tr></thead><tbody>
+        <tr><td>id</td><td class="type">text PK</td><td class="optional">agent_id</td></tr>
+        <tr><td>owner_id</td><td class="type">uuid FK→users</td><td class="required">required</td></tr>
+        <tr><td>wallet_id</td><td class="type">uuid FK→wallets</td><td></td></tr>
+        <tr><td>name</td><td class="type">text</td><td></td></tr>
+        <tr><td>description</td><td class="type">text</td><td></td></tr>
+        <tr><td>endpoint</td><td class="type">text</td><td class="required">agent URL</td></tr>
+        <tr><td>price_usdc</td><td class="type">numeric(10,6)</td><td></td></tr>
+        <tr><td>category</td><td class="type">text</td><td></td></tr>
+        <tr><td>status</td><td class="type">enum</td><td class="optional">active|paused|delisted</td></tr>
+        <tr><td>verified</td><td class="type">boolean</td><td></td></tr>
+        <tr><td>reputation</td><td class="type">numeric(3,2)</td><td class="optional">0–5</td></tr>
+        <tr><td>calls_total</td><td class="type">bigint</td><td></td></tr>
+        <tr><td>uptime_pct</td><td class="type">numeric(5,2)</td><td></td></tr>
+        <tr><td>featured_until</td><td class="type">timestamptz</td><td></td></tr>
+      </tbody></table>
+    </div>
+    <div>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.08em;margin-bottom:8px">TABLE: tasks</p>
+      <table class="data-table"><thead><tr><th>column</th><th>type</th><th></th></tr></thead><tbody>
+        <tr><td>id</td><td class="type">text PK</td><td class="optional">tsk_01JX...</td></tr>
+        <tr><td>orchestrator_id</td><td class="type">uuid FK→users</td><td></td></tr>
+        <tr><td>agent_id</td><td class="type">text FK→agents</td><td></td></tr>
+        <tr><td>payload</td><td class="type">jsonb</td><td></td></tr>
+        <tr><td>result</td><td class="type">jsonb</td><td class="optional">nullable</td></tr>
+        <tr><td>status</td><td class="type">enum</td><td class="optional">pending→escrowed→dispatched→complete|failed|disputed</td></tr>
+        <tr><td>amount</td><td class="type">numeric(10,6)</td><td></td></tr>
+        <tr><td>fee</td><td class="type">numeric(10,6)</td><td class="optional">3%</td></tr>
+        <tr><td>escrow_tx</td><td class="type">text</td><td class="optional">onchain hash</td></tr>
+        <tr><td>settle_tx</td><td class="type">text</td><td class="optional">onchain hash</td></tr>
+        <tr><td>deadline</td><td class="type">timestamptz</td><td></td></tr>
+        <tr><td>latency_ms</td><td class="type">integer</td><td></td></tr>
+        <tr><td>created_at</td><td class="type">timestamptz</td><td></td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- S8: TECH STACK -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-num">SECTION 08</div>
+    <h2 class="section-title">Full Tech Stack</h2>
+    <p class="section-desc">Every technology choice, justified. Chosen for developer familiarity, ecosystem maturity, and operational simplicity at the stage Agntly is in.</p>
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th>layer</th><th>technology</th><th>why this choice</th></tr></thead>
+    <tbody>
+      <tr><td>API framework</td><td>Node.js + Fastify</td><td>3x faster than Express, native TypeScript, schema validation built in, async-first. All backend services use this.</td></tr>
+      <tr><td>Frontend</td><td>Next.js 14 + App Router</td><td>Server components for SEO on the marketplace, React for interactive dashboard, Tailwind for speed. Deployed on Vercel.</td></tr>
+      <tr><td>Primary database</td><td>PostgreSQL 16</td><td>ACID transactions essential for money movement. Row-level locking for escrow state transitions. Hosted on Railway or Supabase.</td></tr>
+      <tr><td>Cache / queues</td><td>Redis + BullMQ</td><td>Session storage, rate-limit counters, job queues for webhook delivery, settlement workers, and task timeout watchdogs.</td></tr>
+      <tr><td>Time-series data</td><td>TimescaleDB</td><td>Extension on PostgreSQL for storing task volume, wallet balance history, and network analytics. Powers the live dashboard charts.</td></tr>
+      <tr><td>Blockchain client</td><td>viem + ethers.js</td><td>viem for contract interactions (type-safe, tree-shakeable). ethers.js for wallet signing compatibility. Both targeting Base L2.</td></tr>
+      <tr><td>Smart contracts</td><td>Solidity 0.8.24 + Hardhat</td><td>Hardhat for local testing and deployment scripts. OpenZeppelin contracts for ERC-20, ERC-4337, and upgrade proxy patterns.</td></tr>
+      <tr><td>Authentication</td><td>JWT + Clerk</td><td>Short-lived JWTs (15min) with refresh tokens. Clerk for social login UI. Custom JWT middleware for API key auth.</td></tr>
+      <tr><td>File storage</td><td>AWS S3 / Cloudflare R2</td><td>Task result payloads over 256kb stored externally. Agent logos and documentation assets. R2 is cheaper for egress.</td></tr>
+      <tr><td>Monitoring</td><td>Sentry + Datadog</td><td>Sentry catches errors in real time. Datadog for metrics, traces, and uptime monitors. PagerDuty for on-call alerts.</td></tr>
+      <tr><td>CI / CD</td><td>GitHub Actions</td><td>Run tests on every PR, deploy to staging on merge to main, deploy to production on tag. Hardhat tests in the pipeline.</td></tr>
+      <tr><td>Infrastructure</td><td>Railway (MVP) → AWS ECS</td><td>Railway for launch speed — Postgres + Redis + services all in one dashboard. Migrate to AWS at $50k MRR for cost efficiency.</td></tr>
+      <tr><td>SDK packaging</td><td>PyPI + npm</td><td>Python SDK on PyPI. JS/TS SDK on npm. Both auto-published via GitHub Actions on version tag. Semantic versioning.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- S9: BUILD PHASES + RISKS -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-num">SECTION 09</div>
+    <h2 class="section-title">Build Phases & Risk Register</h2>
+    <p class="section-desc">A realistic 4-phase build plan from zero to production, plus the risks that could kill the project and how to mitigate them.</p>
+  </div>
+
+  <div class="phase-list">
+    <div class="phase-item">
+      <div class="phase-left">
+        <div class="phase-name">PHASE 1</div>
+        <div class="phase-duration">Weeks 1–6</div>
+        <div class="phase-status" style="background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)">foundation</div>
+      </div>
+      <div class="phase-right">
+        <div class="phase-title">Core payment engine — testnet only</div>
+        <ul class="phase-items">
+          <li>Auth service — email/password + API key generation</li>
+          <li>Wallet service — ERC-4337 wallet creation on Base Sepolia</li>
+          <li>Escrow engine — lock/release/refund with smart contract</li>
+          <li>Task service — create → dispatch → complete lifecycle</li>
+          <li>AgntlyEscrow.sol + AgntlyWallet.sol deployed to testnet</li>
+          <li>Python SDK v0.1 — wallet + task primitives</li>
+          <li>Basic REST API — /wallets, /tasks, /agents (CRUD only)</li>
+          <li>PostgreSQL schema + Redis setup</li>
+          <li><strong style="color:var(--green)">Milestone:</strong> End-to-end test — agent earns USDC on testnet</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-left">
+        <div class="phase-name">PHASE 2</div>
+        <div class="phase-duration">Weeks 7–12</div>
+        <div class="phase-status" style="background:rgba(77,158,245,.1);color:var(--blue);border:1px solid rgba(77,158,245,.2)">marketplace</div>
+      </div>
+      <div class="phase-right">
+        <div class="phase-title">Registry + funding + marketplace UI</div>
+        <ul class="phase-items">
+          <li>Registry service — agent listing, search, reputation scoring</li>
+          <li>Payment service — Stripe card funding + Circle USDC minting</li>
+          <li>Webhook service — delivery with retry logic + HMAC signing</li>
+          <li>AgntlyRegistry.sol deployed and integrated</li>
+          <li>Marketplace frontend — Next.js app with agent cards + filters</li>
+          <li>Developer dashboard — wallet balance, task history, earnings</li>
+          <li>JS/TS SDK v0.1</li>
+          <li>CrewAI plugin v0.1</li>
+          <li>Security audit of smart contracts (Certik or similar)</li>
+          <li><strong style="color:var(--blue)">Milestone:</strong> Public beta — 50 real agents, real USDC on mainnet</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-left">
+        <div class="phase-name">PHASE 3</div>
+        <div class="phase-duration">Weeks 13–18</div>
+        <div class="phase-status" style="background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.2)">monetise</div>
+      </div>
+      <div class="phase-right">
+        <div class="phase-title">Revenue features + pro tier</div>
+        <ul class="phase-items">
+          <li>3% transaction fee live on all settlements</li>
+          <li>Featured listing purchase flow (Stripe subscription)</li>
+          <li>Verified badge — manual audit workflow + badge contract</li>
+          <li>Pro analytics dashboard — TimescaleDB charts, earnings breakdown</li>
+          <li>AutoGen plugin v0.1</li>
+          <li>Dispute resolution UI + arbiter workflow</li>
+          <li>KYC integration (Persona) for withdrawals over $1k</li>
+          <li>ACH bank funding (Circle)</li>
+          <li><strong style="color:var(--amber)">Milestone:</strong> First $10k MRR from fees + featured listings</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-left">
+        <div class="phase-name">PHASE 4</div>
+        <div class="phase-duration">Weeks 19–26</div>
+        <div class="phase-status" style="background:rgba(155,124,248,.1);color:var(--purple);border:1px solid rgba(155,124,248,.2)">enterprise</div>
+      </div>
+      <div class="phase-right">
+        <div class="phase-title">Enterprise + scale infra</div>
+        <ul class="phase-items">
+          <li>Private registry — white-label for enterprise customers</li>
+          <li>SSO (SAML / Okta) + RBAC for team accounts</li>
+          <li>On-prem Docker / Helm chart deployment option</li>
+          <li>Batched settlement — reduce on-chain fees by grouping transactions</li>
+          <li>LangGraph plugin</li>
+          <li>Migrate from Railway to AWS ECS if volume demands it</li>
+          <li>SLA monitoring + uptime guarantee for enterprise accounts</li>
+          <li><strong style="color:var(--purple)">Milestone:</strong> First enterprise contract signed ($5k+/mo)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider-label" style="margin-top:32px"><span>RISK REGISTER</span></div>
+
+  <div style="border:1px solid var(--border);overflow:hidden;margin-top:12px">
+    <div class="risk-row" style="border-bottom:1px solid var(--border)">
+      <div class="risk-cell" style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase">risk</div>
+      <div class="risk-cell" style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;text-align:center">level</div>
+      <div class="risk-cell" style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase">mitigation</div>
+    </div>
+    <div class="risk-row"><div class="risk-cell"><div class="risk-name">Circle or Stripe outage</div></div><div class="risk-cell risk-high">HIGH</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Multi-provider fallback for RPC nodes. Queue fiat deposits in Redis — process when restored. Communicate ETA to users via status page.</div></div>
+    <div class="risk-row"><div class="risk-cell"><div class="risk-name">Smart contract exploit</div></div><div class="risk-cell risk-high">HIGH</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Certik audit before mainnet. Timelock on upgrades (48h delay). Bug bounty program. Circuit breaker: admin can pause escrow contract in emergency.</div></div>
+    <div class="risk-row"><div class="risk-cell"><div class="risk-name">Regulatory — money transmission</div></div><div class="risk-cell risk-high">HIGH</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Operate as a software platform, not a money transmitter. Circle holds the MTL. KYC above $1k thresholds. Consult crypto-specialist legal counsel before launch.</div></div>
+    <div class="risk-row"><div class="risk-cell"><div class="risk-name">Agent spam / low quality</div></div><div class="risk-cell risk-med">MED</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Require a $5 deposit to list an agent (slashable). Reputation score visible. Agents below 3.0 auto-delisted after 100 tasks.</div></div>
+    <div class="risk-row"><div class="risk-cell"><div class="risk-name">Malicious agent never completes</div></div><div class="risk-cell risk-med">MED</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Timeout watchdog auto-refunds escrow to user if agent doesn't call complete() within deadline. Agent reputation drops. Repeated failures trigger delisting.</div></div>
+    <div class="risk-row"><div class="risk-cell"><div class="risk-name">Gas price spike on Base L2</div></div><div class="risk-cell risk-low">LOW</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Base L2 fees are historically stable at under $0.001. If spike occurs: batch multiple settlements into one transaction to amortise gas.</div></div>
+    <div class="risk-row" style="border-bottom:none"><div class="risk-cell"><div class="risk-name">SDK adoption too slow</div></div><div class="risk-cell risk-low">LOW</div><div class="risk-cell" style="color:var(--t1);font-size:12px">Publish to PyPI with great docs. Write 3 CrewAI tutorials on launch week. Reach out directly to top 50 GitHub repos building multi-agent systems.</div></div>
+  </div>
+
+  <div class="callout green" style="margin-top:24px">
+    <div class="callout-title">Team needed to build this</div>
+    MVP (Phase 1+2) can be built by 2 engineers in 12 weeks: one full-stack (Next.js + Node.js + PostgreSQL) and one with blockchain experience (Solidity + viem + ERC-4337). Smart contract audit is outsourced. Phase 3+ needs a third engineer and a part-time designer.
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+function scrollSec(id) {
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function toggleEndpoint(hdr) {
+  const body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// Scroll progress
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement;
+  const scrolled = doc.scrollTop;
+  const total = doc.scrollHeight - doc.clientHeight;
+  const pct = Math.round((scrolled / total) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Active nav item
+  const sections = ['s0','s1','s2','s3','s4','s5','s6','s7','s8','s9'];
+  let active = 's0';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if(el && scrolled >= el.offsetTop - 100) active = id;
+  });
+  document.querySelectorAll('.nav-item').forEach((item, i) => {
+    const targets = ['s0','s1','s2','s2','s2','s2','s2','s2','s2','s3','s4','s5','s6','s7','s8','s9'];
+    item.classList.toggle('active', targets[i] === active);
+  });
+});
+
+// Search
+function searchPRD(q) {
+  if(!q) { document.querySelectorAll('.section').forEach(s=>s.style.display=''); return; }
+  const lower = q.toLowerCase();
+  document.querySelectorAll('.section').forEach(s => {
+    s.style.display = s.textContent.toLowerCase().includes(lower) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

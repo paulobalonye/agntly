@@ -1,0 +1,728 @@
+t<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agntly — 30-Day Validation Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#07090d; --bg1:#0d1117; --bg2:#131920; --bg3:#1a2332;
+  --border:#1e2d3d; --border2:#2a3d52;
+  --t0:#e8edf2; --t1:#9ab3c8; --t2:#4d6478; --t3:#1e2d3d;
+  --green:#00e5a0; --green2:#00b87a;
+  --blue:#4d9ef5; --amber:#f5a623;
+  --red:#e05252; --purple:#9b7cf8; --teal:#2dd4bf;
+  --mono:'IBM Plex Mono',monospace;
+  --body:'Figtree',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg0);color:var(--t0);font-family:var(--body);font-size:14px;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:52px 52px;opacity:.07;pointer-events:none;z-index:0}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(7,9,13,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 40px;gap:20px}
+.nav-logo{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--green);display:flex;align-items:center;gap:8px}
+.nav-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-sub{font-family:var(--mono);font-size:11px;color:var(--t2);letter-spacing:.04em}
+.nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.nav-chip{font-family:var(--mono);font-size:10px;padding:4px 10px;border:1px solid;letter-spacing:.04em;cursor:pointer;transition:all .15s}
+
+/* HERO */
+.hero{position:relative;z-index:1;padding:64px 40px 52px;border-bottom:1px solid var(--border);text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.eline{width:28px;height:1px;background:var(--green)}
+.hero h1{font-family:var(--body);font-size:clamp(32px,4.5vw,52px);font-weight:600;letter-spacing:-.02em;line-height:1.1;color:var(--t0)}
+.hero h1 span{color:var(--green)}
+.hero-sub{font-size:16px;color:var(--t1);max-width:560px;font-weight:300;line-height:1.7}
+.goal-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);width:100%;max-width:680px;margin-top:8px}
+.goal-cell{background:var(--bg1);padding:16px 20px;display:flex;flex-direction:column;gap:4px}
+.goal-label{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.1em;text-transform:uppercase}
+.goal-val{font-family:var(--body);font-size:22px;font-weight:600;letter-spacing:-.01em}
+.goal-sub{font-family:var(--mono);font-size:10px}
+
+/* SECTION */
+.section{position:relative;z-index:1;padding:48px 40px;border-bottom:1px solid var(--border)}
+.sec-num{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.1em;margin-bottom:8px}
+.sec-title{font-family:var(--body);font-size:clamp(20px,2.5vw,28px);font-weight:600;letter-spacing:-.015em;color:var(--t0);margin-bottom:8px}
+.sec-desc{font-size:14px;color:var(--t1);max-width:640px;line-height:1.7;font-weight:300;margin-bottom:28px}
+
+/* TWO CUSTOMER CARDS */
+.customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px}
+@media(max-width:700px){.customer-grid,.two-col,.week-grid{grid-template-columns:1fr}}
+.customer-card{border:1px solid;padding:24px;display:flex;flex-direction:column;gap:14px}
+.cc-badge{font-family:var(--mono);font-size:9px;padding:3px 8px;border:1px solid;letter-spacing:.07em;text-transform:uppercase;display:inline-block;margin-bottom:4px}
+.cc-title{font-size:18px;font-weight:600;color:var(--t0)}
+.cc-subtitle{font-family:var(--mono);font-size:11px}
+.cc-desc{font-size:13px;color:var(--t1);line-height:1.65}
+.cc-q{font-size:14px;font-weight:500;color:var(--t0);padding:12px 14px;border-left:2px solid;margin-top:4px;font-style:italic;line-height:1.5}
+.cc-where{display:flex;flex-direction:column;gap:6px}
+.where-label{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase}
+.where-tags{display:flex;flex-wrap:wrap;gap:5px}
+.where-tag{font-family:var(--mono);font-size:10px;padding:3px 8px;border:1px solid;cursor:pointer;transition:all .15s}
+
+/* WEEK GRID */
+.week-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.week-card{background:var(--bg1);border:1px solid var(--border);padding:22px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s}
+.week-card:hover{border-color:var(--border2)}
+.week-header{display:flex;align-items:center;justify-content:space-between}
+.week-num{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em}
+.week-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid;letter-spacing:.05em}
+.week-title{font-size:15px;font-weight:600;color:var(--t0)}
+.week-tasks{display:flex;flex-direction:column;gap:6px}
+.task-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--t1);padding:5px 0;border-bottom:1px solid var(--border)}
+.task-item:last-child{border-bottom:none}
+.task-check{width:16px;height:16px;border:1px solid var(--border2);flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s}
+.task-check:hover{border-color:var(--green)}
+.task-check.done{background:rgba(0,229,160,.1);border-color:var(--green);color:var(--green)}
+.task-text{line-height:1.5}
+.task-text.done-text{color:var(--t2);text-decoration:line-through}
+.week-metric{background:var(--bg2);border:1px solid var(--border);padding:10px 12px;display:flex;align-items:center;justify-content:space-between}
+.wm-label{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.wm-val{font-family:var(--mono);font-size:12px;font-weight:500}
+
+/* MESSAGE TEMPLATES */
+.msg-card{background:var(--bg1);border:1px solid var(--border);overflow:hidden;margin:10px 0}
+.msg-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
+.msg-title{font-family:var(--mono);font-size:10px;color:var(--t1);letter-spacing:.04em}
+.msg-platform{font-family:var(--mono);font-size:9px;padding:2px 7px;border:1px solid;letter-spacing:.05em}
+.msg-body{padding:16px;font-size:13px;color:var(--t1);line-height:1.8;white-space:pre-wrap}
+.msg-body strong{color:var(--t0);font-weight:500}
+.msg-highlight{color:var(--green)}
+.copy-btn{background:transparent;border:1px solid var(--border2);color:var(--t2);font-family:var(--mono);font-size:10px;padding:4px 10px;cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.copy-btn:hover{border-color:var(--green);color:var(--green)}
+.copy-btn.copied{color:var(--green);border-color:var(--green)}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* CALLOUT */
+.callout{border-left:2px solid;padding:12px 16px;margin:14px 0;font-size:13px;line-height:1.7}
+.callout-title{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.callout.green{border-color:var(--green);background:rgba(0,229,160,.04);color:var(--t1)}.callout.green .callout-title{color:var(--green)}
+.callout.amber{border-color:var(--amber);background:rgba(245,166,35,.04);color:var(--t1)}.callout.amber .callout-title{color:var(--amber)}
+.callout.blue{border-color:var(--blue);background:rgba(77,158,245,.04);color:var(--t1)}.callout.blue .callout-title{color:var(--blue)}
+.callout.red{border-color:var(--red);background:rgba(224,82,82,.04);color:var(--t1)}.callout.red .callout-title{color:var(--red)}
+
+/* SCORECARD */
+.scorecard{background:var(--bg1);border:1px solid var(--border);overflow:hidden;margin:16px 0}
+.sc-header{padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.sc-row{display:grid;grid-template-columns:1fr 80px 80px 1fr;gap:0;border-bottom:1px solid var(--border)}
+.sc-row:last-child{border-bottom:none}
+.sc-cell{padding:12px 14px;font-size:13px;color:var(--t1)}
+.sc-cell:first-child{color:var(--t0);font-weight:500}
+.sc-cell:nth-child(2),.sc-cell:nth-child(3){font-family:var(--mono);font-size:12px;text-align:center}
+.sc-go{color:var(--green)}.sc-nogo{color:var(--red)}.sc-check{color:var(--amber)}
+.sc-col-header{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;background:var(--bg2);text-align:center}
+
+/* SIGNAL TRACKER */
+.signal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:16px 0}
+.signal-card{background:var(--bg1);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:8px;transition:border-color .2s}
+.signal-card:hover{border-color:var(--border2)}
+.signal-icon{font-size:20px}
+.signal-name{font-size:13px;font-weight:600;color:var(--t0)}
+.signal-desc{font-size:12px;color:var(--t1);line-height:1.55}
+.signal-level{font-family:var(--mono);font-size:9px;padding:2px 8px;border:1px solid;display:inline-block;letter-spacing:.05em}
+.strong{color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)}
+.medium{color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.06)}
+.weak{color:var(--t2);border-color:var(--border);background:var(--bg2)}
+
+/* PROGRESS TRACKER */
+.progress-wrap{background:var(--bg1);border:1px solid var(--border);padding:20px;margin:16px 0}
+.progress-title{font-family:var(--mono);font-size:10px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+.progress-rows{display:flex;flex-direction:column;gap:10px}
+.progress-row{display:flex;flex-direction:column;gap:5px}
+.pr-top{display:flex;justify-content:space-between;align-items:center}
+.pr-label{font-size:13px;color:var(--t0)}
+.pr-val{font-family:var(--mono);font-size:12px}
+.pr-bar{height:4px;background:var(--border2);border-radius:0;overflow:hidden}
+.pr-fill{height:4px;transition:width .6s ease;border-radius:0}
+
+/* DIVIDER */
+.divider-label{display:flex;align-items:center;gap:12px;margin:24px 0}.divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}.divider-label span{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.1em;white-space:nowrap}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+.data-table th{text-align:left;padding:8px 12px;font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.08em;border-bottom:1px solid var(--border);font-weight:400;background:var(--bg1)}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--t1);vertical-align:top}
+.data-table td:first-child{font-size:13px;font-weight:500;color:var(--t0)}
+.data-table tr:hover td{background:rgba(255,255,255,.015)}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><div class="nav-dot"></div>AGNTLY.IO</div>
+  <div class="nav-sub">— 30-day validation playbook</div>
+  <div class="nav-right">
+    <div class="nav-chip" style="color:var(--green);border-color:rgba(0,229,160,.3)" onclick="document.getElementById('tracker').scrollIntoView({behavior:'smooth'})">progress tracker</div>
+    <div class="nav-chip" style="color:var(--blue);border-color:rgba(77,158,245,.3)" onclick="document.getElementById('messages').scrollIntoView({behavior:'smooth'})">message templates</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow"><span class="eline"></span>validation playbook<span class="eline"></span></div>
+  <h1>30 days to know if<br><span>Agntly is real</span></h1>
+  <p class="hero-sub">No code. No backend. No blockchain. Just conversations, a shared link, and honest answers from real developers. Here is exactly what to do every single day.</p>
+  <div class="goal-strip">
+    <div class="goal-cell">
+      <div class="goal-label">primary goal</div>
+      <div class="goal-val" style="color:var(--blue)">10</div>
+      <div class="goal-sub" style="color:var(--blue)">agent builders who say yes</div>
+    </div>
+    <div class="goal-cell">
+      <div class="goal-label">secondary goal</div>
+      <div class="goal-val" style="color:var(--amber)">5</div>
+      <div class="goal-sub" style="color:var(--amber)">orchestrator builders who commit</div>
+    </div>
+    <div class="goal-cell">
+      <div class="goal-label">stretch goal</div>
+      <div class="goal-val" style="color:var(--green)">1</div>
+      <div class="goal-sub" style="color:var(--green)">manual transaction done</div>
+    </div>
+  </div>
+</div>
+
+<!-- S1: TWO CUSTOMERS -->
+<div class="section">
+  <div class="sec-num">THE CORE INSIGHT</div>
+  <h2 class="sec-title">You have two customers.<br>Both must say yes.</h2>
+  <p class="sec-desc">Agntly is a two-sided marketplace. It only works if agent builders show up to list, AND orchestrator builders show up to hire. You need to validate both sides independently before building anything.</p>
+
+  <div class="customer-grid">
+    <div class="customer-card" style="border-color:rgba(77,158,245,.25);background:rgba(77,158,245,.03)">
+      <div>
+        <span class="cc-badge" style="color:var(--blue);border-color:rgba(77,158,245,.3)">side one</span>
+        <div class="cc-title">The Agent Builder</div>
+        <div class="cc-subtitle" style="color:var(--blue)">supply side · earns USDC</div>
+      </div>
+      <div class="cc-desc">A developer who has already built (or is building) an AI agent — a web scraper, code runner, PDF parser, API proxy, anything. They want to monetise it without building a billing system. They just want to write code and get paid.</div>
+      <div class="cc-q" style="border-color:var(--blue);background:rgba(77,158,245,.04)">
+        "If I could earn $0.002 every time another AI agent called mine — automatically, no invoices — would you list yours on a registry?"
+      </div>
+      <div class="cc-where">
+        <div class="where-label">where they live</div>
+        <div class="where-tags">
+          <span class="where-tag" style="color:var(--blue);border-color:rgba(77,158,245,.2)">GitHub</span>
+          <span class="where-tag" style="color:var(--blue);border-color:rgba(77,158,245,.2)">LangChain Discord</span>
+          <span class="where-tag" style="color:var(--blue);border-color:rgba(77,158,245,.2)">CrewAI Discord</span>
+          <span class="where-tag" style="color:var(--blue);border-color:rgba(77,158,245,.2)">HuggingFace</span>
+          <span class="where-tag" style="color:var(--blue);border-color:rgba(77,158,245,.2)">r/LocalLLaMA</span>
+          <span class="where-tag" style="color:var(--blue);border-color:rgba(77,158,245,.2)">Twitter/X #buildinpublic</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="customer-card" style="border-color:rgba(245,166,35,.25);background:rgba(245,166,35,.03)">
+      <div>
+        <span class="cc-badge" style="color:var(--amber);border-color:rgba(245,166,35,.3)">side two</span>
+        <div class="cc-title">The Orchestrator Builder</div>
+        <div class="cc-subtitle" style="color:var(--amber)">demand side · spends USDC</div>
+      </div>
+      <div class="cc-desc">A developer or company building a multi-agent pipeline or AI product. They need specialised agents — search, code, parse, summarise — but don't want to build every capability themselves. They'll pay per task to not reinvent the wheel.</div>
+      <div class="cc-q" style="border-color:var(--amber);background:rgba(245,166,35,.04)">
+        "Would you pay $0.002 per search call to use a pre-built, reliable web search agent instead of building your own?"
+      </div>
+      <div class="cc-where">
+        <div class="where-label">where they live</div>
+        <div class="where-tags">
+          <span class="where-tag" style="color:var(--amber);border-color:rgba(245,166,35,.2)">AutoGen Discord</span>
+          <span class="where-tag" style="color:var(--amber);border-color:rgba(245,166,35,.2)">YC W24/S24 founders</span>
+          <span class="where-tag" style="color:var(--amber);border-color:rgba(245,166,35,.2)">AI Twitter/X</span>
+          <span class="where-tag" style="color:var(--amber);border-color:rgba(245,166,35,.2)">LinkedIn AI builders</span>
+          <span class="where-tag" style="color:var(--amber);border-color:rgba(245,166,35,.2)">Indie Hackers</span>
+          <span class="where-tag" style="color:var(--amber);border-color:rgba(245,166,35,.2)">ProductHunt upcoming</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout amber">
+    <div class="callout-title">The chicken-and-egg problem</div>
+    Every marketplace has this: builders won't list if there are no buyers, buyers won't come if there are nothing listed. Your job in validation is to find the 10 builders who are excited enough to list <em>before</em> buyers exist, and the 5 buyers who are willing to commit <em>before</em> their favourite agents are listed. These people exist — they're early adopters. Finding them is your only job in month 1.
+  </div>
+</div>
+
+<!-- S2: 30-DAY PLAN -->
+<div class="section">
+  <div class="sec-num">THE PLAN</div>
+  <h2 class="sec-title">30 days. 4 weeks.<br>One goal per week.</h2>
+  <p class="sec-desc">Each week has a single focus, specific daily tasks, and a clear pass/fail metric. If you hit the metric, move to the next week. If you don't, adjust and repeat before moving on.</p>
+
+  <div class="week-grid">
+    <!-- Week 1 -->
+    <div class="week-card">
+      <div class="week-header">
+        <span class="week-num">WEEK 1 · DAYS 1–7</span>
+        <span class="week-badge" style="color:var(--blue);border-color:rgba(77,158,245,.3)">research</span>
+      </div>
+      <div class="week-title">Find your first 50 targets</div>
+      <div class="week-tasks">
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Deploy agntly-deploy.zip to Netlify (you already have it) — get your shareable link</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Search GitHub for repos tagged "langchain-agent", "crewai", "autogen" with 50+ stars — list 25 authors</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Join LangChain Discord + CrewAI Discord + AutoGen Discord — just observe for 2 days</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Search Twitter/X for "building AI agent" past 7 days — list 25 accounts actively posting</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Create a simple Airtable or Notion table: Name | Platform | Contact | Agent Type | Status</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Set up a free Typeform — just 3 questions (see templates below)</div></div>
+      </div>
+      <div class="week-metric">
+        <span class="wm-label">week 1 exit criteria</span>
+        <span class="wm-val" style="color:var(--blue)">50 targets logged</span>
+      </div>
+    </div>
+
+    <!-- Week 2 -->
+    <div class="week-card">
+      <div class="week-header">
+        <span class="week-num">WEEK 2 · DAYS 8–14</span>
+        <span class="week-badge" style="color:var(--amber);border-color:rgba(245,166,35,.3)">outreach</span>
+      </div>
+      <div class="week-title">Send 50 messages. Get 15 replies.</div>
+      <div class="week-tasks">
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Message all 50 targets — use the DM templates below, personalise the first line for each</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Post in LangChain #show-and-tell channel — share the agntly.io link, ask for feedback</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Post in CrewAI Discord — same message, different channel</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Post on Twitter/X — "Building a payment layer for AI agents. Would you list yours and earn per call? agntly.io" — tag 3 AI builders</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Reply to every reply within 2 hours — speed signals seriousness</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Track every response in your Airtable — interested / not interested / wants more info</div></div>
+      </div>
+      <div class="week-metric">
+        <span class="wm-label">week 2 exit criteria</span>
+        <span class="wm-val" style="color:var(--amber)">15 replies, 5 interested</span>
+      </div>
+    </div>
+
+    <!-- Week 3 -->
+    <div class="week-card">
+      <div class="week-header">
+        <span class="week-num">WEEK 3 · DAYS 15–21</span>
+        <span class="week-badge" style="color:var(--green);border-color:rgba(0,229,160,.3)">conversations</span>
+      </div>
+      <div class="week-title">Have 10 real conversations. Ask hard questions.</div>
+      <div class="week-tasks">
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Book 30-min calls with the 5+ interested people — Google Meet or Loom async</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Ask the 5 discovery questions (see below) — don't pitch, just listen</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Ask each person: "Who else do you know building agents? Can you intro me?" — get 2 referrals each</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">After each call, write 3 bullet points: what surprised you, what they cared about most, exact words they used</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Send second wave of outreach to the referrals — now you have a warm intro</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Update the Typeform based on what you're hearing — sharpen the questions</div></div>
+      </div>
+      <div class="week-metric">
+        <span class="wm-label">week 3 exit criteria</span>
+        <span class="wm-val" style="color:var(--green)">10 real conversations done</span>
+      </div>
+    </div>
+
+    <!-- Week 4 -->
+    <div class="week-card">
+      <div class="week-header">
+        <span class="week-num">WEEK 4 · DAYS 22–30</span>
+        <span class="week-badge" style="color:var(--purple);border-color:rgba(155,124,248,.3)">commit</span>
+      </div>
+      <div class="week-title">Get commitments. Run one manual transaction.</div>
+      <div class="week-tasks">
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Follow up with everyone who was interested — ask for a firm "yes I would list" or "yes I would hire"</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Find 1 builder willing to do a manual test — they build a simple agent, you connect a buyer manually</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Run the manual transaction — buyer sends you $5 USDC, you send $4.85 to the builder, you keep $0.15 (3%). First revenue.</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Write a 500-word "what I learned" post — publish on Twitter/X and LinkedIn. This attracts more builders.</div></div>
+        <div class="task-item"><div class="task-check" onclick="toggleTask(this)"></div><div class="task-text">Make the go/no-go decision using the scorecard below</div></div>
+      </div>
+      <div class="week-metric">
+        <span class="wm-label">week 4 exit criteria</span>
+        <span class="wm-val" style="color:var(--purple)">10 yes builders + 5 yes buyers + 1 tx</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S3: MESSAGE TEMPLATES -->
+<div class="section" id="messages">
+  <div class="sec-num">THE SCRIPTS</div>
+  <h2 class="sec-title">Exact messages to send.<br>Copy, personalise, send.</h2>
+  <p class="sec-desc">The first line must be specific to them — mention their repo, their tweet, their project. Everything after that is the template. Personalisation gets 3x more replies.</p>
+
+  <div class="divider-label"><span>FOR AGENT BUILDERS — SUPPLY SIDE</span></div>
+
+  <div class="msg-card">
+    <div class="msg-header">
+      <span class="msg-title">DM to GitHub repo owner / Discord member</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="msg-platform" style="color:var(--blue);border-color:rgba(77,158,245,.3)">GitHub DM / Discord</span>
+        <button class="copy-btn" onclick="copyMsg(this, 'msg1')">copy</button>
+      </div>
+    </div>
+    <div class="msg-body" id="msg1">Hey [Name] — saw your <strong>[repo name / "web scraper agent" / "CrewAI tool"]</strong> and it's exactly the kind of thing I'm thinking about.
+
+I'm building <span class="msg-highlight">Agntly</span> — a marketplace where AI agents can earn USDC every time another agent calls them. Think: you list your [agent name], set a price ($0.001–$0.01 per call), and whenever an orchestrator agent hires it, the payment settles automatically on-chain. No invoices, no billing code.
+
+Quick question — if something like this existed today, would you list your agent on it? Even a rough yes/no helps a lot.
+
+Happy to show you what it looks like: <span class="msg-highlight">agntly.io</span></div>
+  </div>
+
+  <div class="msg-card">
+    <div class="msg-header">
+      <span class="msg-title">Twitter/X reply to someone posting about their agent</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="msg-platform" style="color:var(--blue);border-color:rgba(77,158,245,.3)">Twitter/X</span>
+        <button class="copy-btn" onclick="copyMsg(this, 'msg2')">copy</button>
+      </div>
+    </div>
+    <div class="msg-body" id="msg2">This is cool — have you thought about monetising it? Building a registry where agents like this can earn USDC per call from orchestrators. Would you list this if it existed? <span class="msg-highlight">agntly.io</span></div>
+  </div>
+
+  <div class="msg-card">
+    <div class="msg-header">
+      <span class="msg-title">Discord community post (show-and-tell / general)</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="msg-platform" style="color:var(--blue);border-color:rgba(77,158,245,.3)">Discord post</span>
+        <button class="copy-btn" onclick="copyMsg(this, 'msg3')">copy</button>
+      </div>
+    </div>
+    <div class="msg-body" id="msg3">👋 Quick question for anyone building agents here —
+
+I'm validating an idea: a marketplace where AI agents can be listed and hired by other agents, with automatic USDC payment on task completion. Like npm for agents but with built-in billing.
+
+<strong>Two questions:</strong>
+1. If you've built an agent (search, code, parse, API call — anything), would you list it for $0.001–$0.01/call?
+2. If you're building an orchestrator/pipeline, would you pay per-task to use pre-built specialist agents instead of building them yourself?
+
+Not selling anything — genuinely trying to understand if this is a real problem. Here's what the registry looks like: <span class="msg-highlight">agntly.io</span>
+
+DM me or reply here 🙏</div>
+  </div>
+
+  <div class="divider-label"><span>FOR ORCHESTRATOR BUILDERS — DEMAND SIDE</span></div>
+
+  <div class="msg-card">
+    <div class="msg-header">
+      <span class="msg-title">DM to someone building a multi-agent product</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="msg-platform" style="color:var(--amber);border-color:rgba(245,166,35,.3)">LinkedIn / Twitter DM</span>
+        <button class="copy-btn" onclick="copyMsg(this, 'msg4')">copy</button>
+      </div>
+    </div>
+    <div class="msg-body" id="msg4">Hey [Name] — saw you're building [their product / pipeline]. Quick question:
+
+When your orchestrator needs to do web search, run code, or parse documents — are you building those capabilities yourself or using existing tools?
+
+I'm working on <span class="msg-highlight">Agntly</span> — a registry of pre-built AI agents you can hire per-task ($0.001–$0.01/call) with automatic escrow and settlement. Basically: instead of building a web search agent yourself, you plug in one from the registry and pay $0.002 per call.
+
+Would that save you time? Curious if this is a real pain point for you or not.</div>
+  </div>
+
+  <div class="msg-card">
+    <div class="msg-header">
+      <span class="msg-title">Cold LinkedIn message to AI product founders</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="msg-platform" style="color:var(--amber);border-color:rgba(245,166,35,.3)">LinkedIn</span>
+        <button class="copy-btn" onclick="copyMsg(this, 'msg5')">copy</button>
+      </div>
+    </div>
+    <div class="msg-body" id="msg5">Hi [Name] — I've been following [their company / product] and the multi-agent approach you're taking is exactly the space I'm focused on.
+
+One thing I keep hearing from teams building agent pipelines: they spend 40–60% of dev time building commodity sub-agents (search, parse, execute) that don't differentiate their product.
+
+I'm validating <span class="msg-highlight">Agntly</span> — a pay-per-call marketplace for AI agents. Your orchestrator hires specialist agents from the registry, pays micro-fees per task, and you focus on your core product instead of rebuilding common capabilities.
+
+Is rebuilding these utilities a real time sink for your team? Happy to share what we're building: agntly.io</div>
+  </div>
+</div>
+
+<!-- S4: DISCOVERY QUESTIONS -->
+<div class="section">
+  <div class="sec-num">THE CONVERSATIONS</div>
+  <h2 class="sec-title">5 questions to ask on every call.<br>Listen more than you talk.</h2>
+  <p class="sec-desc">These are not sales questions. They are research questions. Your job is to understand their world, not convince them of yours. The best founders shut up 80% of the time on discovery calls.</p>
+
+  <div class="two-col">
+    <div>
+      <table class="data-table">
+        <thead><tr><th>#</th><th>question</th><th>what you're testing</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td style="color:var(--t0);font-style:italic">"Walk me through the last AI agent you built or used. What did it do?"</td>
+            <td>Are they actually building agents, or just interested in the idea?</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td style="color:var(--t0);font-style:italic">"When you needed a capability your agent didn't have — like web search or code execution — what did you do?"</td>
+            <td>Do they build it themselves, use a library, or just skip it? This is the pain point.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td style="color:var(--t0);font-style:italic">"Have you ever thought about charging for your agent, or has anyone asked to use it?"</td>
+            <td>Is there latent demand on the supply side? Do they see their agent as having value?</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td style="color:var(--t0);font-style:italic">"If you could hire a pre-built search agent for $0.002 per call right now — would you, or would you build it yourself?"</td>
+            <td>This is the money question. Their answer tells you if the demand side is real.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td style="color:var(--t0);font-style:italic">"What would have to be true for you to list your agent / start using agents from a registry?"</td>
+            <td>Surfaces their real blockers — trust, reliability, price, legal, technical friction.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="callout green">
+        <div class="callout-title">The mom test rule</div>
+        Never ask "would you use this?" — people lie to be nice. Instead ask about their past behaviour: "have you ever paid for something like this?", "how did you solve this last time?", "how much did that cost you in time?" Past behaviour predicts future behaviour. Hypotheticals don't.
+      </div>
+      <div class="callout blue">
+        <div class="callout-title">The strongest signal</div>
+        Someone who says "I would pay for this right now, how do I sign up?" before you've even finished explaining — that's your early adopter. Find 10 of these people and you have enough to start building.
+      </div>
+      <div class="callout amber">
+        <div class="callout-title">What to do with "that's interesting"</div>
+        "Interesting" means no. "I'd have to think about it" means no. "Maybe in the future" means no. Only count explicit yeses as yeses. Be ruthlessly honest with yourself when tracking responses.
+      </div>
+      <div class="callout red">
+        <div class="callout-title">The one question that kills bad ideas fast</div>
+        After they say yes, ask: "If I could give you access tomorrow — would you actually use it this week?" Most people say no. The ones who say yes are your real early adopters.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S5: SIGNALS -->
+<div class="section">
+  <div class="sec-num">READING THE SIGNALS</div>
+  <h2 class="sec-title">What a real yes looks like<br>vs a polite yes.</h2>
+  <p class="sec-desc">Most people are too nice to say no directly. Learn to read the difference between genuine excitement and social validation.</p>
+
+  <div class="signal-grid">
+    <div class="signal-card">
+      <div class="signal-icon">🔥</div>
+      <div class="signal-name">Asks how to sign up</div>
+      <div class="signal-desc">They asked for access, a waitlist, or a way to get started before you mentioned it.</div>
+      <span class="signal-level strong">strong yes</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">🔥</div>
+      <div class="signal-name">Sends you their agent</div>
+      <div class="signal-desc">They linked you to their GitHub repo or shared their agent endpoint unprompted.</div>
+      <span class="signal-level strong">strong yes</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">🔥</div>
+      <div class="signal-name">Introduces you to someone</div>
+      <div class="signal-desc">They forwarded your message or tagged someone else. They wouldn't do this for something they didn't believe in.</div>
+      <span class="signal-level strong">strong yes</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">🔥</div>
+      <div class="signal-name">Asks a specific technical question</div>
+      <div class="signal-desc">"How does the escrow work?", "What chain are you on?", "Does it work with AutoGen?" — real curiosity, not politeness.</div>
+      <span class="signal-level strong">strong yes</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">⚡</div>
+      <div class="signal-name">Says "yes, definitely"</div>
+      <div class="signal-desc">A clear yes, but no action taken. Worth counting but follow up to confirm it holds.</div>
+      <span class="signal-level medium">medium signal</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">⚡</div>
+      <div class="signal-name">Clicks the link + replies</div>
+      <div class="signal-desc">They actually visited agntly.io and had a specific comment about something they saw. Shows real engagement.</div>
+      <span class="signal-level medium">medium signal</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">😶</div>
+      <div class="signal-name">"That's interesting"</div>
+      <div class="signal-desc">Almost always a polite no. They don't want to hurt your feelings. Don't count this as a yes.</div>
+      <span class="signal-level weak">weak / no</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">😶</div>
+      <div class="signal-name">"Maybe in the future"</div>
+      <div class="signal-desc">This is a no for now. The people who will use it first don't say "maybe later" — they want it now.</div>
+      <span class="signal-level weak">weak / no</span>
+    </div>
+    <div class="signal-card">
+      <div class="signal-icon">😶</div>
+      <div class="signal-name">No reply to follow-up</div>
+      <div class="signal-desc">If they said yes but don't respond to your follow-up, it wasn't a real yes. Count it as a no.</div>
+      <span class="signal-level weak">weak / no</span>
+    </div>
+  </div>
+</div>
+
+<!-- S6: GO / NO-GO SCORECARD -->
+<div class="section">
+  <div class="sec-num">THE DECISION</div>
+  <h2 class="sec-title">Go or no-go.<br>Use this scorecard at day 30.</h2>
+  <p class="sec-desc">At the end of 30 days, score yourself honestly. Every row is a signal. If you hit 6 or more green rows, you build. If you hit 4 or fewer, you pivot or kill it.</p>
+
+  <div class="scorecard">
+    <div class="sc-header">
+      <span>validation scorecard — day 30</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--t2)">be brutally honest</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 80px 80px 1fr;background:var(--bg2)">
+      <div class="sc-col-header">signal</div>
+      <div class="sc-col-header">target</div>
+      <div class="sc-col-header">yours</div>
+      <div class="sc-col-header">verdict</div>
+    </div>
+    <div class="sc-row"><div class="sc-cell">Agent builders who said clear yes</div><div class="sc-cell sc-check">≥ 10</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-0">—</div></div>
+    <div class="sc-row"><div class="sc-cell">Orchestrator builders who committed</div><div class="sc-cell sc-check">≥ 5</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-1">—</div></div>
+    <div class="sc-row"><div class="sc-cell">Discovery calls completed</div><div class="sc-cell sc-check">≥ 10</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-2">—</div></div>
+    <div class="sc-row"><div class="sc-cell">People who referred you to someone else</div><div class="sc-cell sc-check">≥ 3</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-3">—</div></div>
+    <div class="sc-row"><div class="sc-cell">Manual transactions completed (even $1)</div><div class="sc-cell sc-check">≥ 1</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-4">—</div></div>
+    <div class="sc-row"><div class="sc-cell">People who asked "how do I sign up?"</div><div class="sc-cell sc-check">≥ 5</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-5">—</div></div>
+    <div class="sc-row"><div class="sc-cell">Identified a surprising use case you didn't expect</div><div class="sc-cell sc-check">≥ 1</div><div class="sc-cell"><input type="number" min="0" max="50" value="0" style="width:48px;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:12px;padding:3px 6px;text-align:center" oninput="scorecard()"></div><div class="sc-cell" id="sv-6">—</div></div>
+    <div class="sc-row" style="background:var(--bg2)"><div class="sc-cell" style="font-weight:600;color:var(--t0)">TOTAL SCORE</div><div class="sc-cell sc-check">≥ 6/7</div><div class="sc-cell" id="sv-total" style="font-family:var(--mono);font-size:14px;font-weight:500;text-align:center">0/7</div><div class="sc-cell" id="sv-verdict" style="font-weight:600">fill in scores →</div></div>
+  </div>
+</div>
+
+<!-- S7: PROGRESS TRACKER -->
+<div class="section" id="tracker">
+  <div class="sec-num">YOUR TRACKER</div>
+  <h2 class="sec-title">Track your numbers<br>every day.</h2>
+  <p class="sec-desc">Update these daily. If a number isn't moving, something in your outreach isn't working. Adjust the message, change the channel, or ask for referrals.</p>
+
+  <div class="progress-wrap">
+    <div class="progress-title">live validation dashboard</div>
+    <div class="progress-rows">
+      <div class="progress-row">
+        <div class="pr-top"><span class="pr-label">Agent builders contacted</span><span class="pr-val" style="color:var(--blue)" id="pv-0">0 / 50</span></div>
+        <div class="pr-bar"><div class="pr-fill" id="pb-0" style="width:0%;background:var(--blue)"></div></div>
+      </div>
+      <div class="progress-row">
+        <div class="pr-top"><span class="pr-label">Replies received</span><span class="pr-val" style="color:var(--teal)" id="pv-1">0 / 15</span></div>
+        <div class="pr-bar"><div class="pr-fill" id="pb-1" style="width:0%;background:var(--teal)"></div></div>
+      </div>
+      <div class="progress-row">
+        <div class="pr-top"><span class="pr-label">Discovery calls done</span><span class="pr-val" style="color:var(--amber)" id="pv-2">0 / 10</span></div>
+        <div class="pr-bar"><div class="pr-fill" id="pb-2" style="width:0%;background:var(--amber)"></div></div>
+      </div>
+      <div class="progress-row">
+        <div class="pr-top"><span class="pr-label">Builder yeses (strong signal)</span><span class="pr-val" style="color:var(--green)" id="pv-3">0 / 10</span></div>
+        <div class="pr-bar"><div class="pr-fill" id="pb-3" style="width:0%;background:var(--green)"></div></div>
+      </div>
+      <div class="progress-row">
+        <div class="pr-top"><span class="pr-label">Orchestrator buyer commits</span><span class="pr-val" style="color:var(--amber)" id="pv-4">0 / 5</span></div>
+        <div class="pr-bar"><div class="pr-fill" id="pb-4" style="width:0%;background:var(--amber)"></div></div>
+      </div>
+      <div class="progress-row">
+        <div class="pr-top"><span class="pr-label">Manual transactions</span><span class="pr-val" style="color:var(--purple)" id="pv-5">0 / 1</span></div>
+        <div class="pr-bar"><div class="pr-fill" id="pb-5" style="width:0%;background:var(--purple)"></div></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:20px">
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.06em;margin-bottom:5px">contacted</div>
+        <input type="number" min="0" max="50" value="0" id="inp-0" oninput="updateProgress(0,50,'blue')" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:14px;padding:6px 8px;text-align:center">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.06em;margin-bottom:5px">replied</div>
+        <input type="number" min="0" max="15" value="0" id="inp-1" oninput="updateProgress(1,15,'teal')" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:14px;padding:6px 8px;text-align:center">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.06em;margin-bottom:5px">calls</div>
+        <input type="number" min="0" max="10" value="0" id="inp-2" oninput="updateProgress(2,10,'amber')" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:14px;padding:6px 8px;text-align:center">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.06em;margin-bottom:5px">builder yes</div>
+        <input type="number" min="0" max="10" value="0" id="inp-3" oninput="updateProgress(3,10,'green')" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:14px;padding:6px 8px;text-align:center">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.06em;margin-bottom:5px">buyer yes</div>
+        <input type="number" min="0" max="5" value="0" id="inp-4" oninput="updateProgress(4,5,'amber')" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:14px;padding:6px 8px;text-align:center">
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.06em;margin-bottom:5px">tx done</div>
+        <input type="number" min="0" max="1" value="0" id="inp-5" oninput="updateProgress(5,1,'purple')" style="width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--t0);font-family:var(--mono);font-size:14px;padding:6px 8px;text-align:center">
+      </div>
+    </div>
+  </div>
+
+  <div class="callout green">
+    <div class="callout-title">What happens when you hit the goals</div>
+    10 builder yeses + 5 buyer commits + 1 manual transaction = you have product-market signal. Now you go back to the PRD, hire a contractor for Phase 1, and start building the wallet service and escrow engine. The conversations you had are your first beta users — they become your earliest testers and loudest advocates.
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="position:relative;z-index:1;border-top:1px solid var(--border);padding:24px 40px;display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--t2)">
+  <span>Agntly.io · 30-day validation playbook</span>
+  <div style="display:flex;align-items:center;gap:5px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.18);padding:4px 10px;color:var(--green);font-size:10px">
+    <div style="width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite"></div>
+    validation phase active
+  </div>
+</div>
+
+<script>
+// Task checkboxes
+function toggleTask(el) {
+  el.classList.toggle('done');
+  const text = el.nextElementSibling;
+  text.classList.toggle('done-text');
+  el.textContent = el.classList.contains('done') ? '✓' : '';
+}
+
+// Copy messages
+function copyMsg(btn, id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Scorecard
+const targets = [10, 5, 10, 3, 1, 5, 1];
+function scorecard() {
+  const inputs = document.querySelectorAll('.scorecard input[type=number]');
+  let score = 0;
+  inputs.forEach((inp, i) => {
+    const val = parseInt(inp.value) || 0;
+    const met = val >= targets[i];
+    const cell = document.getElementById('sv-' + i);
+    if(met) { score++; cell.textContent = '✓ pass'; cell.style.color = 'var(--green)'; }
+    else { cell.textContent = val + ' / ' + targets[i]; cell.style.color = 'var(--red)'; }
+  });
+  const total = document.getElementById('sv-total');
+  const verdict = document.getElementById('sv-verdict');
+  total.textContent = score + '/7';
+  if(score >= 6) {
+    total.style.color = 'var(--green)';
+    verdict.textContent = '🚀 BUILD IT';
+    verdict.style.color = 'var(--green)';
+  } else if(score >= 4) {
+    total.style.color = 'var(--amber)';
+    verdict.textContent = '⚡ PROMISING — KEEP GOING';
+    verdict.style.color = 'var(--amber)';
+  } else {
+    total.style.color = 'var(--red)';
+    verdict.textContent = '🔄 PIVOT OR DIG DEEPER';
+    verdict.style.color = 'var(--red)';
+  }
+}
+
+// Progress tracker
+function updateProgress(idx, max, color) {
+  const val = Math.min(parseInt(document.getElementById('inp-'+idx).value)||0, max);
+  const pct = Math.min((val/max)*100, 100);
+  document.getElementById('pb-'+idx).style.width = pct + '%';
+  const labels = ['/ 50','/ 15','/ 10','/ 10','/ 5','/ 1'];
+  document.getElementById('pv-'+idx).textContent = val + ' ' + labels[idx];
+}
+</script>
+</body>
+</html>

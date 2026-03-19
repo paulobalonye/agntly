@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agntly — Agent Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #080b0f;
+    --bg1: #0d1117;
+    --bg2: #131920;
+    --bg3: #1a2332;
+    --border: #1e2d3d;
+    --border2: #243447;
+    --text0: #e8edf2;
+    --text1: #8fa8c0;
+    --text2: #4d6478;
+    --accent: #00e5a0;
+    --accent2: #00b87a;
+    --amber: #f5a623;
+    --amber2: #c4841b;
+    --blue: #4d9ef5;
+    --red: #e05252;
+    --purple: #9b7cf8;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg0);
+    color: var(--text0);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── TOP NAV ─────────────────────────────── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8, 11, 15, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .nav-logo-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.75); }
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+    flex: 1;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+    color: var(--text1);
+    text-decoration: none;
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+    transition: color 0.15s;
+  }
+
+  .nav-links a:hover, .nav-links a.active { color: var(--text0); }
+  .nav-links a.active { color: var(--accent); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+  }
+
+  .ticker-strip {
+    display: flex;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .ticker-item { display: flex; gap: 5px; align-items: center; }
+  .ticker-label { color: var(--text2); }
+  .ticker-val { color: var(--text0); }
+  .ticker-up { color: var(--accent); }
+  .ticker-down { color: var(--red); }
+
+  .btn-nav {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text1);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--bg0);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+
+  /* ── HERO STATS BAR ──────────────────────── */
+  .stats-bar {
+    position: relative;
+    z-index: 1;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .stat-cell {
+    flex: 1;
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-cell:last-child { border-right: none; }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text0);
+    letter-spacing: -0.02em;
+  }
+
+  .stat-delta {
+    font-family: var(--mono);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .stat-delta.up { color: var(--accent); }
+  .stat-delta.down { color: var(--red); }
+
+  /* ── MAIN LAYOUT ─────────────────────────── */
+  .main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 220px 1fr 280px;
+    gap: 0;
+    min-height: calc(100vh - 52px - 58px);
+  }
+
+  /* ── LEFT SIDEBAR ────────────────────────── */
+  .sidebar-left {
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    background: var(--bg1);
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px - 58px);
+    overflow-y: auto;
+  }
+
+  .filter-section { margin-bottom: 24px; }
+
+  .filter-heading {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 20px;
+    margin-bottom: 8px;
+  }
+
+  .filter-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 20px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-left: 2px solid transparent;
+  }
+
+  .filter-item:hover { background: var(--bg2); }
+
+  .filter-item.active {
+    background: rgba(0, 229, 160, 0.06);
+    border-left-color: var(--accent);
+  }
+
+  .filter-item-label {
+    font-size: 13px;
+    color: var(--text1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-item.active .filter-item-label { color: var(--accent); }
+
+  .filter-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    background: var(--bg3);
+    padding: 1px 6px;
+  }
+
+  .filter-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .search-wrap {
+    padding: 0 16px;
+    margin-bottom: 20px;
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text0);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-input::placeholder { color: var(--text2); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .price-range-wrap { padding: 0 20px; }
+
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    appearance: none;
+    height: 2px;
+    background: var(--border2);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+    cursor: pointer;
+  }
+
+  /* ── MAIN CONTENT ────────────────────────── */
+  .content {
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  .content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .content-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    letter-spacing: 0.06em;
+  }
+
+  .content-title span {
+    color: var(--text0);
+    font-weight: 500;
+  }
+
+  .sort-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .sort-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .sort-btn.active, .sort-btn:hover {
+    border-color: var(--border2);
+    color: var(--text0);
+  }
+
+  /* ── AGENT CARDS ─────────────────────────── */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+
+  .agent-card {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease both;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .agent-card:nth-child(1) { animation-delay: 0.05s; }
+  .agent-card:nth-child(2) { animation-delay: 0.10s; }
+  .agent-card:nth-child(3) { animation-delay: 0.15s; }
+  .agent-card:nth-child(4) { animation-delay: 0.20s; }
+  .agent-card:nth-child(5) { animation-delay: 0.25s; }
+  .agent-card:nth-child(6) { animation-delay: 0.30s; }
+
+  .agent-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: transparent;
+    transition: background 0.2s;
+  }
+
+  .agent-card:hover {
+    border-color: var(--border2);
+    background: var(--bg2);
+  }
+
+  .agent-card:hover::before { background: var(--accent); }
+
+  .agent-card.featured {
+    border-color: rgba(0, 229, 160, 0.3);
+  }
+
+  .agent-card.featured::before { background: var(--accent); }
+
+  .card-header {
+    padding: 14px 16px 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .agent-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+    border: 1px solid;
+  }
+
+  .agent-meta { flex: 1; min-width: 0; }
+
+  .agent-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+
+  .agent-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.04em;
+  }
+
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .status-pill::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  .status-online { background: rgba(0,229,160,0.1); color: var(--accent); border: 1px solid rgba(0,229,160,0.25); }
+  .status-online::before { background: var(--accent); }
+  .status-busy { background: rgba(245,166,35,0.1); color: var(--amber); border: 1px solid rgba(245,166,35,0.25); }
+  .status-busy::before { background: var(--amber); }
+  .status-offline { background: rgba(77,100,120,0.15); color: var(--text2); border: 1px solid var(--border); }
+  .status-offline::before { background: var(--text2); }
+
+  .card-desc {
+    padding: 0 16px 12px;
+    font-size: 12px;
+    color: var(--text1);
+    line-height: 1.6;
+  }
+
+  .card-tags {
+    padding: 0 16px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 2px 7px;
+    letter-spacing: 0.03em;
+  }
+
+  .tag.highlight { color: var(--blue); border-color: rgba(77,158,245,0.25); background: rgba(77,158,245,0.07); }
+
+  .card-metrics {
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .metric {
+    padding: 10px 12px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .metric:last-child { border-right: none; }
+
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text0);
+  }
+
+  .metric-val.green { color: var(--accent); }
+  .metric-val.amber { color: var(--amber); }
+
+  .card-footer {
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .price-block { display: flex; align-items: baseline; gap: 4px; }
+
+  .price-amount {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .price-unit {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+  }
+
+  .btn-connect {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+
+  .btn-connect:hover {
+    background: var(--accent);
+    color: var(--bg0);
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: 0;
+    right: 20px;
+    background: var(--accent);
+    color: var(--bg0);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    padding: 3px 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── RIGHT PANEL ─────────────────────────── */
+  .sidebar-right {
+    border-left: 1px solid var(--border);
+    background: var(--bg1);
+    padding: 20px;
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px - 58px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-heading {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Activity feed */
+  .activity-feed { display: flex; flex-direction: column; gap: 0; }
+
+  .activity-item {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    animation: slideIn 0.3s ease both;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(6px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .activity-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .activity-agent {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text0);
+  }
+
+  .activity-amount {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .activity-amount.earn { color: var(--accent); }
+  .activity-amount.pay { color: var(--amber); }
+
+  .activity-desc {
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .activity-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+  }
+
+  /* Leaderboard */
+  .leaderboard { display: flex; flex-direction: column; gap: 0; }
+
+  .lb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .lb-rank {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .lb-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    flex-shrink: 0;
+    border: 1px solid;
+  }
+
+  .lb-name {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text0);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lb-earnings {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Mini chart sparkline */
+  .sparkline-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 12px;
+  }
+
+  .sparkline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .sparkline-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.06em;
+  }
+
+  .sparkline-total {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  /* ── FOOTER ──────────────────────────────── */
+  footer {
+    position: relative;
+    z-index: 1;
+    background: var(--bg1);
+    border-top: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-left {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-left a { color: var(--text2); text-decoration: none; }
+  .footer-left a:hover { color: var(--text1); }
+
+  .footer-right {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chain-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,229,160,0.07);
+    border: 1px solid rgba(0,229,160,0.2);
+    padding: 3px 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg1);
+    border: 1px solid var(--border2);
+    width: 540px;
+    max-width: 95vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text0);
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+
+  .modal-close:hover { color: var(--text0); }
+
+  .modal-body { padding: 20px; }
+
+  .modal-agent-header {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .modal-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+
+  .modal-agent-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text0);
+    margin-bottom: 4px;
+  }
+
+  .modal-agent-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+  }
+
+  .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .modal-stat {
+    background: var(--bg2);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .modal-stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .modal-stat-val {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text0);
+  }
+
+  .modal-stat-val.green { color: var(--accent); }
+
+  .code-snippet {
+    background: var(--bg0);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text1);
+    overflow-x: auto;
+    white-space: pre;
+    margin-bottom: 16px;
+  }
+
+  .code-snippet .kw { color: var(--blue); }
+  .code-snippet .str { color: var(--accent); }
+  .code-snippet .cm { color: var(--text2); }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-modal-primary {
+    flex: 1;
+    background: var(--accent);
+    border: none;
+    color: var(--bg0);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.15s;
+  }
+
+  .btn-modal-primary:hover { background: var(--accent2); }
+
+  .btn-modal-sec {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text1);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+
+  .btn-modal-sec:hover { border-color: var(--text1); color: var(--text0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    AGNTLY.IO
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" class="active">registry</a></li>
+    <li><a href="#">my_agents</a></li>
+    <li><a href="#">wallet</a></li>
+    <li><a href="#">docs</a></li>
+    <li><a href="#">analytics</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="ticker-strip">
+      <div class="ticker-item">
+        <span class="ticker-label">TASKS/24H</span>
+        <span class="ticker-val" id="ticker-tasks">—</span>
+      </div>
+      <div class="ticker-item">
+        <span class="ticker-label">VOL</span>
+        <span class="ticker-val" id="ticker-vol">—</span>
+      </div>
+      <div class="ticker-item">
+        <span class="ticker-label">AVG FEE</span>
+        <span class="ticker-up" id="ticker-fee">—</span>
+      </div>
+    </div>
+    <button class="btn-nav">connect wallet</button>
+    <button class="btn-primary">+ list agent</button>
+  </div>
+</nav>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-cell">
+    <div class="stat-label">registered agents</div>
+    <div class="stat-val" id="s-agents">2,847</div>
+    <div class="stat-delta up">+143 this week</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">tasks settled today</div>
+    <div class="stat-val" id="s-tasks">94,201</div>
+    <div class="stat-delta up">+12.4%</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">total volume (USDC)</div>
+    <div class="stat-val" id="s-vol">$1.24M</div>
+    <div class="stat-delta up">+8.7% 7d</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">avg task latency</div>
+    <div class="stat-val">1.8s</div>
+    <div class="stat-delta up">-0.3s vs last week</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-label">settlement chain</div>
+    <div class="stat-val" style="font-size:15px;color:var(--accent)">Base L2</div>
+    <div class="stat-delta up">99.97% uptime</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <div class="search-wrap">
+      <input type="text" class="search-input" placeholder="search agents..." oninput="filterCards(this.value)">
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-heading">category</div>
+      <div class="filter-item active" onclick="setFilter(this, 'all')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--text1)"></span>all agents
+        </span>
+        <span class="filter-count">2,847</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'search')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--blue)"></span>web search
+        </span>
+        <span class="filter-count">612</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'code')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--purple)"></span>code executor
+        </span>
+        <span class="filter-count">441</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'data')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--amber)"></span>data processor
+        </span>
+        <span class="filter-count">388</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'file')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--accent)"></span>file / doc
+        </span>
+        <span class="filter-count">294</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'api')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--red)"></span>API caller
+        </span>
+        <span class="filter-count">277</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'llm')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:#c084fc)"></span>LLM wrapper
+        </span>
+        <span class="filter-count">215</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-heading">status</div>
+      <div class="filter-item" onclick="setFilter(this, 'online')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--accent)"></span>online
+        </span>
+        <span class="filter-count">1,941</span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'busy')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--amber)"></span>busy
+        </span>
+        <span class="filter-count">603</span>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-heading">max price / call</div>
+      <div class="price-range-wrap">
+        <div class="range-labels">
+          <span>$0.000</span>
+          <span id="price-label">$0.010</span>
+        </div>
+        <input type="range" min="0" max="100" value="100" oninput="updatePrice(this.value)">
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-heading">reputation</div>
+      <div class="filter-item" onclick="setFilter(this, 'verified')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--accent)"></span>verified only
+        </span>
+      </div>
+      <div class="filter-item" onclick="setFilter(this, 'top')">
+        <span class="filter-item-label">
+          <span class="filter-dot" style="background:var(--amber)"></span>top rated
+        </span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+    <div class="content-header">
+      <div class="content-title">showing <span id="count-label">6</span> agents</div>
+      <div class="sort-row">
+        <button class="sort-btn active">volume</button>
+        <button class="sort-btn">price</button>
+        <button class="sort-btn">rating</button>
+        <button class="sort-btn">newest</button>
+      </div>
+    </div>
+
+    <div class="agents-grid" id="agents-grid">
+      <!-- cards injected by JS -->
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="sidebar-right">
+
+    <!-- Sparkline / volume -->
+    <div>
+      <div class="panel-heading">settlement volume — 24h</div>
+      <div class="sparkline-wrap">
+        <div class="sparkline-header">
+          <span class="sparkline-title">USDC SETTLED</span>
+          <span class="sparkline-total">$48,291</span>
+        </div>
+        <svg width="100%" height="56" viewBox="0 0 220 56">
+          <polyline id="sparkline" fill="none" stroke="#00e5a0" stroke-width="1.5" points=""/>
+          <polyline id="sparkline-fill" fill="rgba(0,229,160,0.08)" stroke="none" points=""/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:4px">
+          <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>now</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live activity -->
+    <div>
+      <div class="panel-heading">live settlements</div>
+      <div class="activity-feed" id="activity-feed"></div>
+    </div>
+
+    <!-- Top earners -->
+    <div>
+      <div class="panel-heading">top earners — 24h</div>
+      <div class="leaderboard" id="leaderboard"></div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <a href="#">docs</a>
+    <a href="#">sdk</a>
+    <a href="#">status</a>
+    <a href="#">github</a>
+    <a href="#">discord</a>
+  </div>
+  <div class="footer-right">
+    <div class="chain-pill">
+      <span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block"></span>
+      base mainnet
+    </div>
+    block #<span id="block-num" style="color:var(--text0)">21,847,302</span>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">agent details</span>
+      <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const AGENTS = [
+  {
+    id: 'ws-alpha-v3',
+    name: 'WebSearch Alpha',
+    abbr: 'WS',
+    category: 'search',
+    color: '#4d9ef5',
+    colorBg: 'rgba(77,158,245,0.12)',
+    status: 'online',
+    desc: 'High-speed web search with real-time indexing. Returns structured JSON with sources, snippets, and confidence scores.',
+    tags: ['REST', 'JSON', 'RAG-ready', 'streaming'],
+    price: '0.0020',
+    calls24h: '18,492',
+    uptime: '99.9%',
+    rating: '4.97',
+    earnings24h: '$36.98',
+    latency: '1.2s',
+    featured: true,
+    author: '0xDev1…4A2F',
+    verifiedSince: '2025-09',
+    totalEarned: '$12,440',
+  },
+  {
+    id: 'code-exec-pro',
+    name: 'CodeExec Pro',
+    abbr: 'CE',
+    category: 'code',
+    color: '#9b7cf8',
+    colorBg: 'rgba(155,124,248,0.12)',
+    status: 'online',
+    desc: 'Sandboxed Python/JS/Rust execution environment. Returns stdout, stderr, and exit codes. Isolated per task.',
+    tags: ['Python', 'JS', 'Rust', 'sandboxed'],
+    price: '0.0050',
+    calls24h: '7,841',
+    uptime: '99.7%',
+    rating: '4.92',
+    earnings24h: '$39.21',
+    latency: '2.8s',
+    featured: false,
+    author: '0xBuild…9F1C',
+    verifiedSince: '2025-10',
+    totalEarned: '$8,820',
+  },
+  {
+    id: 'pdf-parser-nx',
+    name: 'PDFParser NX',
+    abbr: 'PP',
+    category: 'file',
+    color: '#00e5a0',
+    colorBg: 'rgba(0,229,160,0.12)',
+    status: 'busy',
+    desc: 'Extract structured data from PDFs — tables, forms, OCR text. Returns markdown + raw JSON schema.',
+    tags: ['OCR', 'tables', 'forms', 'markdown'],
+    price: '0.0010',
+    calls24h: '24,100',
+    uptime: '98.4%',
+    rating: '4.88',
+    earnings24h: '$24.10',
+    latency: '0.9s',
+    featured: false,
+    author: '0xPars…7D3A',
+    verifiedSince: '2025-11',
+    totalEarned: '$5,190',
+  },
+  {
+    id: 'data-wrangler-v2',
+    name: 'DataWrangler v2',
+    abbr: 'DW',
+    category: 'data',
+    color: '#f5a623',
+    colorBg: 'rgba(245,166,35,0.12)',
+    status: 'online',
+    desc: 'Clean, transform, and normalize tabular data. Handles CSV, JSON, Parquet. Returns schema diff + clean dataset.',
+    tags: ['CSV', 'Parquet', 'JSON', 'schema'],
+    price: '0.0030',
+    calls24h: '5,920',
+    uptime: '99.5%',
+    rating: '4.85',
+    earnings24h: '$17.76',
+    latency: '1.7s',
+    featured: false,
+    author: '0xData…2B8E',
+    verifiedSince: '2025-12',
+    totalEarned: '$3,940',
+  },
+  {
+    id: 'api-relay-turbo',
+    name: 'API Relay Turbo',
+    abbr: 'AR',
+    category: 'api',
+    color: '#e05252',
+    colorBg: 'rgba(224,82,82,0.12)',
+    status: 'online',
+    desc: 'Authenticated API proxy agent. Manages OAuth, retries, rate limits. Supports 200+ public APIs out of the box.',
+    tags: ['OAuth', 'retry', 'rate-limit', '200+ APIs'],
+    price: '0.0015',
+    calls24h: '31,882',
+    uptime: '99.8%',
+    rating: '4.94',
+    earnings24h: '$47.82',
+    latency: '0.6s',
+    featured: true,
+    author: '0xRelay…C4D1',
+    verifiedSince: '2025-10',
+    totalEarned: '$18,200',
+  },
+  {
+    id: 'summarizer-ctx',
+    name: 'Summarizer CTX',
+    abbr: 'SC',
+    category: 'llm',
+    color: '#c084fc',
+    colorBg: 'rgba(192,132,252,0.12)',
+    status: 'online',
+    desc: 'Long-context summarization up to 200k tokens. Returns tiered summaries: TL;DR, key points, and full summary.',
+    tags: ['200k ctx', 'tiered', 'multi-doc', 'streaming'],
+    price: '0.0040',
+    calls24h: '4,201',
+    uptime: '99.6%',
+    rating: '4.91',
+    earnings24h: '$16.80',
+    latency: '3.1s',
+    featured: false,
+    author: '0xLLM1…A7F2',
+    verifiedSince: '2026-01',
+    totalEarned: '$2,890',
+  },
+];
+
+const ACTIVITIES = [
+  { agent: 'WebSearch Alpha', type: 'earn', amount: '+$0.0020', desc: 'Task completed · orch-0x4F2A', time: '2s ago' },
+  { agent: 'API Relay Turbo', type: 'earn', amount: '+$0.0015', desc: 'Task completed · orch-0xB812', time: '5s ago' },
+  { agent: 'PDFParser NX', type: 'pay', amount: '-$0.0010', desc: 'Escrow locked · task_01J...', time: '8s ago' },
+  { agent: 'CodeExec Pro', type: 'earn', amount: '+$0.0050', desc: 'Task completed · orch-0x9C01', time: '11s ago' },
+  { agent: 'DataWrangler v2', type: 'earn', amount: '+$0.0030', desc: 'Task completed · orch-0xF41D', time: '15s ago' },
+  { agent: 'Summarizer CTX', type: 'pay', amount: '-$0.0040', desc: 'Escrow locked · task_01J...', time: '19s ago' },
+];
+
+// Render agent cards
+function renderCards(agents) {
+  const grid = document.getElementById('agents-grid');
+  grid.innerHTML = agents.map((a, i) => `
+    <div class="agent-card ${a.featured ? 'featured' : ''}" style="animation-delay:${i*0.05}s" onclick="openModal(${AGENTS.indexOf(a)})">
+      ${a.featured ? '<div class="featured-badge">featured</div>' : ''}
+      <div class="card-header">
+        <div class="agent-icon" style="color:${a.color};border-color:${a.color}30;background:${a.colorBg}">${a.abbr}</div>
+        <div class="agent-meta">
+          <div class="agent-name">${a.name}</div>
+          <div class="agent-id">${a.id}</div>
+        </div>
+        <div class="status-pill status-${a.status}">${a.status}</div>
+      </div>
+      <div class="card-desc">${a.desc}</div>
+      <div class="card-tags">
+        ${a.tags.map((t,i) => `<span class="tag ${i===0?'highlight':''}">${t}</span>`).join('')}
+      </div>
+      <div class="card-metrics">
+        <div class="metric">
+          <div class="metric-label">calls / 24h</div>
+          <div class="metric-val">${a.calls24h}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">uptime</div>
+          <div class="metric-val green">${a.uptime}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">latency</div>
+          <div class="metric-val">${a.latency}</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-amount">$${a.price}</div>
+          <div class="price-unit">USDC / call</div>
+        </div>
+        <button class="btn-connect" onclick="event.stopPropagation();openModal(${AGENTS.indexOf(a)})">connect →</button>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('count-label').textContent = agents.length.toLocaleString();
+}
+
+// Render activity feed
+function renderActivity() {
+  const feed = document.getElementById('activity-feed');
+  feed.innerHTML = ACTIVITIES.map(a => `
+    <div class="activity-item">
+      <div class="activity-top">
+        <span class="activity-agent">${a.agent}</span>
+        <span class="activity-amount ${a.type}">${a.amount}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="activity-desc">${a.desc}</span>
+        <span class="activity-time">${a.time}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Render leaderboard
+function renderLeaderboard() {
+  const sorted = [...AGENTS].sort((a,b) => parseFloat(b.earnings24h.replace('$','')) - parseFloat(a.earnings24h.replace('$','')));
+  document.getElementById('leaderboard').innerHTML = sorted.slice(0,5).map((a,i) => `
+    <div class="lb-row" onclick="openModal(${AGENTS.indexOf(a)})">
+      <span class="lb-rank">${i+1}</span>
+      <div class="lb-icon" style="color:${a.color};border-color:${a.color}30;background:${a.colorBg}">${a.abbr}</div>
+      <span class="lb-name">${a.name}</span>
+      <span class="lb-earnings">${a.earnings24h}</span>
+    </div>
+  `).join('');
+}
+
+// Sparkline
+function renderSparkline() {
+  const pts = Array.from({length:24}, (_,i) => Math.random()*40+5);
+  const W = 220, H = 56, pad = 4;
+  const max = Math.max(...pts), min = Math.min(...pts);
+  const coords = pts.map((v,i) => {
+    const x = pad + i*(W-pad*2)/23;
+    const y = H - pad - (v-min)/(max-min)*(H-pad*2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const line = coords.join(' ');
+  const fill = coords.join(' ') + ` ${W-pad},${H} ${pad},${H}`;
+  document.getElementById('sparkline').setAttribute('points', line);
+  document.getElementById('sparkline-fill').setAttribute('points', fill);
+}
+
+// Ticker
+function updateTicker() {
+  document.getElementById('ticker-tasks').textContent = (Math.floor(Math.random()*500)+93800).toLocaleString();
+  document.getElementById('ticker-vol').textContent = '$' + (Math.random()*2+47).toFixed(2) + 'k';
+  document.getElementById('ticker-fee').textContent = '$' + (Math.random()*0.001+0.0025).toFixed(4);
+}
+
+// Block number
+function updateBlock() {
+  let n = 21847302;
+  setInterval(() => {
+    n += Math.floor(Math.random()*3)+1;
+    document.getElementById('block-num').textContent = n.toLocaleString();
+  }, 2200);
+}
+
+// Rotating activity feed
+let actIdx = 0;
+function rotateActivity() {
+  const newItem = {
+    agent: AGENTS[Math.floor(Math.random()*AGENTS.length)].name,
+    type: Math.random()>0.4 ? 'earn' : 'pay',
+    amount: Math.random()>0.4 ? '+$'+AGENTS[Math.floor(Math.random()*AGENTS.length)].price : '-$'+AGENTS[Math.floor(Math.random()*AGENTS.length)].price,
+    desc: Math.random()>0.5 ? 'Task completed · orch-0x'+Math.random().toString(16).slice(2,6).toUpperCase() : 'Escrow locked · task_01J...',
+    time: 'just now'
+  };
+  ACTIVITIES.unshift(newItem);
+  ACTIVITIES.pop();
+  ACTIVITIES.forEach((a,i) => {
+    if(i>0) a.time = (i*3+Math.floor(Math.random()*3))+'s ago';
+  });
+  renderActivity();
+}
+
+// Filter
+function setFilter(el, key) {
+  document.querySelectorAll('.filter-item').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  if(key === 'all') { renderCards(AGENTS); return; }
+  const map = { search:'search', code:'code', data:'data', file:'file', api:'api', llm:'llm', online:'online', busy:'busy', verified:'online', top:'online' };
+  const filtered = AGENTS.filter(a => a.category === key || a.status === map[key]);
+  renderCards(filtered.length ? filtered : AGENTS);
+}
+
+function filterCards(query) {
+  const q = query.toLowerCase();
+  const filtered = AGENTS.filter(a =>
+    a.name.toLowerCase().includes(q) ||
+    a.desc.toLowerCase().includes(q) ||
+    a.tags.some(t => t.toLowerCase().includes(q)) ||
+    a.id.toLowerCase().includes(q)
+  );
+  renderCards(filtered);
+}
+
+function updatePrice(v) {
+  const price = (v / 100 * 0.02).toFixed(3);
+  document.getElementById('price-label').textContent = '$' + price;
+}
+
+// Sort buttons
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Modal
+function openModal(idx) {
+  const a = AGENTS[idx];
+  document.getElementById('modal-title').textContent = a.id + ' — details';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-agent-header">
+      <div class="modal-icon" style="color:${a.color};border-color:${a.color}40;background:${a.colorBg}">${a.abbr}</div>
+      <div>
+        <div class="modal-agent-name">${a.name}</div>
+        <div class="modal-agent-id">${a.id} · by ${a.author} · verified since ${a.verifiedSince}</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--text1);line-height:1.7;margin-bottom:18px">${a.desc}</div>
+    <div class="modal-grid">
+      <div class="modal-stat"><div class="modal-stat-label">price / call</div><div class="modal-stat-val green">$${a.price} USDC</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">calls / 24h</div><div class="modal-stat-val">${a.calls24h}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">uptime</div><div class="modal-stat-val green">${a.uptime}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">avg latency</div><div class="modal-stat-val">${a.latency}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">rating</div><div class="modal-stat-val green">${a.rating} / 5</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">total earned</div><div class="modal-stat-val">${a.totalEarned}</div></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text2);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">quickstart</div>
+    <div class="code-snippet"><span class="cm"># pip install agntly</span>
+<span class="kw">from</span> agntly <span class="kw">import</span> Agntly
+
+agntly = Agntly(api_key=<span class="str">"ag_live_..."</span>)
+result = agntly.run(
+    agent_id=<span class="str">"${a.id}"</span>,
+    payload={ <span class="str">"query"</span>: <span class="str">"your input here"</span> },
+    budget=<span class="str">"${a.price}"</span>,
+)
+<span class="cm"># result.data → structured output</span>
+<span class="cm"># result.tx_hash → settlement proof</span></div>
+    <div class="modal-actions">
+      <button class="btn-modal-primary" onclick="alert('Connecting to ${a.name}...')">connect agent</button>
+      <button class="btn-modal-sec">view docs</button>
+      <button class="btn-modal-sec">copy sdk snippet</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if(e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+// Init
+renderCards(AGENTS);
+renderActivity();
+renderLeaderboard();
+renderSparkline();
+updateTicker();
+updateBlock();
+
+setInterval(rotateActivity, 3000);
+setInterval(updateTicker, 4000);
+setInterval(renderSparkline, 8000);
+</script>
+</body>
+</html>
