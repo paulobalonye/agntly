@@ -4,12 +4,20 @@ export type AgentStatus = 'active' | 'paused' | 'delisted';
 export type TaskStatus = 'pending' | 'escrowed' | 'dispatched' | 'complete' | 'failed' | 'disputed';
 export type EscrowState = 'locked' | 'released' | 'refunded' | 'disputed';
 export type WebhookEvent =
+  | 'task.created'
   | 'task.escrowed'
+  | 'task.dispatched'
   | 'task.completed'
   | 'task.failed'
   | 'task.disputed'
+  | 'escrow.locked'
+  | 'escrow.released'
+  | 'escrow.refunded'
+  | 'escrow.failed'
   | 'wallet.funded'
   | 'wallet.withdrawn'
+  | 'wallet.locked'
+  | 'wallet.unlocked'
   | 'agent.verified';
 
 export interface User {
