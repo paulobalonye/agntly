@@ -27,12 +27,14 @@ async function startEventLoop() {
           await settlementService.submitRefund(message.data);
         } else if (message.type === 'escrow.dispute_resolved') {
           await settlementService.submitDisputeResolution(message.data);
+        } else if (message.type === 'wallet.withdrawn') {
+          await settlementService.submitWithdrawal(message.data);
         }
       } catch (err) {
         app.log.error({ err, eventId: message.id }, 'Settlement processing failed');
       }
     },
-    ['escrow.released', 'escrow.refunded', 'escrow.dispute_resolved'],
+    ['escrow.released', 'escrow.refunded', 'escrow.dispute_resolved', 'wallet.withdrawn'],
   );
 }
 
