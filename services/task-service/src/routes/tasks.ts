@@ -13,8 +13,8 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
   app.post('/', async (request, reply) => {
     const parsed = createTaskSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid task request'));
-    const task = await service.createTask('demo-user', parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
-    return reply.status(202).send(createApiResponse(task));
+    const { task, completionToken } = await service.createTask('demo-user', parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
+    return reply.status(202).send(createApiResponse({ ...task, completionToken }));
   });
 
   app.get('/:taskId', async (request, reply) => {
@@ -24,14 +24,25 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(200).send(createApiResponse(task));
   });
 
+  const completeSchema = z.object({
+    result: z.record(z.unknown()),
+    completionToken: z.string().startsWith('ctk_'),
+    proof: z.string().optional(),
+  });
+
   app.post('/:taskId/complete', async (request, reply) => {
     const { taskId } = request.params as { taskId: string };
-    const body = request.body as { result: Record<string, unknown>; proof?: string };
+    const parsed = completeSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send(createErrorResponse('Invalid request: completionToken is required'));
+    }
     try {
-      const task = await service.completeTask(taskId, body.result);
+      const task = await service.completeTask(taskId, parsed.data.result, parsed.data.completionToken);
       return reply.status(200).send(createApiResponse(task));
     } catch (err) {
-      return reply.status(400).send(createErrorResponse(err instanceof Error ? err.message : 'Complete failed'));
+      const msg = err instanceof Error ? err.message : 'Complete failed';
+      const status = msg.includes('completion token') ? 403 : 400;
+      return reply.status(status).send(createErrorResponse(msg));
     }
   });
 

@@ -1,4 +1,4 @@
-import { generateId, calculateFee, DEFAULT_TASK_TIMEOUT_MS } from '@agntly/shared';
+import { generateId, calculateFee, DEFAULT_TASK_TIMEOUT_MS, generateCompletionToken, verifyCompletionToken } from '@agntly/shared';
 import type { EventBus } from '@agntly/shared';
 import type { TaskRepository, TaskRow } from '../repositories/task-repository.js';
 
@@ -14,7 +14,7 @@ export class TaskService {
     payload: Record<string, unknown>,
     budget: string,
     timeoutMs?: number,
-  ): Promise<TaskRow> {
+  ): Promise<{ task: TaskRow; completionToken: string }> {
     const id = generateId('tsk');
     const { fee } = calculateFee(budget);
     const timeout = timeoutMs ?? DEFAULT_TASK_TIMEOUT_MS;
@@ -47,7 +47,8 @@ export class TaskService {
       });
     }
 
-    return task;
+    const completionToken = generateCompletionToken(id, agentId);
+    return { task, completionToken };
   }
 
   async getTask(taskId: string): Promise<TaskRow | null> {
@@ -79,12 +80,24 @@ export class TaskService {
     return task;
   }
 
-  async completeTask(taskId: string, result: Record<string, unknown>): Promise<TaskRow> {
-    const createdAt = (await this.repo.findById(taskId))?.createdAt;
+  async completeTask(
+    taskId: string,
+    result: Record<string, unknown>,
+    completionToken: string,
+  ): Promise<TaskRow> {
+    const task = await this.repo.findById(taskId);
+    if (!task) throw new Error('Task not found');
+
+    // Anti-spoofing: verify the caller has the valid completion token
+    if (!verifyCompletionToken(completionToken, taskId, task.agentId)) {
+      throw new Error('Invalid completion token — only the assigned agent can complete this task');
+    }
+
+    const createdAt = task.createdAt;
     const latencyMs = createdAt !== undefined ? Date.now() - createdAt.getTime() : null;
     const settleTx = `0x${Buffer.from(taskId).toString('hex').padEnd(64, 'f').slice(0, 64)}`;
 
-    const task = await this.repo.transition(
+    const completedTask = await this.repo.transition(
       taskId,
       ['escrowed', 'dispatched'],
       'complete',
@@ -95,28 +108,28 @@ export class TaskService {
       },
     );
 
-    if (!task) {
+    if (!completedTask) {
       const current = await this.repo.findById(taskId);
       const stateInfo = current ? `current status: ${current.status}` : 'task not found';
       throw new Error(`Cannot complete task ${taskId}: ${stateInfo}`);
     }
 
     await this.repo.addAuditEntry({
-      taskId: task.id,
+      taskId: completedTask.id,
       status: 'complete',
-      details: `Task completed in ${task.latencyMs ?? latencyMs}ms`,
+      details: `Task completed in ${completedTask.latencyMs ?? latencyMs}ms`,
     });
 
     if (this.eventBus) {
       await this.eventBus.publish('task.completed', {
-        taskId: task.id,
+        taskId: completedTask.id,
         result,
-        latencyMs: task.latencyMs,
-        settleTx: task.settleTx,
+        latencyMs: completedTask.latencyMs,
+        settleTx: completedTask.settleTx,
       });
     }
 
-    return task;
+    return completedTask;
   }
 
   async disputeTask(taskId: string, reason: string): Promise<TaskRow> {
