@@ -14,6 +14,11 @@ export type WebhookEvent =
   | 'escrow.released'
   | 'escrow.refunded'
   | 'escrow.failed'
+  | 'escrow.dispute_opened'
+  | 'escrow.dispute_resolved'
+  | 'settlement.submitted'
+  | 'settlement.confirmed'
+  | 'settlement.failed'
   | 'wallet.funded'
   | 'wallet.withdrawn'
   | 'wallet.locked'
@@ -125,4 +130,15 @@ export interface ServiceEvent {
   readonly type: WebhookEvent;
   readonly data: Record<string, unknown>;
   readonly timestamp: Date;
+}
+
+export type DisputeDecision = 'release_to_agent' | 'refund_to_orchestrator';
+
+export interface DisputeResolution {
+  readonly escrowId: string;
+  readonly decision: DisputeDecision;
+  readonly resolvedBy: string;
+  readonly reason: string;
+  readonly onChainTxHash: string | null;
+  readonly resolvedAt: Date;
 }
