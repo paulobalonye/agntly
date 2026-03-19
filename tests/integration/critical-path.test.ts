@@ -45,7 +45,7 @@ describe('Critical path: full task lifecycle with correct balances', () => {
 
     // Create task with $1 budget — calculateFee gives 3% fee → net 0.97
     const { fee: taskFee, net: taskNet } = calculateFee('1.000000');
-    const task = await taskService.createTask(
+    const { task, completionToken } = await taskService.createTask(
       orchWallet.ownerId,
       'agent-01',
       { type: 'summarize', input: 'hello world' },
@@ -79,7 +79,7 @@ describe('Critical path: full task lifecycle with correct balances', () => {
     expect(escrowedTask.status).toBe('escrowed');
 
     // Complete task
-    const completedTask = await taskService.completeTask(task.id, { output: 'summary here' });
+    const completedTask = await taskService.completeTask(task.id, { output: 'summary here' }, completionToken);
     expect(completedTask.status).toBe('complete');
 
     // Release escrow state: locked → released
