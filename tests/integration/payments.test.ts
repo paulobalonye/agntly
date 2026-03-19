@@ -14,6 +14,8 @@ import type { DbConnection } from '@agntly/shared';
 import pg from 'pg';
 
 // Mock Stripe client — no real API calls
+let sessionCounter = 0;
+
 class MockStripeClient implements IStripeClient {
   lastSessionParams: CheckoutSessionParams | null = null;
   shouldFailSignature = false;
@@ -21,7 +23,7 @@ class MockStripeClient implements IStripeClient {
   async createCheckoutSession(params: CheckoutSessionParams): Promise<CheckoutSessionResult> {
     this.lastSessionParams = params;
     return {
-      sessionId: `cs_test_${Date.now()}`,
+      sessionId: `cs_test_${Date.now()}_${++sessionCounter}`,
       url: 'https://checkout.stripe.com/test',
       expiresAt: Math.floor(Date.now() / 1000) + 1800,
     };
