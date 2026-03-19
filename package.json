@@ -11,6 +11,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:integration": "services/wallet-service/node_modules/.bin/vitest run --config vitest.integration.config.ts",
     "lint": "turbo run lint",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
@@ -20,7 +21,8 @@
     "@types/pg": "^8.18.0",
     "drizzle-kit": "^0.31.10",
     "turbo": "^2.4.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
