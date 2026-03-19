@@ -1,15 +1,18 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { SERVICE_PORTS, createDbConnection, EventBus } from '@agntly/shared';
+import { SERVICE_PORTS, createDbConnection, createPool, EventBus } from '@agntly/shared';
 import { healthRoutes } from './routes/health.js';
 import { walletRoutes } from './routes/wallets.js';
 import { WalletRepository } from './repositories/wallet-repository.js';
+import { WithdrawalRepository } from './repositories/withdrawal-repository.js';
 import { WalletService } from './services/wallet-service.js';
 
 const db = createDbConnection();
 const eventBus = new EventBus('wallet-service');
 const walletRepo = new WalletRepository(db);
-const walletService = new WalletService(walletRepo, eventBus);
+const pool = createPool();
+const withdrawalRepo = new WithdrawalRepository(db);
+const walletService = new WalletService(walletRepo, withdrawalRepo, pool, eventBus);
 
 const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },

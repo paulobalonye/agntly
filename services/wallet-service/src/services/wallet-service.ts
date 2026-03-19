@@ -1,10 +1,14 @@
+import pg from 'pg';
 import { generateId } from '@agntly/shared';
 import type { EventBus } from '@agntly/shared';
 import type { WalletRepository, WalletRow } from '../repositories/wallet-repository.js';
+import type { WithdrawalRepository, WithdrawalRow } from '../repositories/withdrawal-repository.js';
 
 export class WalletService {
   constructor(
     private readonly repo: WalletRepository,
+    private readonly withdrawalRepo: WithdrawalRepository,
+    private readonly pool: pg.Pool,
     private readonly eventBus?: EventBus,
   ) {}
 
@@ -55,10 +59,10 @@ export class WalletService {
   }
 
   async withdraw(
+    userId: string,
     walletId: string,
     amount: string,
     destination: string,
-    instant?: boolean,
   ): Promise<{
     withdrawalId: string;
     amount: string;
@@ -66,27 +70,78 @@ export class WalletService {
     fee: string;
     status: string;
   }> {
-    const debited = await this.repo.debitBalance(walletId, amount);
-    if (!debited) {
-      throw new Error('Insufficient available balance or wallet not found');
+    // Verify wallet exists and belongs to the caller
+    const wallet = await this.repo.findById(walletId);
+    if (!wallet) throw new Error('Wallet not found');
+    if (wallet.ownerId !== userId) throw new Error('Wallet does not belong to user');
+
+    // Normalize amount to 6 decimal places
+    const normalizedAmount = parseFloat(amount).toFixed(6);
+    const fee = '0.000000';
+
+    // Atomic transaction: debit balance + create withdrawal record
+    const client = await this.pool.connect();
+    let withdrawalId: string;
+    try {
+      await client.query('BEGIN');
+
+      // Debit balance with guard
+      const debitResult = await client.query(
+        `UPDATE wallets SET balance = balance - $2::numeric, updated_at = NOW()
+         WHERE id = $1::uuid AND balance >= $2::numeric
+         RETURNING id`,
+        [walletId, normalizedAmount],
+      );
+
+      if (debitResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        throw new Error('Insufficient available balance');
+      }
+
+      // Create withdrawal record
+      const insertResult = await client.query(
+        `INSERT INTO withdrawals (wallet_id, amount, destination, fee, status)
+         VALUES ($1::uuid, $2::numeric, $3, $4::numeric, 'queued')
+         RETURNING id`,
+        [walletId, normalizedAmount, destination, fee],
+      );
+
+      withdrawalId = insertResult.rows[0].id;
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
 
-    const fee = instant ? (parseFloat(amount) * 0.005).toFixed(6) : '0.000000';
-    const withdrawalId = generateId('wth');
-    const status = instant ? 'processing' : 'queued';
-
+    // Publish event (outside transaction — best effort)
     if (this.eventBus) {
       await this.eventBus.publish('wallet.withdrawn', {
-        walletId,
         withdrawalId,
-        amount,
+        walletId,
+        amount: normalizedAmount,
         destination,
         fee,
-        instant: instant ?? false,
       });
     }
 
-    return { withdrawalId, amount, destination, fee, status };
+    return {
+      withdrawalId,
+      amount: normalizedAmount,
+      destination,
+      fee,
+      status: 'queued',
+    };
+  }
+
+  async getWithdrawalHistory(
+    walletId: string,
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<{ withdrawals: readonly WithdrawalRow[]; total: number; limit: number; offset: number }> {
+    const { rows, total } = await this.withdrawalRepo.findByWalletId(walletId, limit, offset);
+    return { withdrawals: rows, total, limit, offset };
   }
 
   async lockFunds(walletId: string, amount: string): Promise<boolean> {
