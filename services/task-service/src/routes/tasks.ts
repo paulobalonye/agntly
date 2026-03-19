@@ -1,14 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { createApiResponse, createErrorResponse } from '@agntly/shared';
+import { createApiResponse, createErrorResponse, createDbConnection } from '@agntly/shared';
 import { TaskService } from '../services/task-service.js';
+import { TaskRepository } from '../repositories/task-repository.js';
 
 const createTaskSchema = z.object({
   agentId: z.string(), payload: z.record(z.unknown()), budget: z.string(), timeoutMs: z.number().optional(),
 });
 
 export const taskRoutes: FastifyPluginAsync = async (app) => {
-  const taskService = new TaskService();
+  const db = createDbConnection();
+  const taskService = new TaskService(new TaskRepository(db));
 
   app.post('/', async (request, reply) => {
     const parsed = createTaskSchema.safeParse(request.body);
