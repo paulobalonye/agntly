@@ -4,3 +4,4 @@ export * from './config/index.js';
 export * from './db/connection.js';
 export * from './redis/event-bus.js';
 export * from './redis/cache.js';
+export * from './crypto/completion-token.js';
