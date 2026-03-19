@@ -33,23 +33,32 @@ CRUD for the `withdrawals` table (already exists in DB schema). Key operations:
 - `findByWalletId(walletId, limit, offset)` — Paginated withdrawal history
 - `markProcessing(id)` — Atomic CAS: `UPDATE withdrawals SET status='processing' WHERE id=$1 AND status='queued' RETURNING id`. Prevents duplicate processing from concurrent event handlers.
 - `markCompleted(id, txHash)` — Atomic CAS: `UPDATE withdrawals SET status='completed', tx_hash=$2 WHERE id=$1 AND status='processing' RETURNING id`
-- `markFailed(id, reason)` — Atomic CAS: `UPDATE withdrawals SET status='failed' WHERE id=$1 AND status='processing' RETURNING id`. Note: does NOT add a `failureReason` column — failures are logged server-side and investigated manually.
+- `markFailed(id)` — Atomic CAS: `UPDATE withdrawals SET status='failed' WHERE id=$1 AND status='processing' RETURNING id`. Failures are logged server-side with full context (error message, tx details). No `failureReason` column — admin investigates via logs.
+
+All `create()` calls use `.returning()` to get the DB-generated UUID back. The returned `id` is placed in the `wallet.withdrawn` event payload as `withdrawalId`.
 
 Uses Drizzle typed queries for reads, `db.execute(sql)` for atomic status transitions (same pattern as payment/escrow/task repositories).
 
 ### 2. WalletService Extension
 
-Extend the existing `withdraw()` method to persist a withdrawal record after the atomic `debitBalance`:
+Extend the existing `withdraw()` method. The balance debit and withdrawal record creation MUST be in a single DB transaction to prevent balance loss on crash:
 
 ```
-1. Validate destination address (regex: /^0x[0-9a-fA-F]{40}$/)
-2. debitBalance(walletId, amount) — atomic, already built
-3. Create withdrawal record via WithdrawalRepository.create()
-4. Publish wallet.withdrawn event with withdrawalId included
-5. Return { withdrawalId, amount, destination, fee, status: 'queued' }
+1. Verify wallet exists AND belongs to the authenticated user (wallet.ownerId === userId)
+2. Validate destination address via viem isAddress(destination, { strict: true }) for EIP-55 checksum
+3. Reject zero address (0x0000...0000)
+4. BEGIN TRANSACTION (raw pg.Pool client, same pattern as PaymentService.handleWebhook):
+   a. Debit balance: UPDATE wallets SET balance = balance - amount WHERE id = walletId AND balance >= amount
+   b. If no rows → ROLLBACK, throw "Insufficient balance"
+   c. Create withdrawal record: INSERT INTO withdrawals (wallet_id, amount, destination, fee, status) VALUES (...)
+   d. COMMIT
+5. Publish wallet.withdrawn event with withdrawalId (from the INSERT RETURNING id)
+6. Return { withdrawalId, amount, destination, fee, status: 'queued' }
 ```
 
-The `WithdrawalRepository` is injected via constructor alongside `WalletRepository`.
+The `WithdrawalRepository` is injected via constructor alongside `WalletRepository`. The `pg.Pool` is also injected (same as PaymentService) for raw transaction control.
+
+**Authorization:** The route handler MUST verify `wallet.ownerId === request.userId` before calling `withdraw()`. This prevents one user from draining another user's wallet. The service method accepts `userId` as a parameter and performs the ownership check internally.
 
 ### 3. Settlement-Worker Extension
 
@@ -78,16 +87,21 @@ Add to wallet routes:
 
 Zod schema for the withdraw endpoint:
 ```typescript
+import { isAddress } from 'viem';
+
 const withdrawSchema = z.object({
-  amount: z.string().regex(/^\d+\.\d{6}$/, 'Amount must have 6 decimal places'),
-  destination: z.string().regex(/^0x[0-9a-fA-F]{40}$/, 'Invalid Ethereum address'),
-  instant: z.boolean().optional(),
+  amount: z.string()
+    .refine(val => /^\d+(\.\d{1,6})?$/.test(val), 'Amount must be a positive number with up to 6 decimal places')
+    .refine(val => parseFloat(val) > 0, 'Amount must be greater than zero'),
+  destination: z.string()
+    .refine(val => isAddress(val, { strict: true }), 'Invalid Ethereum address (EIP-55 checksum required)')
+    .refine(val => val !== '0x0000000000000000000000000000000000000000', 'Cannot withdraw to zero address'),
 });
 ```
 
-Additional validation:
-- Destination must not be the zero address (`0x0000...0000`)
-- Amount must parse to a positive number
+The `instant` flag is **NOT included** in Phase 5 scope. All withdrawals go through the same queued pipeline. The `instant` flag and its associated fee logic can be added in a future phase if differentiated processing speeds are needed. The existing `instant` parameter in `WalletService.withdraw()` is ignored — all withdrawals return `status: 'queued'` with `fee: '0.000000'`.
+
+Note: The amount regex accepts `"5"`, `"5.5"`, and `"5.500000"` — all valid. The service normalizes to 6 decimal places before DB insertion.
 
 ## Error Cases
 
@@ -165,7 +179,7 @@ Already exists. Enhanced with:
 | Modify | `services/wallet-service/src/routes/wallets.ts` | Add Zod validation, withdrawal history endpoint |
 | Modify | `services/wallet-service/src/server.ts` | Initialize WithdrawalRepository, inject into WalletService |
 | Modify | `services/settlement-worker/src/services/settlement-service.ts` | Add USDC transfer handler for wallet.withdrawn |
-| Modify | `services/settlement-worker/src/server.ts` | Subscribe to wallet.withdrawn events, initialize WithdrawalRepository |
+| Modify | `services/settlement-worker/src/server.ts` | Add `'wallet.withdrawn'` to the EXISTING events array in the single `subscribe()` call (do NOT create a second subscribe). Initialize WithdrawalRepository. |
 | Create | `tests/integration/withdrawals.test.ts` | Withdrawal flow + concurrent tests |
 
 ## Testing Strategy
