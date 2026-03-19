@@ -6,6 +6,7 @@ export const SERVICE_PORTS = {
   registry: 3005,
   payment: 3006,
   webhook: 3007,
+  settlement: 3008,
 } as const;
 
 export const PLATFORM_FEE_PERCENT = 3;

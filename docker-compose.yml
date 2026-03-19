@@ -122,6 +122,23 @@ services:
       redis:
         condition: service_healthy
 
+  settlement-worker:
+    build:
+      context: .
+      dockerfile: services/settlement-worker/Dockerfile
+    ports:
+      - "3008:3008"
+    env_file: .env
+    environment:
+      - ESCROW_CONTRACT_ADDRESS=${ESCROW_CONTRACT_ADDRESS:-}
+      - RELAYER_PRIVATE_KEY=${RELAYER_PRIVATE_KEY:-}
+      - BASE_RPC_URL=${BASE_RPC_URL:-https://sepolia.base.org}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   redisdata:
