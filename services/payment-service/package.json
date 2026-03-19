@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@agntly/shared": "workspace:*",
+    "@agntly/wallet-service": "workspace:*",
     "fastify": "^5.2.0",
     "@fastify/cors": "^10.0.0",
     "ioredis": "^5.4.0",
+    "stripe": "^17.0.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

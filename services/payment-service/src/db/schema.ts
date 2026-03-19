@@ -8,7 +8,7 @@ export const payments = pgTable('payments', {
   usdcAmount: numeric('usdc_amount', { precision: 18, scale: 6 }),
   method: text('method').notNull(), // card, ach, usdc_direct
   stripePaymentIntentId: text('stripe_payment_intent_id'),
-  stripeSessionId: text('stripe_session_id'),
+  stripeSessionId: text('stripe_session_id').unique(),
   circlePaymentId: text('circle_payment_id'),
   status: text('status').notNull().default('pending'), // pending, processing, completed, failed, refunded
   failureReason: text('failure_reason'),
