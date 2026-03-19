@@ -1,12 +1,14 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import { createApiResponse, createErrorResponse } from '@agntly/shared';
+import { createApiResponse, createErrorResponse, createDbConnection } from '@agntly/shared';
 import { EscrowService } from '../services/escrow-service.js';
+import { EscrowRepository } from '../repositories/escrow-repository.js';
 
 const lockSchema = z.object({ taskId: z.string(), fromWalletId: z.string(), toWalletId: z.string(), amount: z.string() });
 
 export const escrowRoutes: FastifyPluginAsync = async (app) => {
-  const escrowService = new EscrowService();
+  const db = createDbConnection();
+  const escrowService = new EscrowService(new EscrowRepository(db));
 
   app.post('/lock', async (request, reply) => {
     const parsed = lockSchema.safeParse(request.body);
