@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import type { EscrowService } from '../services/escrow-service.js';
+import type { DisputeService } from '../services/dispute-service.js';
 
 const lockSchema = z.object({
   taskId: z.string(),
@@ -13,6 +14,7 @@ const lockSchema = z.object({
 
 export const escrowRoutes: FastifyPluginAsync = async (app) => {
   const service = (app as any).escrowService as EscrowService;
+  const disputeService = (app as any).disputeService as DisputeService;
 
   app.post('/lock', async (request, reply) => {
     const parsed = lockSchema.safeParse(request.body);
@@ -68,5 +70,38 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
     const escrow = await service.getEscrow(escrowId);
     if (!escrow) return reply.status(404).send(createErrorResponse('Escrow not found'));
     return reply.status(200).send(createApiResponse(escrow));
+  });
+
+  app.post('/:escrowId/evidence', async (request, reply) => {
+    const { escrowId } = request.params as { escrowId: string };
+    const evidenceSchema = z.object({
+      evidence: z.string().min(1),
+      submittedBy: z.string().min(1),
+    });
+    const parsed = evidenceSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid evidence request'));
+    try {
+      await disputeService.submitEvidence(escrowId, parsed.data.submittedBy, parsed.data.evidence);
+      return reply.status(200).send(createApiResponse({ submitted: true }));
+    } catch (err) {
+      return reply.status(400).send(createErrorResponse(err instanceof Error ? err.message : 'Evidence submission failed'));
+    }
+  });
+
+  app.post('/:escrowId/resolve', async (request, reply) => {
+    const { escrowId } = request.params as { escrowId: string };
+    const resolveSchema = z.object({
+      decision: z.enum(['release_to_agent', 'refund_to_orchestrator']),
+      reason: z.string().min(1),
+      resolvedBy: z.string().min(1),
+    });
+    const parsed = resolveSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid resolve request'));
+    try {
+      await disputeService.resolveDispute(escrowId, parsed.data.decision, parsed.data.resolvedBy, parsed.data.reason);
+      return reply.status(200).send(createApiResponse({ resolved: true, decision: parsed.data.decision }));
+    } catch (err) {
+      return reply.status(400).send(createErrorResponse(err instanceof Error ? err.message : 'Resolution failed'));
+    }
   });
 };
