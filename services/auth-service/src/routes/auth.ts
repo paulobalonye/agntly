@@ -15,7 +15,7 @@ const loginSchema = z.object({
 });
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
-  const decorated = app as unknown as { authService: AuthService; magicLinkService: MagicLinkService };
+  const decorated = app as unknown as { authService: AuthService; magicLinkService: MagicLinkService; apiKeyService: import('../services/api-key-service.js').ApiKeyService };
   const authService = decorated.authService;
   const magicLinkService = decorated.magicLinkService;
 
@@ -74,6 +74,19 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     } catch (err) {
       return reply.status(401).send(createErrorResponse('Invalid or expired magic link'));
     }
+  });
+
+  app.post('/validate-key', async (request, reply) => {
+    const body = request.body as { key?: string } | undefined;
+    if (!body?.key) {
+      return reply.status(400).send(createErrorResponse('API key required'));
+    }
+    const apiKeyService = decorated.apiKeyService;
+    const userId = await apiKeyService.validateKey(body.key);
+    if (!userId) {
+      return reply.status(401).send(createErrorResponse('Invalid API key'));
+    }
+    return reply.status(200).send(createApiResponse({ userId }));
   });
 
   app.post('/refresh', async (request, reply) => {

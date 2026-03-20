@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import type { TaskService } from '../services/task-service.js';
+import { dispatchToAgent } from '../services/agent-dispatcher.js';
 
 const createTaskSchema = z.object({
   agentId: z.string().min(1),
@@ -10,6 +11,7 @@ const createTaskSchema = z.object({
     .refine(val => /^\d+(\.\d{1,6})?$/.test(val), 'Budget must be a valid number')
     .refine(val => parseFloat(val) > 0, 'Budget must be positive'),
   timeoutMs: z.number().int().positive().max(86_400_000).optional(), // max 24h
+  dispatch: z.boolean().optional(),
 });
 
 export const taskRoutes: FastifyPluginAsync = async (app) => {
@@ -21,6 +23,25 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { task, completionToken } = await service.createTask(userId, parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
+
+    // If dispatch is requested (default true), fire-and-forget call to agent endpoint
+    if (parsed.data.dispatch !== false) {
+      const capturedToken = completionToken;
+      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload)
+        .then(async ({ result }) => {
+          if (result && capturedToken) {
+            try {
+              await service.completeTask(task.id, result, capturedToken);
+            } catch {
+              // Already completed or invalid state — ignore
+            }
+          }
+        })
+        .catch(() => {
+          // Dispatch failure is non-fatal; task remains in pending/escrowed state
+        });
+    }
+
     return reply.status(202).send(createApiResponse({ ...task, completionToken }));
   });
 

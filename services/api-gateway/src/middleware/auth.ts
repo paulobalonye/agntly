@@ -46,9 +46,30 @@ export async function authMiddleware(
   }
 
   // API key — starts with 'ag_'
-  // Pass through to the backend service which validates against the DB
+  // Validate against auth-service and inject user identity headers
   if (token.startsWith('ag_')) {
-    return;
+    try {
+      const authUrl = process.env.AUTH_SERVICE_URL ?? 'http://localhost:3001';
+      const res = await fetch(`${authUrl}/v1/auth/validate-key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: token }),
+      });
+      if (!res.ok) {
+        return reply.status(401).send({ success: false, data: null, error: 'Invalid API key' });
+      }
+      const data = await res.json() as { data: { userId: string } };
+      request.headers['x-user-id'] = data.data.userId;
+      request.headers['x-user-email'] = '';
+      request.headers['x-user-role'] = 'user';
+      // Sign the forwarded identity so downstream services can verify headers came from the gateway
+      const signingPayload = `${data.data.userId}::`;
+      const signature = createHmac('sha256', INTERNAL_SECRET).update(signingPayload).digest('hex');
+      request.headers['x-gateway-signature'] = signature;
+      return;
+    } catch {
+      return reply.status(401).send({ success: false, data: null, error: 'API key validation failed' });
+    }
   }
 
   // JWT — validate signature and expiry
