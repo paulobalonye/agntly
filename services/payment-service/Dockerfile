@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3006
 EXPOSE 3006
 
-CMD ["./node_modules/.bin/tsx", "services/payment-service/src/server.ts"]
+CMD ["pnpm", "--filter", "@agntly/payment-service", "exec", "tsx", "src/server.ts"]

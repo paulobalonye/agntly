@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3008
 EXPOSE 3008
 
-CMD ["./node_modules/.bin/tsx", "services/settlement-worker/src/server.ts"]
+CMD ["pnpm", "--filter", "@agntly/settlement-worker", "exec", "tsx", "src/server.ts"]

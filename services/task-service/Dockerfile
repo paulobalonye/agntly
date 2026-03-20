@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3004
 EXPOSE 3004
 
-CMD ["./node_modules/.bin/tsx", "services/task-service/src/server.ts"]
+CMD ["pnpm", "--filter", "@agntly/task-service", "exec", "tsx", "src/server.ts"]

@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3001
 EXPOSE 3001
 
-CMD ["./node_modules/.bin/tsx", "services/auth-service/src/server.ts"]
+CMD ["pnpm", "--filter", "@agntly/auth-service", "exec", "tsx", "src/server.ts"]

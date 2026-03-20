@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3002
 EXPOSE 3002
 
-CMD ["./node_modules/.bin/tsx", "services/wallet-service/src/server.ts"]
+CMD ["pnpm", "--filter", "@agntly/wallet-service", "exec", "tsx", "src/server.ts"]

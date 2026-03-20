@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["./node_modules/.bin/tsx", "services/api-gateway/src/server.ts"]
+CMD ["pnpm", "--filter", "@agntly/api-gateway", "exec", "tsx", "src/server.ts"]
