@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
           Network Analytics
         </h1>
         <p className="font-mono text-[12px] text-t-1">
-          Real-time network statistics — updated every 30s
+          Data snapshot — refreshes on page load
         </p>
       </section>
 

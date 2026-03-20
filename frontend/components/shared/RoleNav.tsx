@@ -38,8 +38,9 @@ const BOTH_LINKS = [
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? match[2] : null;
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = document.cookie.match(new RegExp('(^| )' + escapedName + '=([^;]+)'));
+  return match ? match[2] ?? null : null;
 }
 
 type Role = 'builder' | 'hire' | 'both' | null;
@@ -129,8 +130,11 @@ export function RoleNav() {
 
         <button
           onClick={async () => {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            try {
+              await fetch('/api/auth/logout', { method: 'POST' });
+            } catch { /* network error — still clear local state */ }
             document.cookie = 'agntly_role=; path=/; max-age=0';
+            document.cookie = 'agntly_redirect=; path=/; max-age=0';
             window.location.href = '/';
           }}
           className="bg-transparent border border-border text-t-2 font-mono text-[11px] px-[10px] py-[6px] tracking-[0.04em] hover:border-red hover:text-red transition-all cursor-pointer"

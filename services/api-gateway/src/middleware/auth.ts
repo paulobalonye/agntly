@@ -64,12 +64,14 @@ export async function authMiddleware(
       if (!res.ok) {
         return reply.status(401).send({ success: false, data: null, error: 'Invalid API key' });
       }
-      const data = await res.json() as { data: { userId: string } };
-      request.headers['x-user-id'] = data.data.userId;
-      request.headers['x-user-email'] = '';
-      request.headers['x-user-role'] = 'user';
+      const data = await res.json() as { data: { userId: string; role?: string } };
+      const { userId } = data.data;
+      const role = data.data.role ?? 'developer';
+      request.headers['x-user-id'] = userId;
+      request.headers['x-user-email'] = 'api-key-user';
+      request.headers['x-user-role'] = role;
       // Sign the forwarded identity so downstream services can verify headers came from the gateway
-      const signingPayload = `${data.data.userId}::`;
+      const signingPayload = `${userId}:api-key-user:developer`;
       const signature = createHmac('sha256', INTERNAL_SECRET).update(signingPayload).digest('hex');
       request.headers['x-gateway-signature'] = signature;
       return;

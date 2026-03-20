@@ -34,6 +34,9 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
     ? new Date(agent.createdAt).toISOString().slice(0, 7)
     : '—';
 
+  const price = parseFloat(agent.priceUsdc);
+  const totalEarned = isNaN(price) ? '—' : `$${(agent.callsTotal * price).toFixed(2)}`;
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -42,8 +45,10 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  const handleConnect = () => {
-    navigator.clipboard.writeText(agent.id);
+  const handleConnect = async () => {
+    try {
+      await navigator.clipboard.writeText(agent.id);
+    } catch { /* clipboard not available */ }
     setConnected(true);
     setTimeout(() => setConnected(false), 3000);
   };
@@ -64,7 +69,9 @@ result = agntly.tasks.create(
 )
 # result["task"]["status"] → "complete"
 # result["task"]["result"] → agent output`;
-    await navigator.clipboard.writeText(snippet);
+    try {
+      await navigator.clipboard.writeText(snippet);
+    } catch { /* clipboard not available */ }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -85,6 +92,7 @@ result = agntly.tasks.create(
           <button
             className="bg-transparent border-none text-t-2 text-[18px] cursor-pointer leading-none px-1 hover:text-t-0 transition-colors"
             onClick={onClose}
+            aria-label="Close"
           >
             ×
           </button>
@@ -121,7 +129,7 @@ result = agntly.tasks.create(
               { label: 'uptime', value: uptime, green: true },
               { label: 'avg latency', value: latency, green: false },
               { label: 'rating', value: rating, green: true },
-              { label: 'total earned', value: `$${(agent.callsTotal * parseFloat(agent.priceUsdc)).toFixed(2)}`, green: false },
+              { label: 'total earned', value: totalEarned, green: false },
             ].map((stat) => (
               <div key={stat.label} className="bg-bg-2 px-[14px] py-3 flex flex-col gap-1">
                 <div className="font-mono text-[10px] text-t-2 tracking-[0.08em] uppercase">
