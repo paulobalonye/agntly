@@ -41,7 +41,10 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
   }, [onClose]);
 
   const handleConnect = () => {
-    window.alert('Agent connected! Use the SDK snippet above to integrate.');
+    navigator.clipboard.writeText(agent.id);
+    window.alert(
+      `Agent "${agent.name}" connected!\n\nAgent ID copied to clipboard: ${agent.id}\n\nUse this in your SDK:\nagntly.tasks.create(agent_id="${agent.id}", ...)`
+    );
   };
 
   const handleViewDocs = () => {
