@@ -21,9 +21,10 @@ COPY frontend/ frontend/
 
 ENV NODE_ENV=production
 ENV JWT_SECRET=placeholder-replaced-at-runtime
-RUN cd frontend && npx next build
+WORKDIR /app/frontend
+RUN ./node_modules/.bin/next build
 
 ENV PORT=3100
 EXPOSE 3100
 
-CMD ["npx", "next", "start", "-p", "3100", "--dir", "frontend"]
+CMD ["./node_modules/.bin/next", "start", "-p", "3100"]

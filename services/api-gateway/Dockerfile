@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["npx", "tsx", "services/api-gateway/src/server.ts"]
+CMD ["./node_modules/.bin/tsx", "services/api-gateway/src/server.ts"]

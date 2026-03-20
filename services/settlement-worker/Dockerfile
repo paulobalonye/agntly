@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3008
 EXPOSE 3008
 
-CMD ["npx", "tsx", "services/settlement-worker/src/server.ts"]
+CMD ["./node_modules/.bin/tsx", "services/settlement-worker/src/server.ts"]

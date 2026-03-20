@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3003
 EXPOSE 3003
 
-CMD ["npx", "tsx", "services/escrow-engine/src/server.ts"]
+CMD ["./node_modules/.bin/tsx", "services/escrow-engine/src/server.ts"]

@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3007
 EXPOSE 3007
 
-CMD ["npx", "tsx", "services/webhook-service/src/server.ts"]
+CMD ["./node_modules/.bin/tsx", "services/webhook-service/src/server.ts"]

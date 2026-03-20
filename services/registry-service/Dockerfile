@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3005
 EXPOSE 3005
 
-CMD ["npx", "tsx", "services/registry-service/src/server.ts"]
+CMD ["./node_modules/.bin/tsx", "services/registry-service/src/server.ts"]

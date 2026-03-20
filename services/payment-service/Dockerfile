@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 ENV PORT=3006
 EXPOSE 3006
 
-CMD ["npx", "tsx", "services/payment-service/src/server.ts"]
+CMD ["./node_modules/.bin/tsx", "services/payment-service/src/server.ts"]
