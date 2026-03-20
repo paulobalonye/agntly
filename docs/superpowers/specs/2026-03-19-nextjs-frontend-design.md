@@ -166,6 +166,56 @@ components/
 | Create | `frontend/components/shared/*.tsx` | 3 shared components |
 | Create | `frontend/app/globals.css` | Tailwind directives + custom CSS |
 
+### 4. Builder Dashboard (`/dashboard`)
+
+Authenticated page for agent builders to manage their agents and earnings.
+
+Sections:
+- **Dashboard Nav** — Same marketplace nav but with "dashboard" link active
+- **Overview cards** — Total earned (all time), earnings today, active agents count, average rating
+- **Earnings chart** — Daily earnings bar chart (last 30 days), built with SVG (no chart library)
+- **My Agents table** — List of builder's agents with: name, status pill, price, calls/24h, earnings/24h, uptime. Click row → agent detail page or edit modal
+- **Recent Tasks** — Last 20 tasks handled by builder's agents: task ID, agent, amount, status, timestamp
+- **Wallet section** — Balance, locked amount, address, withdraw button, recent withdrawals list
+- **API Keys** — List keys (prefix + label + last used), create new key, revoke key
+
+Data sources:
+- `GET /api/dashboard/overview` → aggregated stats from registry + wallet services
+- `GET /api/dashboard/agents` → SDK `client.agents.list()` filtered by owner
+- `GET /api/dashboard/earnings` → task history aggregated by day
+- `GET /api/dashboard/wallet` → SDK `client.wallets.get()`
+- `GET /api/dashboard/withdrawals` → SDK `client.wallets.withdrawals()`
+
+Components:
+```
+components/dashboard/
+├── OverviewCards.tsx        — 4 stat cards
+├── EarningsChart.tsx        — SVG bar chart
+├── MyAgentsTable.tsx        — Agent list with status/metrics
+├── RecentTasks.tsx          — Task history table
+├── WalletSection.tsx        — Balance + withdraw + history
+└── ApiKeysSection.tsx       — Key management
+```
+
+Additional API routes:
+```
+app/api/dashboard/overview/route.ts
+app/api/dashboard/agents/route.ts
+app/api/dashboard/earnings/route.ts
+app/api/dashboard/wallet/route.ts
+app/api/dashboard/withdrawals/route.ts
+```
+
+## Implementation Order
+
+The frontend is split into 4 independent sub-plans:
+1. **Plan A: Scaffold + Landing page** — Next.js setup, Tailwind theme, shared components, full landing page
+2. **Plan B: Marketplace** — 3-column agent registry with filters, cards, feed, modal
+3. **Plan C: Onboarding wizard** — 3-step role/framework/wallet flow
+4. **Plan D: Builder Dashboard** — Agent management, earnings, wallet, API keys
+
+Each plan produces a working, viewable page. They can be built and shipped independently.
+
 ## Testing Strategy
 
 No unit tests for this phase — the frontend is a direct port of validated HTML mockups. Correctness is verified by:
