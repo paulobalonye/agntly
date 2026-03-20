@@ -28,10 +28,20 @@ const STEPS = [
 export function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const presetRole = searchParams.get('role');
-  const [step, setStep] = useState(presetRole === 'builder' ? 1 : 0);
-  const [role, setRole] = useState(presetRole === 'builder' ? 'builder' : 'builder');
+  const [step, setStep] = useState(0);
+  const [role, setRole] = useState('builder');
   const [framework, setFramework] = useState('python');
+  const [ready, setReady] = useState(false);
+
+  // Read role from query param after mount to avoid hydration mismatch
+  useEffect(() => {
+    const presetRole = searchParams.get('role');
+    if (presetRole === 'builder') {
+      setRole('builder');
+      setStep(1); // Skip role selection for builders
+    }
+    setReady(true);
+  }, [searchParams]);
 
   const currentStep = STEPS[step];
 
@@ -48,9 +58,17 @@ export function OnboardingWizard() {
       setStep((s) => s + 1);
     } else {
       document.cookie = `agntly_role=${role}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
-      const destination = role === 'builder' ? '/dashboard' : '/marketplace';
+      const destination = role === 'builder' || role === 'both' ? '/dashboard' : '/marketplace';
       router.push(destination);
     }
+  }
+
+  if (!ready) {
+    return (
+      <div className="w-full max-w-[560px] flex items-center justify-center py-20">
+        <div className="w-8 h-8 border border-accent/30 bg-accent/10 animate-pulse-dot" />
+      </div>
+    );
   }
 
   return (
@@ -84,15 +102,15 @@ export function OnboardingWizard() {
 
       {/* Step label */}
       <div className="font-mono text-[10px] text-accent tracking-[0.12em] uppercase">
-        {currentStep.label}
+        {currentStep!.label}
       </div>
 
       {/* Title + description */}
       <div className="flex flex-col gap-2">
         <h2 className="font-display text-[30px] font-semibold text-t-0 leading-tight whitespace-pre-line">
-          {currentStep.title}
+          {currentStep!.title}
         </h2>
-        <p className="font-sans text-sm text-t-1 leading-relaxed">{currentStep.desc}</p>
+        <p className="font-sans text-sm text-t-1 leading-relaxed">{currentStep!.desc}</p>
       </div>
 
       {/* Step content */}

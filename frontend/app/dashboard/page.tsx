@@ -5,7 +5,7 @@ import { RecentTasks } from '@/components/dashboard/RecentTasks';
 import { WalletSection } from '@/components/dashboard/WalletSection';
 import { ApiKeysSection } from '@/components/dashboard/ApiKeysSection';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3100';
 
 interface ApiResponse<T> {
   success: boolean;
