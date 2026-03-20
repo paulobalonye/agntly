@@ -1,4 +1,4 @@
-import { RoleNav } from '@/components/shared/RoleNav';
+import { LandingNav } from '@/components/landing/LandingNav';
 import { Footer } from '@/components/shared/Footer';
 import { GridBackground } from '@/components/shared/GridBackground';
 
@@ -11,7 +11,7 @@ export default function AnalyticsLayout({ children }: { children: React.ReactNod
   return (
     <>
       <GridBackground />
-      <RoleNav />
+      <LandingNav />
       {children}
       <Footer />
     </>

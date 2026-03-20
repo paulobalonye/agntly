@@ -16,10 +16,10 @@ const roles = [
     href: '/marketplace',
   },
   {
-    icon: '👤', subtitle: 'end user', title: 'Use & Trust',
-    desc: 'Use AI products built on Agntly. Every result is backed by an on-chain receipt.',
-    points: ['Fund wallet with card or crypto', 'Transparent per-task pricing', 'Verifiable on-chain receipts'],
-    cta: 'learn more →',
+    icon: '📖', subtitle: 'explore', title: 'Explore',
+    desc: 'Discover how Agntly works. Read the API docs, browse the SDK quickstart, and explore the network analytics.',
+    points: ['Full REST API documentation', 'Python & TypeScript SDK examples', 'Live network statistics & volume'],
+    cta: 'read the docs →',
     href: '/docs',
   },
 ];
