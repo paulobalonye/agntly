@@ -4,8 +4,15 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY shared/package.json shared/
-COPY services/*/package.json /tmp/services/
-RUN for f in /tmp/services/*/package.json; do dir=$(basename $(dirname $f)); mkdir -p services/$dir && cp $f services/$dir/; done
+COPY services/auth-service/package.json services/auth-service/
+COPY services/wallet-service/package.json services/wallet-service/
+COPY services/escrow-engine/package.json services/escrow-engine/
+COPY services/task-service/package.json services/task-service/
+COPY services/registry-service/package.json services/registry-service/
+COPY services/payment-service/package.json services/payment-service/
+COPY services/webhook-service/package.json services/webhook-service/
+COPY services/settlement-worker/package.json services/settlement-worker/
+COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile --prod=false
 
 COPY shared/ shared/
@@ -18,4 +25,4 @@ ENV NODE_ENV=production
 ENV PORT=3002
 EXPOSE 3002
 
-CMD ["node", "--experimental-specifier-resolution=node", "services/wallet-service/dist/server.js"]
+CMD ["node", "services/wallet-service/dist/server.js"]
