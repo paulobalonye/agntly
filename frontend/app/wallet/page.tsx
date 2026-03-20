@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 // ── Demo data ──────────────────────────────────────────────────────────────
 
 interface WalletData {
+  id: string;
   balance: string;
   locked: string;
   address: string;
@@ -12,9 +13,10 @@ interface WalletData {
 }
 
 const DEMO_WALLET: WalletData = {
-  balance: '142.500000',
-  locked: '12.000000',
-  address: '0xA9c3B7d4e5F6a8D2f3c1E9b0D7a6F4e2C8b5A1d3',
+  id: '',
+  balance: '0.000000',
+  locked: '0.000000',
+  address: '—',
   chain: 'Base Sepolia',
 };
 
@@ -161,6 +163,10 @@ function FundWalletSection({ wallet }: FundWalletSectionProps) {
 
   async function handleCardFund(e: React.FormEvent) {
     e.preventDefault();
+    if (!wallet.id) {
+      setCardError('Wallet not loaded yet. Please wait or refresh.');
+      return;
+    }
     const parsed = parseFloat(cardAmount);
     if (!cardAmount || isNaN(parsed) || parsed <= 0) {
       setCardError('Enter a valid amount greater than 0.');
@@ -173,7 +179,7 @@ function FundWalletSection({ wallet }: FundWalletSectionProps) {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletId: 'demo-wallet', amountUsd: parsed, method: 'card' }),
+        body: JSON.stringify({ walletId: wallet.id, amountUsd: parsed, method: 'card' }),
       });
       const data = await res.json();
       if (data.success && data.data?.checkoutUrl) {
@@ -298,7 +304,7 @@ function WithdrawSection({ wallet }: WithdrawSectionProps) {
       const res = await fetch('/api/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletId: 'demo-wallet', amount, destination }),
+        body: JSON.stringify({ walletId: wallet.id, amount, destination }),
       });
       const json = await res.json();
       if (json.success) {
@@ -423,6 +429,7 @@ function TransactionHistory() {
 
 function normalizeWalletData(raw: Record<string, unknown>): WalletData {
   return {
+    id: String(raw.id ?? ''),
     balance: String(raw.balance ?? raw.availableBalance ?? DEMO_WALLET.balance),
     locked: String(raw.locked ?? raw.lockedBalance ?? DEMO_WALLET.locked),
     address: String(raw.address ?? raw.walletAddress ?? DEMO_WALLET.address),

@@ -22,6 +22,10 @@ export class WalletService {
     return this.repo.findById(walletId);
   }
 
+  async getWalletByOwner(ownerId: string): Promise<WalletRow | null> {
+    return this.repo.findByOwner(ownerId);
+  }
+
   async fundWallet(
     walletId: string,
     amountUsd: number,

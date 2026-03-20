@@ -31,6 +31,15 @@ const historySchema = z.object({
 export const walletRoutes: FastifyPluginAsync = async (app) => {
   const service = (app as any).walletService as WalletService;
 
+  // GET / — Get wallet for the authenticated user
+  app.get('/', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const wallet = await service.getWalletByOwner(userId);
+    if (!wallet) return reply.status(404).send(createErrorResponse('No wallet found for this user'));
+    return reply.status(200).send(createApiResponse(wallet));
+  });
+
   app.post('/', async (request, reply) => {
     const parsed = createSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid input'));

@@ -36,6 +36,14 @@ const BOTH_LINKS = [
   { label: 'analytics', href: '/analytics' },
 ] as const;
 
+const ADMIN_LINKS = [
+  { label: 'admin', href: '/admin' },
+  { label: 'registry', href: '/marketplace' },
+  { label: 'dashboard', href: '/dashboard' },
+  { label: 'wallet', href: '/wallet' },
+  { label: 'docs', href: '/docs' },
+] as const;
+
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
   const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -43,9 +51,10 @@ function getCookie(name: string): string | null {
   return match ? match[2] ?? null : null;
 }
 
-type Role = 'builder' | 'hire' | 'both' | null;
+type Role = 'builder' | 'hire' | 'both' | 'admin' | null;
 
 function getLinksForRole(role: Role): ReadonlyArray<{ label: string; href: string }> {
+  if (role === 'admin') return ADMIN_LINKS;
   if (role === 'builder') return BUILDER_LINKS;
   if (role === 'both') return BOTH_LINKS;
   // Default: orchestrator view (no dashboard, no my_agents)

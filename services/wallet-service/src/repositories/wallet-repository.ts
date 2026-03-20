@@ -44,6 +44,15 @@ export class WalletRepository {
     return (row as WalletRow) ?? null;
   }
 
+  async findByOwner(ownerId: string): Promise<WalletRow | null> {
+    const [row] = await this.db
+      .select()
+      .from(wallets)
+      .where(eq(wallets.ownerId, ownerId))
+      .limit(1);
+    return (row as WalletRow) ?? null;
+  }
+
   /**
    * Lock funds: atomically move from available (balance) to reserved (locked).
    * Guard: balance >= amount (NOT balance - locked, which double-counts).

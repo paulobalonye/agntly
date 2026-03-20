@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { SERVICE_PORTS, createDbConnection, EventBus } from '@agntly/shared';
 import { healthRoutes } from './routes/health.js';
 import { taskRoutes } from './routes/tasks.js';
+import { adminTaskRoutes } from './routes/admin.js';
 import { TaskRepository } from './repositories/task-repository.js';
 import { TaskService } from './services/task-service.js';
 
@@ -20,6 +21,7 @@ app.decorate('taskService', taskService);
 await app.register(cors, { origin: true });
 await app.register(healthRoutes);
 await app.register(taskRoutes, { prefix: '/v1/tasks' });
+await app.register(adminTaskRoutes, { prefix: '/v1/admin' });
 
 const port = SERVICE_PORTS.task;
 const host = process.env.HOST ?? '0.0.0.0';

@@ -26,5 +26,6 @@ export const config = {
     '/wallet/:path*',
     '/my-agents/:path*',
     '/my-tasks/:path*',
+    '/admin/:path*',
   ],
 };
