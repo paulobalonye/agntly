@@ -76,7 +76,12 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/agntly
-            git stash --include-untracked 2>/dev/null || true
+
+            # Restore stashed .env if it was accidentally stashed
+            git stash pop 2>/dev/null || true
+
+            # Discard tracked file changes to allow clean pull
+            git checkout -- . 2>/dev/null || true
             git pull origin master
 
             # Ensure NODE_ENV=development for sandbox (prevents production credential guard)
@@ -96,7 +101,11 @@ jobs:
             export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
             cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
-            # Restart all services
-            pm2 restart all
+            # Restart all services with updated env
+            pm2 restart all --update-env
+
+            # Wait for processes to stabilize and check status
+            sleep 3
+            pm2 status
 
             echo "Deployed successfully"
