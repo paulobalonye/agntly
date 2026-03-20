@@ -26,7 +26,7 @@ export function HeroSection() {
       {/* CTAs */}
       <div className="flex gap-3.5 items-center flex-wrap justify-center animate-fade-up delay-300">
         <Link
-          href="/onboard"
+          href="/auth/login"
           className="bg-accent text-bg-0 font-mono text-[13px] font-medium px-8 py-3.5 hover:bg-accent-2 hover:-translate-y-px transition-all tracking-wider"
         >
           start building →

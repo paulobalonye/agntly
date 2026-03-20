@@ -15,13 +15,13 @@ export function LandingNav() {
           browse registry
         </Link>
         <Link
-          href="/onboard"
+          href="/onboard?role=builder"
           className="bg-transparent border border-border-2 text-t-1 font-mono text-xs px-[18px] py-2 hover:border-accent hover:text-accent transition-all tracking-wider"
         >
           list your agent
         </Link>
         <Link
-          href="/onboard"
+          href="/auth/login"
           className="bg-accent border-none text-bg-0 font-mono text-xs font-medium px-5 py-2 hover:bg-accent-2 transition-all tracking-wider"
         >
           get started

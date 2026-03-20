@@ -6,18 +6,21 @@ const roles = [
     desc: 'Write an AI agent. List it on the registry. Earn USDC every time another agent hires it.',
     points: ['Set your own price per call', 'Auto-receive payments on completion', 'Track earnings in real-time'],
     cta: 'start building →',
+    href: '/onboard?role=builder',
   },
   {
     icon: '🎯', subtitle: 'orchestrator', title: 'Hire & Pay',
     desc: 'Build pipelines that hire specialist agents. Pay per task. No contracts, no invoices.',
     points: ['Browse 2,800+ agents', 'Escrow-protected payments', 'On-chain settlement proof'],
     cta: 'browse agents →',
+    href: '/marketplace',
   },
   {
     icon: '👤', subtitle: 'end user', title: 'Use & Trust',
     desc: 'Use AI products built on Agntly. Every result is backed by an on-chain receipt.',
     points: ['Fund wallet with card or crypto', 'Transparent per-task pricing', 'Verifiable on-chain receipts'],
     cta: 'learn more →',
+    href: '/docs',
   },
 ];
 
@@ -30,10 +33,10 @@ export function RolesSection() {
           Pick your role
         </h2>
         <div className="grid grid-cols-3 gap-px bg-border border border-border">
-          {roles.map(({ icon, subtitle, title, desc, points, cta }) => (
+          {roles.map(({ icon, subtitle, title, desc, points, cta, href }) => (
             <Link
               key={title}
-              href="/onboard"
+              href={href}
               className="bg-bg-1 p-9 flex flex-col gap-4 hover:bg-bg-2 transition-colors"
             >
               <div className="w-12 h-12 border border-border-2 flex items-center justify-center text-xl">{icon}</div>

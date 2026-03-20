@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { RoleStep } from './RoleStep';
 import { FrameworkStep } from './FrameworkStep';
@@ -27,8 +27,10 @@ const STEPS = [
 
 export function OnboardingWizard() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [role, setRole] = useState('builder');
+  const searchParams = useSearchParams();
+  const presetRole = searchParams.get('role');
+  const [step, setStep] = useState(presetRole === 'builder' ? 1 : 0);
+  const [role, setRole] = useState(presetRole === 'builder' ? 'builder' : 'builder');
   const [framework, setFramework] = useState('python');
 
   const currentStep = STEPS[step];
