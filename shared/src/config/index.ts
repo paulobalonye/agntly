@@ -1,4 +1,5 @@
 export const SERVICE_PORTS = {
+  gateway: 3000,
   auth: 3001,
   wallet: 3002,
   escrow: 3003,
