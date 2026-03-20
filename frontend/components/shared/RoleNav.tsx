@@ -25,7 +25,7 @@ const ORCHESTRATOR_LINKS = [
   { label: 'analytics', href: '/analytics' },
 ] as const;
 
-const ALL_LINKS = [
+const BOTH_LINKS = [
   { label: 'registry', href: '/marketplace' },
   { label: 'dashboard', href: '/dashboard' },
   { label: 'my_agents', href: '/my-agents' },
@@ -44,8 +44,9 @@ type Role = 'builder' | 'hire' | 'both' | null;
 
 function getLinksForRole(role: Role): ReadonlyArray<{ label: string; href: string }> {
   if (role === 'builder') return BUILDER_LINKS;
-  if (role === 'hire') return ORCHESTRATOR_LINKS;
-  return ALL_LINKS;
+  if (role === 'both') return BOTH_LINKS;
+  // Default: orchestrator view (no dashboard, no my_agents)
+  return ORCHESTRATOR_LINKS;
 }
 
 export function RoleNav() {
@@ -59,9 +60,9 @@ export function RoleNav() {
     setMounted(true);
   }, []);
 
-  // Use ALL_LINKS until mounted to avoid hydration mismatch
-  const links = mounted ? getLinksForRole(role) : ALL_LINKS;
-  const isBuilder = mounted && role === 'builder';
+  // Use ORCHESTRATOR_LINKS until mounted to avoid hydration mismatch
+  const links = mounted ? getLinksForRole(role) : ORCHESTRATOR_LINKS;
+  const isBuilder = mounted && (role === 'builder' || role === 'both');
 
   return (
     <nav className="sticky top-0 z-[100] flex items-center gap-8 px-8 h-[52px] border-b border-border bg-bg-0/[0.92] backdrop-blur-[12px]">
