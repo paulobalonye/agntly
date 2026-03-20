@@ -1,10 +1,7 @@
-// TODO: SECURITY — Migrate from in-memory Maps to PostgreSQL before production.
-// The users, api_keys, and magic_link_tokens tables already exist in migrate.sql.
-// In-memory storage means: data lost on restart, no horizontal scaling, rate limits per-instance only.
-
 import bcrypt from 'bcryptjs';
 import jwt, { type SignOptions } from 'jsonwebtoken';
-import { generateId } from '@agntly/shared';
+import type { DbConnection } from '@agntly/shared';
+import { UserRepository } from '../repositories/user-repository.js';
 
 interface AuthTokens {
   readonly accessToken: string;
@@ -26,29 +23,26 @@ const JWT_SECRET: string = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m';
 const REFRESH_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN ?? '7d';
 
-const users = new Map<string, { id: string; email: string; passwordHash: string; role: string; createdAt: Date }>();
-const emailIndex = new Map<string, string>();
-
 export class AuthService {
+  private readonly userRepo: UserRepository;
+
+  constructor(db: DbConnection) {
+    this.userRepo = new UserRepository(db);
+  }
+
   async register(email: string, password: string): Promise<AuthTokens> {
-    if (emailIndex.has(email)) {
+    const existing = await this.userRepo.findByEmail(email);
+    if (existing) {
       throw new Error('Email already registered');
     }
 
-    const id = generateId('usr');
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = { id, email, passwordHash, role: 'developer', createdAt: new Date() };
-
-    users.set(id, user);
-    emailIndex.set(email, id);
+    const user = await this.userRepo.create({ email, passwordHash, role: 'developer' });
     return this.generateTokens(user);
   }
 
   async login(email: string, password: string): Promise<AuthTokens> {
-    const userId = emailIndex.get(email);
-    if (!userId) throw new Error('Invalid credentials');
-
-    const user = users.get(userId);
+    const user = await this.userRepo.findByEmail(email);
     if (!user) throw new Error('Invalid credentials');
 
     const valid = await bcrypt.compare(password, user.passwordHash);
@@ -61,24 +55,14 @@ export class AuthService {
     const payload = jwt.verify(token, JWT_SECRET) as { userId: string; type: string };
     if (payload.type !== 'refresh') throw new Error('Invalid token type');
 
-    const user = users.get(payload.userId);
+    const user = await this.userRepo.findById(payload.userId);
     if (!user) throw new Error('User not found');
 
     return this.generateTokens(user);
   }
 
-  getOrCreateUser(email: string): { id: string; email: string; role: string } {
-    const existingId = emailIndex.get(email);
-    if (existingId) {
-      const existing = users.get(existingId);
-      if (!existing) throw new Error('User index inconsistency');
-      return { id: existing.id, email: existing.email, role: existing.role };
-    }
-
-    const id = generateId('usr');
-    const user = { id, email, passwordHash: '', role: 'developer', createdAt: new Date() };
-    users.set(id, user);
-    emailIndex.set(email, id);
+  async getOrCreateUser(email: string): Promise<{ id: string; email: string; role: string }> {
+    const user = await this.userRepo.upsertByEmail(email);
     return { id: user.id, email: user.email, role: user.role };
   }
 

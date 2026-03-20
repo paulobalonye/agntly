@@ -1,10 +1,11 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { SERVICE_PORTS } from '@agntly/shared';
+import { SERVICE_PORTS, createDbConnection } from '@agntly/shared';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { apiKeyRoutes } from './routes/api-keys.js';
 import { AuthService } from './services/auth-service.js';
+import { ApiKeyService } from './services/api-key-service.js';
 import { MagicLinkService } from './services/magic-link-service.js';
 import { ResendClient } from './services/resend-client.js';
 
@@ -14,10 +15,14 @@ const app = Fastify({
 
 await app.register(cors, { origin: true });
 
-const authService = new AuthService();
+const db = createDbConnection();
+const authService = new AuthService(db);
+const apiKeyService = new ApiKeyService(db);
 const resendClient = new ResendClient();
-const magicLinkService = new MagicLinkService(authService, resendClient);
+const magicLinkService = new MagicLinkService(authService, resendClient, db);
 
+app.decorate('authService', authService);
+app.decorate('apiKeyService', apiKeyService);
 app.decorate('magicLinkService', magicLinkService);
 
 await app.register(healthRoutes);

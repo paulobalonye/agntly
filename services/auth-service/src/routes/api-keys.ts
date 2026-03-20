@@ -1,12 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
-import { ApiKeyService } from '../services/api-key-service.js';
+import type { ApiKeyService } from '../services/api-key-service.js';
 
 const createKeySchema = z.object({ label: z.string().min(1).max(100) });
 
 export const apiKeyRoutes: FastifyPluginAsync = async (app) => {
-  const apiKeyService = new ApiKeyService();
+  const apiKeyService = (app as unknown as { apiKeyService: ApiKeyService }).apiKeyService;
 
   app.post('/', async (request, reply) => {
     const parsed = createKeySchema.safeParse(request.body);

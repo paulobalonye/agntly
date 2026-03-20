@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
-import { AuthService } from '../services/auth-service.js';
+import type { AuthService } from '../services/auth-service.js';
 import type { MagicLinkService } from '../services/magic-link-service.js';
 
 const registerSchema = z.object({
@@ -15,8 +15,9 @@ const loginSchema = z.object({
 });
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
-  const authService = new AuthService();
-  const magicLinkService = (app as unknown as { magicLinkService: MagicLinkService }).magicLinkService;
+  const decorated = app as unknown as { authService: AuthService; magicLinkService: MagicLinkService };
+  const authService = decorated.authService;
+  const magicLinkService = decorated.magicLinkService;
 
   app.post('/register', async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
