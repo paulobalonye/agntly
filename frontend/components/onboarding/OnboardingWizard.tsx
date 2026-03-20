@@ -45,7 +45,8 @@ export function OnboardingWizard() {
     if (step < 2) {
       setStep((s) => s + 1);
     } else {
-      const destination = role === 'builder' || role === 'both' ? '/dashboard' : '/marketplace';
+      document.cookie = `agntly_role=${role}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      const destination = role === 'builder' ? '/dashboard' : '/marketplace';
       router.push(destination);
     }
   }

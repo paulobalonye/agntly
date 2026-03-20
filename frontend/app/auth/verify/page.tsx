@@ -28,7 +28,9 @@ function VerifyContent() {
         }
         setStatus('success');
         setTimeout(() => {
-          const redirect = searchParams.get('redirect') || '/marketplace';
+          const roleCookie = document.cookie.match(/agntly_role=([^;]+)/)?.[1];
+          const defaultRedirect = roleCookie === 'builder' ? '/dashboard' : '/marketplace';
+          const redirect = searchParams.get('redirect') || defaultRedirect;
           router.push(redirect);
         }, 1500);
       })

@@ -1,4 +1,4 @@
-import { MarketplaceNav } from '@/components/marketplace/MarketplaceNav';
+import { RoleNav } from '@/components/shared/RoleNav';
 import { StatsBar } from '@/components/marketplace/StatsBar';
 import { Footer } from '@/components/shared/Footer';
 import { GridBackground } from '@/components/shared/GridBackground';
@@ -12,7 +12,7 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
   return (
     <>
       <GridBackground />
-      <MarketplaceNav />
+      <RoleNav />
       <StatsBar />
       {children}
       <Footer />
