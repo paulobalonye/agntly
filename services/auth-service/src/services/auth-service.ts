@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { generateId } from '@agntly/shared';
 
 interface AuthTokens {
@@ -54,17 +54,35 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  private generateTokens(user: { id: string; email: string; role: string }): AuthTokens {
+  getOrCreateUser(email: string): { id: string; email: string; role: string } {
+    const existingId = emailIndex.get(email);
+    if (existingId) {
+      const existing = users.get(existingId);
+      if (!existing) throw new Error('User index inconsistency');
+      return { id: existing.id, email: existing.email, role: existing.role };
+    }
+
+    const id = generateId('usr');
+    const user = { id, email, passwordHash: '', role: 'developer', createdAt: new Date() };
+    users.set(id, user);
+    emailIndex.set(email, id);
+    return { id: user.id, email: user.email, role: user.role };
+  }
+
+  generateTokens(user: { id: string; email: string; role: string }): AuthTokens {
+    const accessOptions: SignOptions = { expiresIn: JWT_EXPIRES_IN as SignOptions['expiresIn'] };
+    const refreshOptions: SignOptions = { expiresIn: REFRESH_EXPIRES_IN as SignOptions['expiresIn'] };
+
     const accessToken = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      accessOptions,
     );
 
     const refreshToken = jwt.sign(
       { userId: user.id, type: 'refresh' },
       JWT_SECRET,
-      { expiresIn: REFRESH_EXPIRES_IN }
+      refreshOptions,
     );
 
     return { accessToken, refreshToken, expiresIn: 900, user: { id: user.id, email: user.email, role: user.role } };

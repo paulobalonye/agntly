@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import { AuthService } from '../services/auth-service.js';
+import type { MagicLinkService } from '../services/magic-link-service.js';
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -15,6 +16,7 @@ const loginSchema = z.object({
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
   const authService = new AuthService();
+  const magicLinkService = (app as unknown as { magicLinkService: MagicLinkService }).magicLinkService;
 
   app.post('/register', async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
@@ -40,6 +42,36 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(200).send(createApiResponse(result));
     } catch (err) {
       return reply.status(401).send(createErrorResponse('Invalid email or password'));
+    }
+  });
+
+  app.post('/magic-link', async (request, reply) => {
+    const schema = z.object({ email: z.string().email() });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send(createErrorResponse('Valid email required'));
+    }
+    try {
+      await magicLinkService.sendMagicLink(parsed.data.email);
+      return reply.status(200).send(createApiResponse({ sent: true }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to send magic link';
+      const status = msg.includes('Too many') ? 429 : 400;
+      return reply.status(status).send(createErrorResponse(msg));
+    }
+  });
+
+  app.post('/verify-magic-link', async (request, reply) => {
+    const schema = z.object({ token: z.string().min(1) });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send(createErrorResponse('Token required'));
+    }
+    try {
+      const result = await magicLinkService.verifyMagicLink(parsed.data.token);
+      return reply.status(200).send(createApiResponse(result));
+    } catch (err) {
+      return reply.status(401).send(createErrorResponse('Invalid or expired magic link'));
     }
   });
 

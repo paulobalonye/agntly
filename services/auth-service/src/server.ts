@@ -4,15 +4,25 @@ import { SERVICE_PORTS } from '@agntly/shared';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { apiKeyRoutes } from './routes/api-keys.js';
+import { AuthService } from './services/auth-service.js';
+import { MagicLinkService } from './services/magic-link-service.js';
+import { ResendClient } from './services/resend-client.js';
 
 const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
 });
 
 await app.register(cors, { origin: true });
+
+const authService = new AuthService();
+const resendClient = new ResendClient();
+const magicLinkService = new MagicLinkService(authService, resendClient);
+
+app.decorate('magicLinkService', magicLinkService);
+
 await app.register(healthRoutes);
 await app.register(authRoutes, { prefix: '/v1/auth' });
-    await app.register(apiKeyRoutes, { prefix: '/v1/api-keys' });
+await app.register(apiKeyRoutes, { prefix: '/v1/api-keys' });
 
 const port = SERVICE_PORTS.auth;
 const host = process.env.HOST ?? '0.0.0.0';
