@@ -4,6 +4,23 @@ import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import type { WebhookRepository } from '../repositories/webhook-repository.js';
 import type { DeliveryService } from '../services/delivery-service.js';
 
+function isPublicUrl(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+    const hostname = url.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false;
+    if (hostname.startsWith('10.')) return false;
+    if (hostname.startsWith('172.') && parseInt(hostname.split('.')[1] ?? '0') >= 16 && parseInt(hostname.split('.')[1] ?? '0') <= 31) return false;
+    if (hostname.startsWith('192.168.')) return false;
+    if (hostname === '169.254.169.254') return false; // AWS metadata
+    if (hostname.endsWith('.internal') || hostname.endsWith('.local')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const ALL_WEBHOOK_EVENTS = [
   'task.created',
   'task.escrowed',
@@ -51,6 +68,7 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
     const { url, secret, events } = parsed.data;
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    if (!isPublicUrl(url)) return reply.status(400).send(createErrorResponse('URL must be a public HTTPS/HTTP endpoint'));
 
     const subscription = await webhookRepo.createSubscription({ userId, url, secret, events });
 

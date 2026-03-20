@@ -35,6 +35,8 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.put('/:agentId', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { agentId } = request.params as { agentId: string };
     const updates = request.body as Record<string, unknown>;
     const agent = await registryService.updateAgent(agentId, updates);
@@ -42,6 +44,8 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.delete('/:agentId', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { agentId } = request.params as { agentId: string };
     await registryService.delistAgent(agentId);
     return reply.status(200).send(createApiResponse({ delisted: true }));

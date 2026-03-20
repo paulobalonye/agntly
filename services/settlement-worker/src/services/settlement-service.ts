@@ -1,5 +1,6 @@
 import { parseAbi, type Hex } from 'viem';
 import { GasManager } from './gas-manager.js';
+import { usdcToSmallest } from '@agntly/shared';
 
 const ESCROW_CONTRACT_ADDRESS = process.env.ESCROW_CONTRACT_ADDRESS as `0x${string}` | undefined;
 
@@ -132,8 +133,8 @@ export class SettlementService {
     const destination = data.destination as string;
     const amount = data.amount as string;
 
-    // Convert "5.000000" to smallest unit (6 decimals)
-    const amountSmallest = BigInt(Math.round(parseFloat(amount) * 1_000_000));
+    // Convert "5.000000" to smallest unit (6 decimals) using shared utility (avoids floating-point errors)
+    const amountSmallest = usdcToSmallest(amount);
 
     const txHash = await this.gasManager.walletClient.writeContract({
       address: USDC_CONTRACT_ADDRESS,

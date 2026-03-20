@@ -5,10 +5,13 @@ import type { EscrowService } from '../services/escrow-service.js';
 import type { DisputeService } from '../services/dispute-service.js';
 
 const lockSchema = z.object({
-  taskId: z.string(),
-  fromWalletId: z.string(),
-  toWalletId: z.string(),
-  amount: z.string(),
+  taskId: z.string().min(1),
+  fromWalletId: z.string().uuid(),
+  toWalletId: z.string().uuid(),
+  amount: z.string()
+    .refine(val => /^\d+(\.\d{1,6})?$/.test(val), 'Amount must be a valid number')
+    .refine(val => parseFloat(val) > 0, 'Amount must be positive')
+    .refine(val => parseFloat(val) <= 1_000_000, 'Amount exceeds maximum'),
   deadline: z.string().datetime().optional(),
 });
 

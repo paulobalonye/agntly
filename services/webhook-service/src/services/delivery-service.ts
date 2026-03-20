@@ -1,6 +1,24 @@
 import { createHmac } from 'node:crypto';
 import type { WebhookRepository, WebhookSubscriptionRow } from '../repositories/webhook-repository.js';
 
+function isPublicUrl(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+    const hostname = url.hostname;
+    // Block private/internal IPs
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false;
+    if (hostname.startsWith('10.')) return false;
+    if (hostname.startsWith('172.') && parseInt(hostname.split('.')[1] ?? '0') >= 16 && parseInt(hostname.split('.')[1] ?? '0') <= 31) return false;
+    if (hostname.startsWith('192.168.')) return false;
+    if (hostname === '169.254.169.254') return false; // AWS metadata
+    if (hostname.endsWith('.internal') || hostname.endsWith('.local')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const BACKOFF_SECONDS = [60, 300, 1500, 7200, 43200] as const;
 const MAX_ATTEMPTS = 5;
 const FETCH_TIMEOUT_MS = 10_000;
@@ -26,6 +44,18 @@ export class DeliveryService {
   }
 
   async deliver(subscription: WebhookSubscriptionRow, event: DeliveryEvent): Promise<void> {
+    if (!isPublicUrl(subscription.url)) {
+      const delivery = await this.webhookRepo.createDelivery({
+        subscriptionId: subscription.id,
+        eventType: event.type,
+        eventId: event.id,
+        payload: JSON.stringify({ id: event.id, type: event.type, data: event.data, timestamp: event.timestamp }),
+        signature: '',
+      });
+      await this.webhookRepo.markFailed(delivery.id, null, 'SSRF_BLOCKED');
+      return;
+    }
+
     const payload = JSON.stringify({
       id: event.id,
       type: event.type,
@@ -55,6 +85,11 @@ export class DeliveryService {
       const subscription = await this.webhookRepo.findSubscriptionById(delivery.subscriptionId);
       if (!subscription) {
         await this.webhookRepo.markFailed(delivery.id, null, 'Subscription not found');
+        continue;
+      }
+
+      if (!isPublicUrl(subscription.url)) {
+        await this.webhookRepo.markFailed(delivery.id, null, 'SSRF_BLOCKED');
         continue;
       }
 

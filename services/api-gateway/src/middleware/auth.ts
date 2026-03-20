@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { createHmac } from 'node:crypto';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
 function getJwtSecret(): string {
@@ -11,6 +12,7 @@ function getJwtSecret(): string {
 }
 
 const JWT_SECRET: string = getJwtSecret();
+const INTERNAL_SECRET = process.env.INTERNAL_SIGNING_SECRET ?? 'dev-internal-secret';
 
 export interface AuthContext {
   readonly userId: string;
@@ -61,6 +63,11 @@ export async function authMiddleware(
     request.headers['x-user-id'] = payload.userId;
     request.headers['x-user-email'] = payload.email;
     request.headers['x-user-role'] = payload.role;
+
+    // Sign the forwarded identity so downstream services can verify headers came from the gateway
+    const signingPayload = `${payload.userId}:${payload.email}:${payload.role}`;
+    const signature = createHmac('sha256', INTERNAL_SECRET).update(signingPayload).digest('hex');
+    request.headers['x-gateway-signature'] = signature;
   } catch {
     return reply.status(401).send({
       success: false,

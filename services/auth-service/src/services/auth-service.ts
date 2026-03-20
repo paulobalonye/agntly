@@ -1,3 +1,7 @@
+// TODO: SECURITY — Migrate from in-memory Maps to PostgreSQL before production.
+// The users, api_keys, and magic_link_tokens tables already exist in migrate.sql.
+// In-memory storage means: data lost on restart, no horizontal scaling, rate limits per-instance only.
+
 import bcrypt from 'bcryptjs';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { generateId } from '@agntly/shared';

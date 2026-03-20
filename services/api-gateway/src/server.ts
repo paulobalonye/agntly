@@ -10,10 +10,16 @@ const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
 });
 
-// CORS — allow all origins (SDKs may call from any origin in dev)
-await app.register(cors, { origin: true });
+// CORS — restrict to known origins; set ALLOWED_ORIGINS env var (comma-separated) in production
+await app.register(cors, {
+  origin: process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3100', 'http://localhost:3000'],
+  credentials: true,
+});
 
 // Rate limiting — registered globally before proxies so all routes are covered
+// TODO: SECURITY — Auth endpoints (/v1/auth/*) should have a stricter rate limit (e.g. 5 req/15min).
+// The MagicLinkService already enforces per-email rate limiting (3 requests per 15 min).
+// For production, register a dedicated scoped plugin for /v1/auth with a lower max count.
 await app.register(rateLimit, {
   max: RATE_LIMIT_MAX,
   timeWindow: RATE_LIMIT_WINDOW_MS,

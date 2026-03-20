@@ -4,7 +4,12 @@ import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import type { TaskService } from '../services/task-service.js';
 
 const createTaskSchema = z.object({
-  agentId: z.string(), payload: z.record(z.unknown()), budget: z.string(), timeoutMs: z.number().optional(),
+  agentId: z.string().min(1),
+  payload: z.record(z.unknown()),
+  budget: z.string()
+    .refine(val => /^\d+(\.\d{1,6})?$/.test(val), 'Budget must be a valid number')
+    .refine(val => parseFloat(val) > 0, 'Budget must be positive'),
+  timeoutMs: z.number().int().positive().max(86_400_000).optional(), // max 24h
 });
 
 export const taskRoutes: FastifyPluginAsync = async (app) => {

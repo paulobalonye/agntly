@@ -69,7 +69,11 @@ export class PaymentService {
     const session = event.data.object;
     const stripeSessionId = session.id;
     const walletId = session.metadata.walletId;
-    const usdcAmount = (session.amount_total / 100).toFixed(6);
+    // Use integer arithmetic to avoid floating-point precision errors
+    const cents = session.amount_total;
+    const dollars = Math.floor(cents / 100);
+    const remainingCents = cents % 100;
+    const usdcAmount = `${dollars}.${String(remainingCents).padStart(2, '0')}0000`;
 
     // CRITICAL TRANSACTION: both payment + wallet updates on the same pg client
     const client = await this.pool.connect();
