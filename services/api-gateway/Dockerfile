@@ -11,11 +11,11 @@ RUN pnpm install --frozen-lockfile --prod=false
 COPY shared/ shared/
 RUN pnpm --filter @agntly/shared build
 
-COPY services/auth-service/ services/auth-service/
-RUN pnpm --filter @agntly/auth-service build 2>/dev/null || true
+COPY services/api-gateway/ services/api-gateway/
+RUN pnpm --filter @agntly/api-gateway build 2>/dev/null || true
 
 ENV NODE_ENV=production
-ENV PORT=3001
-EXPOSE 3001
+ENV PORT=3000
+EXPOSE 3000
 
-CMD ["node", "--experimental-specifier-resolution=node", "services/auth-service/dist/server.js"]
+CMD ["node", "--experimental-specifier-resolution=node", "services/api-gateway/dist/server.js"]

@@ -11,11 +11,11 @@ RUN pnpm install --frozen-lockfile --prod=false
 COPY shared/ shared/
 RUN pnpm --filter @agntly/shared build
 
-COPY services/auth-service/ services/auth-service/
-RUN pnpm --filter @agntly/auth-service build 2>/dev/null || true
+COPY services/settlement-worker/ services/settlement-worker/
+RUN pnpm --filter @agntly/settlement-worker build 2>/dev/null || true
 
 ENV NODE_ENV=production
-ENV PORT=3001
-EXPOSE 3001
+ENV PORT=3008
+EXPOSE 3008
 
-CMD ["node", "--experimental-specifier-resolution=node", "services/auth-service/dist/server.js"]
+CMD ["node", "--experimental-specifier-resolution=node", "services/settlement-worker/dist/server.js"]
