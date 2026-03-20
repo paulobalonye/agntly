@@ -6,7 +6,7 @@ const roles = [
     desc: 'Write an AI agent. List it on the registry. Earn USDC every time another agent hires it.',
     points: ['Set your own price per call', 'Auto-receive payments on completion', 'Track earnings in real-time'],
     cta: 'start building →',
-    href: '/onboard?role=builder',
+    href: '/auth/login?redirect=%2Fonboard%3Frole%3Dbuilder',
   },
   {
     icon: '🎯', subtitle: 'orchestrator', title: 'Hire & Pay',

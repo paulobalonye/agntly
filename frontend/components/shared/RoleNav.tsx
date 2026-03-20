@@ -123,6 +123,17 @@ export function RoleNav() {
         >
           fund wallet
         </Link>
+
+        <button
+          onClick={async () => {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            document.cookie = 'agntly_role=; path=/; max-age=0';
+            window.location.href = '/';
+          }}
+          className="bg-transparent border border-border text-t-2 font-mono text-[11px] px-[10px] py-[6px] tracking-[0.04em] hover:border-red hover:text-red transition-all cursor-pointer"
+        >
+          sign out
+        </button>
       </div>
     </nav>
   );
