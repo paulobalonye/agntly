@@ -10,3 +10,8 @@ coverage/
 artifacts/
 cache/
 typechain-types/
+.next/
+.superpowers/
+sdk/python/.venv/
+__pycache__/
+*.pyc

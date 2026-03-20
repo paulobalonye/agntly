@@ -1,1 +1,0 @@
-self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/Users/drpraize/agntly/frontend/app/layout":["static/media/13971731025ec697-s.p.woff2","static/media/de42cfb9a3b980ae-s.p.woff2","static/media/d3ebbfd689654d3a-s.p.woff2","static/media/f36144f235cd456e-s.p.woff2","static/media/98e207f02528a563-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';
