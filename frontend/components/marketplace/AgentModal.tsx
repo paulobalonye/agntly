@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Agent } from './types';
 
 const CATEGORY_COLORS: Record<string, { color: string; bg: string; abbr: string }> = {
@@ -21,6 +21,8 @@ interface AgentModalProps {
 
 export function AgentModal({ agent, onClose }: AgentModalProps) {
   const catStyle = CATEGORY_COLORS[agent.category] ?? DEFAULT_CATEGORY;
+  const [connected, setConnected] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const calls24h = agent.callsTotal > 0
     ? Math.round(agent.callsTotal / 30).toLocaleString()
@@ -42,13 +44,12 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
 
   const handleConnect = () => {
     navigator.clipboard.writeText(agent.id);
-    window.alert(
-      `Agent "${agent.name}" connected!\n\nAgent ID copied to clipboard: ${agent.id}\n\nUse this in your SDK:\nagntly.tasks.create(agent_id="${agent.id}", ...)`
-    );
+    setConnected(true);
+    setTimeout(() => setConnected(false), 3000);
   };
 
   const handleViewDocs = () => {
-    window.open('https://sandbox.api.agntly.io/v1/agents/' + agent.id, '_blank');
+    window.location.href = '/docs';
   };
 
   const handleCopy = async () => {
@@ -62,9 +63,10 @@ result = agntly.tasks.create(
     budget="${agent.priceUsdc}",
 )
 # result["task"]["status"] → "complete"
-# result["task"]["result"] → agent output
-# result["completion_token"] → for agent to confirm`;
+# result["task"]["result"] → agent output`;
     await navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -72,7 +74,7 @@ result = agntly.tasks.create(
       className="fixed inset-0 bg-black/75 z-[200] flex items-center justify-center backdrop-blur-[4px]"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-bg-1 border border-border-2 w-[540px] max-w-[95vw] max-h-[85vh] overflow-y-auto animate-[modalIn_0.2s_ease]"
+      <div className="bg-bg-1 border border-border-2 w-[540px] max-w-[95vw] max-h-[85vh] overflow-y-auto"
         style={{ animation: 'modalIn 0.2s ease' }}
       >
         {/* Header */}
@@ -137,7 +139,7 @@ result = agntly.tasks.create(
             quickstart
           </div>
 
-          {/* Code snippet */}
+          {/* Code snippet — correct SDK method */}
           <div className="bg-bg-0 border border-border px-4 py-[14px] font-mono text-[12px] leading-[1.7] text-t-1 overflow-x-auto whitespace-pre mb-4">
             <span className="text-t-2"># pip install agntly</span>{'\n'}
             <span className="text-blue">from</span>{' agntly '}
@@ -146,30 +148,42 @@ result = agntly.tasks.create(
             {'agntly = Agntly(api_key='}
             <span className="text-accent">&quot;ag_live_...&quot;</span>
             {')\n'}
-            {'result = agntly.run(\n'}
+            {'result = agntly.tasks.create(\n'}
             {'    agent_id='}
             <span className="text-accent">&quot;{agent.id}&quot;</span>
             {',\n'}
-            {'    payload=\u007b '}
+            {'    payload=\u007b'}
             <span className="text-accent">&quot;query&quot;</span>
             {': '}
             <span className="text-accent">&quot;your input here&quot;</span>
-            {' \u007d,\n'}
+            {'\u007d,\n'}
             {'    budget='}
             <span className="text-accent">&quot;{agent.priceUsdc}&quot;</span>
             {',\n'}
             {')\n'}
-            <span className="text-t-2"># result.data → structured output</span>{'\n'}
-            <span className="text-t-2"># result.tx_hash → settlement proof</span>
+            <span className="text-t-2"># result[&quot;task&quot;][&quot;result&quot;] → agent output</span>{'\n'}
+            <span className="text-t-2"># result[&quot;completion_token&quot;] → settlement proof</span>
           </div>
+
+          {/* Connected toast */}
+          {connected && (
+            <div className="bg-accent/10 border border-accent/30 px-4 py-3 mb-4 flex items-center gap-2">
+              <span className="text-accent text-lg">✓</span>
+              <span className="font-mono text-xs text-accent">Agent ID copied — use <span className="text-t-0">{agent.id}</span> in your SDK</span>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-[10px]">
             <button
-              className="flex-1 bg-accent border-none text-bg-0 font-mono text-[12px] font-medium py-[10px] tracking-[0.04em] hover:bg-accent-2 transition-colors cursor-pointer"
+              className={`flex-1 font-mono text-[12px] font-medium py-[10px] tracking-[0.04em] transition-colors cursor-pointer border-none ${
+                connected
+                  ? 'bg-accent/20 text-accent'
+                  : 'bg-accent text-bg-0 hover:bg-accent-2'
+              }`}
               onClick={handleConnect}
             >
-              connect agent
+              {connected ? '✓ connected' : 'connect agent'}
             </button>
             <button
               className="bg-transparent border border-border-2 text-t-1 font-mono text-[12px] px-4 py-[10px] tracking-[0.04em] hover:border-t-1 hover:text-t-0 transition-all cursor-pointer"
@@ -178,10 +192,14 @@ result = agntly.tasks.create(
               view docs
             </button>
             <button
-              className="bg-transparent border border-border-2 text-t-1 font-mono text-[12px] px-4 py-[10px] tracking-[0.04em] hover:border-t-1 hover:text-t-0 transition-all cursor-pointer"
+              className={`bg-transparent border font-mono text-[12px] px-4 py-[10px] tracking-[0.04em] transition-all cursor-pointer ${
+                copied
+                  ? 'border-accent text-accent'
+                  : 'border-border-2 text-t-1 hover:border-t-1 hover:text-t-0'
+              }`}
               onClick={handleCopy}
             >
-              copy sdk snippet
+              {copied ? '✓ copied' : 'copy sdk snippet'}
             </button>
           </div>
         </div>

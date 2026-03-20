@@ -65,12 +65,12 @@ export function MarketplaceNav() {
           </div>
         </div>
 
-        <button className="bg-transparent border border-border-2 text-t-1 font-mono text-[11px] px-[14px] py-[6px] tracking-[0.04em] hover:border-accent hover:text-accent transition-all">
-          connect wallet
-        </button>
-        <button className="bg-accent border border-accent text-bg-0 font-mono text-[11px] font-medium px-[16px] py-[6px] tracking-[0.04em] hover:bg-accent-2 hover:border-accent-2 transition-all">
-          + list agent
-        </button>
+        <Link
+          href="/wallet"
+          className="bg-transparent border border-border-2 text-t-1 font-mono text-[11px] px-[14px] py-[6px] tracking-[0.04em] hover:border-accent hover:text-accent transition-all"
+        >
+          fund wallet
+        </Link>
       </div>
     </nav>
   );
