@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { SERVICE_PORTS, createDbConnection, EventBus } from '@agntly/shared';
 import { healthRoutes } from './routes/health.js';
 import { webhookRoutes } from './routes/webhooks.js';
+import { feedRoutes, broadcastEvent } from './routes/feed.js';
 import { WebhookRepository } from './repositories/webhook-repository.js';
 import { DeliveryService } from './services/delivery-service.js';
 
@@ -21,6 +22,7 @@ app.decorate('deliveryService', deliveryService);
 await app.register(cors, { origin: true });
 await app.register(healthRoutes);
 await app.register(webhookRoutes, { prefix: '/v1/webhooks' });
+await app.register(feedRoutes);
 
 // Subscribe to ALL events on the Redis Stream and fan out to matching subscriptions
 await eventBus.subscribe(async (message) => {
@@ -37,6 +39,9 @@ await eventBus.subscribe(async (message) => {
       app.log.error({ err, subscriptionId: sub.id, eventId: message.id }, 'Webhook delivery failed');
     }
   }
+
+  // Broadcast to SSE clients for the live settlement feed
+  broadcastEvent({ type: message.type, data: message.data, timestamp: message.timestamp });
 });
 
 // Retry loop: process pending retries every 30 seconds
