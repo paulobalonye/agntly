@@ -14,7 +14,7 @@ function okPaginated(data: unknown[], meta: { total: number; limit: number; offs
 }
 
 describe('WalletsResource', () => {
-  const client = new HttpClient({ apiKey: 'test', baseUrl: 'http://localhost:3002' });
+  const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3002' });
   const wallets = new WalletsResource(client);
 
   it('create sends POST with optional agentId', async () => {

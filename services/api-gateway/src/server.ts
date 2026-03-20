@@ -30,7 +30,6 @@ app.get('/health', async () => ({
   status: 'ok',
   service: 'api-gateway',
   timestamp: new Date().toISOString(),
-  routes: ROUTE_TABLE.map((r) => r.prefix),
 }));
 
 // Register proxy routes.

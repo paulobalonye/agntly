@@ -61,8 +61,8 @@ export class EscrowService {
 
     if (!escrow) {
       const current = await this.repo.findById(escrowId);
-      const stateInfo = current ? `current state: ${current.state}` : 'escrow not found';
-      throw new Error(`Cannot release escrow ${escrowId}: ${stateInfo}`);
+      console.error(`[EscrowService] Cannot release escrow ${escrowId}: ${current ? `current state: ${current.state}` : 'not found'}`);
+      throw new Error('Escrow cannot be released');
     }
 
     await this.repo.addAuditEntry({
@@ -92,8 +92,8 @@ export class EscrowService {
 
     if (!escrow) {
       const current = await this.repo.findById(escrowId);
-      const stateInfo = current ? `current state: ${current.state}` : 'escrow not found';
-      throw new Error(`Cannot refund escrow ${escrowId}: ${stateInfo}`);
+      console.error(`[EscrowService] Cannot refund escrow ${escrowId}: ${current ? `current state: ${current.state}` : 'not found'}`);
+      throw new Error('Escrow cannot be refunded');
     }
 
     await this.repo.addAuditEntry({
@@ -122,8 +122,8 @@ export class EscrowService {
 
     if (!escrow) {
       const current = await this.repo.findById(escrowId);
-      const stateInfo = current ? `current state: ${current.state}` : 'escrow not found';
-      throw new Error(`Cannot dispute escrow ${escrowId}: ${stateInfo}`);
+      console.error(`[EscrowService] Cannot dispute escrow ${escrowId}: ${current ? `current state: ${current.state}` : 'not found'}`);
+      throw new Error('Escrow cannot be disputed');
     }
 
     await this.repo.addAuditEntry({

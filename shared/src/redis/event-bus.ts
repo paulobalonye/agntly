@@ -19,6 +19,9 @@ export class EventBus {
 
   constructor(serviceName: string, redisUrl?: string) {
     const url = redisUrl ?? process.env.REDIS_URL ?? 'redis://localhost:6379';
+    if (!url.includes('@') && process.env.NODE_ENV === 'production') {
+      console.warn('WARNING: Redis connection has no authentication — not recommended for production');
+    }
     this.publisher = new (IORedis as any)(url);
     this.serviceName = serviceName;
   }

@@ -1,3 +1,6 @@
+// TODO: SECURITY — Magic link tokens stored in-memory. Must migrate to magic_link_tokens
+// PostgreSQL table before production. In-memory means: tokens lost on restart, rate
+// limits per-instance only, no horizontal scaling.
 import crypto from 'crypto';
 import { AuthService } from './auth-service.js';
 import type { IResendClient } from './resend-client.js';

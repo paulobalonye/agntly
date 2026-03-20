@@ -27,8 +27,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       const result = await authService.register(parsed.data.email, parsed.data.password);
       return reply.status(201).send(createApiResponse(result));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
-      return reply.status(409).send(createErrorResponse(message));
+      // Don't reveal whether email exists
+      return reply.status(409).send(createErrorResponse('Registration failed'));
     }
   });
 

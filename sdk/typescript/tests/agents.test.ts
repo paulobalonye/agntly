@@ -14,7 +14,7 @@ function okPaginated(data: unknown[], meta: { total: number; limit: number; offs
 }
 
 describe('AgentsResource', () => {
-  const client = new HttpClient({ apiKey: 'test', baseUrl: 'http://localhost:3005' });
+  const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3005' });
   const agents = new AgentsResource(client);
 
   it('register sends agentId and body', async () => {

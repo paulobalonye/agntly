@@ -1,5 +1,9 @@
 import Stripe from 'stripe';
 
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('WARNING: STRIPE_SECRET_KEY not set — Stripe operations will fail');
+}
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY ?? '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? '';
 const SUCCESS_URL = process.env.STRIPE_SUCCESS_URL ?? 'http://localhost:3000/wallet?funded=true';

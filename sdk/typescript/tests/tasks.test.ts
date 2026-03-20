@@ -11,7 +11,7 @@ function ok(data: unknown) {
 }
 
 describe('TasksResource', () => {
-  const client = new HttpClient({ apiKey: 'test', baseUrl: 'http://localhost:3004' });
+  const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3004' });
   const tasks = new TasksResource(client);
 
   it('create reshapes flat response into { task, completionToken }', async () => {

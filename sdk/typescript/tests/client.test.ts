@@ -24,7 +24,11 @@ function jsonResponse(data: unknown, status = 200): Response {
 
 describe('HttpClient', () => {
   it('should throw if apiKey is empty', () => {
-    expect(() => new HttpClient({ apiKey: '' })).toThrow('apiKey is required');
+    expect(() => new HttpClient({ apiKey: '' })).toThrow('apiKey must be an Agntly API key starting with ag_');
+  });
+
+  it('should throw if apiKey does not start with ag_', () => {
+    expect(() => new HttpClient({ apiKey: 'invalid-key' })).toThrow('apiKey must be an Agntly API key starting with ag_');
   });
 
   it('should set Authorization header on every request', async () => {
@@ -40,7 +44,7 @@ describe('HttpClient', () => {
 
   it('should build URL with query params', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ success: true, data: [], error: null }));
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     await client.get('/v1/agents', { category: 'search', limit: 10, skip: undefined });
 
@@ -56,7 +60,7 @@ describe('HttpClient', () => {
       data: { id: 'agent_1', name: 'Test' },
       error: null,
     }));
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     const result = await client.get<{ id: string; name: string }>('/v1/agents/1');
 
@@ -70,7 +74,7 @@ describe('HttpClient', () => {
       error: null,
       meta: { total: 5, limit: 2, offset: 0 },
     }));
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     const result = await client.getPaginated<{ id: string }>('/v1/agents');
 
@@ -85,7 +89,7 @@ describe('HttpClient', () => {
     );
     mockFetch.mockResolvedValueOnce(errorResponse);
     mockFetch.mockResolvedValueOnce(errorResponse);
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     await expect(client.get('/v1/wallets/bad')).rejects.toThrow(AgntlyError);
     await expect(client.get('/v1/wallets/bad')).rejects.toThrow('Wallet not found');
@@ -97,7 +101,7 @@ describe('HttpClient', () => {
       json: () => Promise.reject(new Error('not json')),
       headers: new Headers(),
     } as unknown as Response);
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     try {
       await client.get('/v1/test');
@@ -110,7 +114,7 @@ describe('HttpClient', () => {
 
   it('should wrap network errors as AgntlyError with status 0', async () => {
     mockFetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     try {
       await client.get('/v1/test');
@@ -123,7 +127,7 @@ describe('HttpClient', () => {
 
   it('should send POST with JSON body', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ success: true, data: { id: '1' }, error: null }));
-    const client = new HttpClient({ apiKey: 'key', baseUrl: 'http://localhost:3000' });
+    const client = new HttpClient({ apiKey: 'ag_test_key', baseUrl: 'http://localhost:3000' });
 
     await client.post('/v1/tasks', { agentId: 'a1', payload: {} });
 
@@ -134,7 +138,7 @@ describe('HttpClient', () => {
 
   it('should use default baseUrl when not provided', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ success: true, data: {}, error: null }));
-    const client = new HttpClient({ apiKey: 'key' });
+    const client = new HttpClient({ apiKey: 'ag_test_key' });
 
     await client.get('/v1/test');
 

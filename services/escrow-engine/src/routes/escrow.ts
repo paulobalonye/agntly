@@ -4,6 +4,11 @@ import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import type { EscrowService } from '../services/escrow-service.js';
 import type { DisputeService } from '../services/dispute-service.js';
 
+const disputeSchema = z.object({
+  reason: z.string().min(1).max(1000),
+  evidence: z.string().max(10000).optional(),
+});
+
 const lockSchema = z.object({
   taskId: z.string().min(1),
   fromWalletId: z.string().uuid(),
@@ -67,9 +72,10 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { escrowId } = request.params as { escrowId: string };
-    const body = request.body as { reason: string; evidence?: string };
+    const parsed = disputeSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid dispute request'));
     try {
-      const result = await service.disputeEscrow(escrowId, body.reason);
+      const result = await service.disputeEscrow(escrowId, parsed.data.reason);
       return reply.status(200).send(createApiResponse(result));
     } catch (err) {
       return reply.status(400).send(createErrorResponse(err instanceof Error ? err.message : 'Dispute failed'));
@@ -88,8 +94,8 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { escrowId } = request.params as { escrowId: string };
     const evidenceSchema = z.object({
-      evidence: z.string().min(1),
-      submittedBy: z.string().min(1),
+      evidence: z.string().min(1).max(10000),
+      submittedBy: z.string().min(1).max(200),
     });
     const parsed = evidenceSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid evidence request'));

@@ -68,7 +68,11 @@ export class PaymentService {
 
     const session = event.data.object;
     const stripeSessionId = session.id;
-    const walletId = session.metadata.walletId;
+    const walletId = session.metadata?.walletId;
+    if (!walletId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(walletId)) {
+      console.error('Invalid walletId in Stripe session metadata:', walletId);
+      return; // Skip — don't credit an invalid wallet
+    }
     // Use integer arithmetic to avoid floating-point precision errors
     const cents = session.amount_total;
     const dollars = Math.floor(cents / 100);

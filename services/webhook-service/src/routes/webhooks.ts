@@ -105,9 +105,15 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send(createErrorResponse('webhookId (uuid) is required'));
     }
 
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+
     const subscription = await webhookRepo.findSubscriptionById(parsed.data.webhookId);
     if (!subscription) {
       return reply.status(404).send(createErrorResponse('Subscription not found'));
+    }
+    if (subscription.userId !== userId) {
+      return reply.status(403).send(createErrorResponse('Access denied'));
     }
 
     const testEvent = {

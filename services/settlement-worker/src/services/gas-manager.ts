@@ -1,3 +1,6 @@
+// TODO: SECURITY — Nonce management uses in-memory state. On crash-restart, nonces may
+// desync from chain state. For production, always fetch nonce from chain before each tx,
+// or use Redis-based nonce locking for multi-instance coordination.
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';

@@ -158,9 +158,9 @@ describe('Critical path: double-release prevention', () => {
     const firstRelease = await escrowService.releaseEscrow(escrow.id);
     expect(firstRelease.state).toBe('released');
 
-    // Second release should throw with state info
+    // Second release should throw
     await expect(escrowService.releaseEscrow(escrow.id)).rejects.toThrow(
-      'Cannot release escrow',
+      'Escrow cannot be released',
     );
   });
 });
