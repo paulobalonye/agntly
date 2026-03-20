@@ -29,5 +29,20 @@ export async function POST(request: NextRequest) {
     path: '/',
   });
 
+  // Create a wallet for the user (fire-and-forget; failure must not block login)
+  try {
+    const walletUrl = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
+    await fetch(`${walletUrl}/v1/wallets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': user.id,
+      },
+      body: JSON.stringify({}),
+    });
+  } catch {
+    // Wallet creation failure should not block login
+  }
+
   return NextResponse.json({ success: true, data: { user }, error: null });
 }

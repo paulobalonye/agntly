@@ -1,10 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // ── Demo data ──────────────────────────────────────────────────────────────
 
-const DEMO_WALLET = {
+interface WalletData {
+  balance: string;
+  locked: string;
+  address: string;
+  chain: string;
+}
+
+const DEMO_WALLET: WalletData = {
   balance: '142.500000',
   locked: '12.000000',
   address: '0xA9c3B7d4e5F6a8D2f3c1E9b0D7a6F4e2C8b5A1d3',
@@ -97,11 +104,15 @@ function statusPill(status: Transaction['status']): string {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function BalanceCard() {
+interface BalanceCardProps {
+  wallet: WalletData;
+}
+
+function BalanceCard({ wallet }: BalanceCardProps) {
   const [copied, setCopied] = useState(false);
 
   function handleCopy() {
-    navigator.clipboard.writeText(DEMO_WALLET.address).catch(() => {});
+    navigator.clipboard.writeText(wallet.address).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
@@ -111,21 +122,21 @@ function BalanceCard() {
       <div className="font-mono text-[10px] text-t-2 tracking-[0.1em] uppercase mb-4">Balance</div>
 
       <div className="font-mono text-[40px] font-medium text-accent leading-none mb-1">
-        ${DEMO_WALLET.balance}
+        ${wallet.balance}
         <span className="text-[16px] text-t-2 ml-2">USDC</span>
       </div>
       <div className="font-mono text-[12px] text-t-2 mb-5">
-        ${DEMO_WALLET.locked} USDC locked in escrow
+        ${wallet.locked} USDC locked in escrow
       </div>
 
       <div className="grid grid-cols-[auto_1fr] gap-4 text-[11px] font-mono text-t-2 mb-5">
         <span>chain</span>
-        <span className="text-t-1">{DEMO_WALLET.chain}</span>
+        <span className="text-t-1">{wallet.chain}</span>
       </div>
 
       <div className="flex items-center gap-2">
         <div className="font-mono text-[12px] text-t-1 bg-bg-2 border border-border px-3 py-2 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-          {truncateAddress(DEMO_WALLET.address)}
+          {truncateAddress(wallet.address)}
         </div>
         <button
           onClick={handleCopy}
@@ -138,7 +149,11 @@ function BalanceCard() {
   );
 }
 
-function FundWalletSection() {
+interface FundWalletSectionProps {
+  wallet: WalletData;
+}
+
+function FundWalletSection({ wallet }: FundWalletSectionProps) {
   const [mode, setMode] = useState<'idle' | 'card' | 'direct'>('idle');
   const [cardAmount, setCardAmount] = useState('');
   const [cardState, setCardState] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -233,7 +248,7 @@ function FundWalletSection() {
             Send USDC (Base Sepolia) to this address:
           </div>
           <div className="bg-bg-2 border border-border px-3 py-2 font-mono text-[12px] text-accent break-all">
-            {DEMO_WALLET.address}
+            {wallet.address}
           </div>
           <div className="font-mono text-[10px] text-t-2">
             Only send USDC on Base Sepolia. Other assets or networks will be lost.
@@ -244,7 +259,11 @@ function FundWalletSection() {
   );
 }
 
-function WithdrawSection() {
+interface WithdrawSectionProps {
+  wallet: WalletData;
+}
+
+function WithdrawSection({ wallet }: WithdrawSectionProps) {
   const [amount, setAmount] = useState('');
   const [destination, setDestination] = useState('');
   const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -256,7 +275,7 @@ function WithdrawSection() {
 
     if (!amount || isNaN(parsed) || parsed <= 0) {
       next.amount = 'Enter a valid amount greater than 0.';
-    } else if (parsed > parseFloat(DEMO_WALLET.balance)) {
+    } else if (parsed > parseFloat(wallet.balance)) {
       next.amount = 'Amount exceeds available balance.';
     }
 
@@ -402,7 +421,32 @@ function TransactionHistory() {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
+function normalizeWalletData(raw: Record<string, unknown>): WalletData {
+  return {
+    balance: String(raw.balance ?? raw.availableBalance ?? DEMO_WALLET.balance),
+    locked: String(raw.locked ?? raw.lockedBalance ?? DEMO_WALLET.locked),
+    address: String(raw.address ?? raw.walletAddress ?? DEMO_WALLET.address),
+    chain: String(raw.chain ?? raw.network ?? DEMO_WALLET.chain),
+  };
+}
+
 export default function WalletPage() {
+  const [wallet, setWallet] = useState<WalletData>(DEMO_WALLET);
+
+  useEffect(() => {
+    fetch('/api/wallet')
+      .then((r) => r.json())
+      .then((json) => {
+        const raw: Record<string, unknown> = json?.data ?? json;
+        if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+          setWallet(normalizeWalletData(raw as Record<string, unknown>));
+        }
+      })
+      .catch(() => {
+        // Keep demo data on failure
+      });
+  }, []);
+
   return (
     <div className="relative z-[1] min-h-[calc(100vh-52px-58px)] px-8 py-8 max-w-[900px] mx-auto">
       <div className="font-mono text-[10px] text-t-2 tracking-[0.1em] uppercase mb-1">wallet</div>
@@ -411,9 +455,9 @@ export default function WalletPage() {
       </h1>
 
       <div className="flex flex-col gap-6">
-        <BalanceCard />
-        <FundWalletSection />
-        <WithdrawSection />
+        <BalanceCard wallet={wallet} />
+        <FundWalletSection wallet={wallet} />
+        <WithdrawSection wallet={wallet} />
         <TransactionHistory />
       </div>
     </div>

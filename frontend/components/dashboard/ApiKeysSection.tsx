@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ApiKey {
   id: string;
@@ -9,52 +9,84 @@ interface ApiKey {
   lastUsed: string;
 }
 
-const INITIAL_KEYS: ApiKey[] = [
+const DEMO_KEYS: ApiKey[] = [
   { id: 'key_001', prefix: 'ag_live_sk_J3kR...', label: 'production', lastUsed: '2 min ago' },
   { id: 'key_002', prefix: 'ag_test_sk_X9mP...', label: 'development', lastUsed: '3 days ago' },
   { id: 'key_003', prefix: 'ag_live_sk_Q7wN...', label: 'ci-pipeline', lastUsed: 'never' },
 ];
 
+function normalizeKey(raw: Record<string, unknown>): ApiKey {
+  const id = String(raw.id ?? raw.keyId ?? '');
+  const label = String(raw.label ?? raw.name ?? '');
+  const prefix = String(raw.prefix ?? raw.keyPrefix ?? (raw.key ? String(raw.key).slice(0, 16) + '...' : id.slice(0, 16) + '...'));
+  const lastUsed = raw.lastUsedAt
+    ? new Date(String(raw.lastUsedAt)).toLocaleString()
+    : raw.lastUsed
+    ? String(raw.lastUsed)
+    : 'never';
+  return { id, prefix, label, lastUsed };
+}
+
 export function ApiKeysSection() {
-  const [keys, setKeys] = useState<ApiKey[]>(INITIAL_KEYS);
+  const [keys, setKeys] = useState<ApiKey[]>([]);
   const [newLabel, setNewLabel] = useState('');
   const [revealedKey, setRevealedKey] = useState<{ id: string; fullKey: string } | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [createState, setCreateState] = useState<'idle' | 'loading'>('idle');
+  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'done'>('idle');
 
-  function generateKey(label: string): string {
-    const prefix = label.toLowerCase().includes('test') || label.toLowerCase().includes('dev')
-      ? 'ag_test_sk_'
-      : 'ag_live_sk_';
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    let key = prefix;
-    for (let i = 0; i < 32; i++) {
-      key += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return key;
-  }
+  useEffect(() => {
+    setLoadState('loading');
+    fetch('/api/keys')
+      .then((r) => r.json())
+      .then((json) => {
+        const list: unknown[] = json?.data ?? json?.keys ?? json ?? [];
+        if (Array.isArray(list) && list.length > 0) {
+          setKeys(list.map((k) => normalizeKey(k as Record<string, unknown>)));
+        } else {
+          setKeys(DEMO_KEYS);
+        }
+      })
+      .catch(() => {
+        setKeys(DEMO_KEYS);
+      })
+      .finally(() => setLoadState('done'));
+  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!newLabel.trim()) return;
     setCreateState('loading');
 
-    // Simulate async creation
-    await new Promise((r) => setTimeout(r, 400));
+    try {
+      const res = await fetch('/api/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: newLabel.trim() }),
+      });
 
-    const fullKey = generateKey(newLabel);
-    const prefix = fullKey.slice(0, fullKey.indexOf('_', 8) + 5) + '...';
-    const newKey: ApiKey = {
-      id: `key_${Date.now()}`,
-      prefix,
-      label: newLabel.trim(),
-      lastUsed: 'never',
-    };
+      const json = await res.json();
 
-    setKeys((prev) => [...prev, newKey]);
-    setRevealedKey({ id: newKey.id, fullKey });
-    setNewLabel('');
-    setCreateState('idle');
+      if (!res.ok) {
+        console.error('[ApiKeysSection] create key error:', json);
+        setCreateState('idle');
+        return;
+      }
+
+      const raw: Record<string, unknown> = json?.data ?? json;
+      const fullKey = String(raw.key ?? raw.rawKey ?? raw.fullKey ?? '');
+      const newKey = normalizeKey(raw);
+
+      setKeys((prev) => [...prev, newKey]);
+      if (fullKey) {
+        setRevealedKey({ id: newKey.id, fullKey });
+      }
+    } catch (err) {
+      console.error('[ApiKeysSection] create key failed:', err);
+    } finally {
+      setNewLabel('');
+      setCreateState('idle');
+    }
   }
 
   function handleRevoke(id: string) {
@@ -71,7 +103,7 @@ export function ApiKeysSection() {
 
   return (
     <div className="bg-bg-1 border border-border overflow-hidden">
-      {/* Key list */}
+      {/* Key list header */}
       <div className="bg-bg-2 border-b border-border grid grid-cols-[2fr_1fr_1.5fr_auto] px-5 py-3">
         {['Key', 'Label', 'Last Used', ''].map((col, i) => (
           <div key={i} className="font-mono text-[10px] text-t-2 tracking-[0.08em] uppercase">
@@ -80,7 +112,11 @@ export function ApiKeysSection() {
         ))}
       </div>
 
-      {keys.map((key) => (
+      {loadState === 'loading' && (
+        <div className="px-5 py-6 font-mono text-[12px] text-t-2 text-center">Loading keys…</div>
+      )}
+
+      {loadState !== 'loading' && keys.map((key) => (
         <div
           key={key.id}
           className="grid grid-cols-[2fr_1fr_1.5fr_auto] px-5 py-4 border-b border-border last:border-b-0 items-center gap-4"
@@ -97,7 +133,7 @@ export function ApiKeysSection() {
         </div>
       ))}
 
-      {keys.length === 0 && (
+      {loadState === 'done' && keys.length === 0 && (
         <div className="px-5 py-6 font-mono text-[12px] text-t-2 text-center">
           No API keys. Create one below.
         </div>
