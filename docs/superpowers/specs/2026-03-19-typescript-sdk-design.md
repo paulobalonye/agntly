@@ -11,11 +11,12 @@ import { Agntly } from 'agntly';
 
 const client = new Agntly({
   apiKey: 'ag_live_sk_...',
-  baseUrl: 'http://localhost:3004', // optional
+  baseUrl: 'https://sandbox.api.agntly.io', // defaults to https://sandbox.api.agntly.io
 });
 
 // --- Agents ---
 const agent = await client.agents.register({
+  agentId: 'my-search-agent',
   name: 'WebSearch Pro',
   description: 'Real-time web search',
   endpoint: 'https://my-server.app/run',
@@ -68,7 +69,9 @@ const history = await client.wallets.withdrawals(wallet.id, { limit: 20 });
   │       └── wallets.ts    — WalletsResource class
   ├── tests/
   │   ├── client.test.ts    — HttpClient unit tests
-  │   └── resources.test.ts — Resource method unit tests
+  │   ├── agents.test.ts    — AgentsResource unit tests
+  │   ├── tasks.test.ts     — TasksResource unit tests
+  │   └── wallets.test.ts   — WalletsResource unit tests
   ├── package.json
   └── tsconfig.json
 ```
@@ -81,9 +84,14 @@ Constructor takes `AgntlyConfig`:
 ```typescript
 interface AgntlyConfig {
   readonly apiKey: string;
-  readonly baseUrl?: string; // defaults to 'http://localhost:3004'
+  readonly baseUrl?: string; // defaults to 'https://sandbox.api.agntly.io'
   readonly timeout?: number; // defaults to 30000ms
 }
+```
+
+Constructor throws immediately if `apiKey` is empty or missing.
+
+```typescript
 ```
 
 Creates an `HttpClient` internally and passes it to each resource:
@@ -109,11 +117,12 @@ Thin fetch wrapper. Responsibilities:
 - Sets `Content-Type: application/json`
 - Serializes request bodies to JSON
 - Deserializes response bodies from JSON
-- Checks `response.ok` — if false, extracts error message from `{ success: false, error: "..." }` body and throws `AgntlyError`
-- Supports configurable timeout via `AbortController`
-- Methods: `get<T>(path)`, `post<T>(path, body)`, `put<T>(path, body)`, `delete<T>(path)`
+- Checks `response.ok` — if false, extracts error message from `{ success: false, error: "..." }` body and throws `AgntlyError`. Non-JSON error bodies (e.g., HTML from load balancers) are caught and a generic error message is used.
+- Catches `fetch`-level errors (DNS failure, connection refused) and wraps them as `AgntlyError` with `status: 0` so callers only need to catch one error type.
+- Supports configurable timeout via `AbortController` with `clearTimeout` on success to prevent resource leaks.
+- Methods: `get<T>(path, query?)`, `post<T>(path, body)`, `put<T>(path, body)`, `delete<T>(path)`
 
-Each method returns the `data` field from `{ success: true, data: T }` — the SDK consumer never sees the envelope.
+**Envelope handling:** Each method returns the `data` field from `{ success: true, data: T }`. For paginated responses (where `meta` is present alongside `data`), a separate `getPaginated<T>(path, query?)` method returns `{ data: T[], meta }` so pagination metadata is preserved. The `WalletsResource.withdrawals` and `AgentsResource.list` methods use `getPaginated`.
 
 ### 3. AgntlyError
 
@@ -136,19 +145,19 @@ Maps to `POST/GET/PUT/DELETE /v1/agents/*` on registry-service (port 3005).
 
 Methods:
 - `register(params: RegisterAgentParams): Promise<Agent>` — POST /v1/agents
-- `list(params?: ListAgentsParams): Promise<Agent[]>` — GET /v1/agents with query params
+- `list(params?: ListAgentsParams): Promise<PaginatedResponse<Agent>>` — GET /v1/agents with query params (uses `getPaginated`)
 - `get(agentId: string): Promise<Agent>` — GET /v1/agents/:agentId
 - `update(agentId: string, params: UpdateAgentParams): Promise<Agent>` — PUT /v1/agents/:agentId
-- `delist(agentId: string): Promise<void>` — DELETE /v1/agents/:agentId
+- `delist(agentId: string): Promise<{ delisted: boolean }>` — DELETE /v1/agents/:agentId
 
-**URL routing:** Since we're using a single `baseUrl` that will eventually point to an API gateway, the agents resource uses relative paths like `/v1/agents`. For local dev without a gateway, the `baseUrl` should point to the registry-service directly (`http://localhost:3005`). The SDK does NOT hardcode individual service ports.
+**URL routing:** All resources use relative paths like `/v1/agents`. The `baseUrl` defaults to `https://sandbox.api.agntly.io` (dev environment API gateway). For local dev, pass `http://localhost:3005` (or whichever service port).
 
 ### 5. TasksResource
 
 Maps to `POST/GET /v1/tasks/*` on task-service (port 3004).
 
 Methods:
-- `create(params: CreateTaskParams): Promise<{ task: Task; completionToken: string }>` — POST /v1/tasks
+- `create(params: CreateTaskParams): Promise<{ task: Task; completionToken: string }>` — POST /v1/tasks. Note: the server returns a flat object `{ ...taskFields, completionToken }`. The `TasksResource.create` method must separate `completionToken` from the rest and reconstruct the nested `{ task, completionToken }` shape for the caller.
 - `get(taskId: string): Promise<Task>` — GET /v1/tasks/:taskId
 - `complete(taskId: string, params: CompleteTaskParams): Promise<Task>` — POST /v1/tasks/:taskId/complete
 - `dispute(taskId: string, params: DisputeTaskParams): Promise<Task>` — POST /v1/tasks/:taskId/dispute
@@ -160,8 +169,9 @@ Maps to `POST/GET /v1/wallets/*` on wallet-service (port 3002).
 Methods:
 - `create(params?: CreateWalletParams): Promise<Wallet>` — POST /v1/wallets
 - `get(walletId: string): Promise<Wallet>` — GET /v1/wallets/:walletId
+- `fund(walletId: string, params: FundWalletParams): Promise<FundResult>` — POST /v1/wallets/:walletId/fund
 - `withdraw(walletId: string, params: WithdrawParams): Promise<Withdrawal>` — POST /v1/wallets/:walletId/withdraw
-- `withdrawals(walletId: string, params?: PaginationParams): Promise<PaginatedResponse<Withdrawal>>` — GET /v1/wallets/:walletId/withdrawals
+- `withdrawals(walletId: string, params?: PaginationParams): Promise<PaginatedResponse<Withdrawal>>` — GET /v1/wallets/:walletId/withdrawals (uses `getPaginated`)
 
 ## Types
 
@@ -171,13 +181,15 @@ The SDK exports its own types — standalone, no dependency on `@agntly/shared`.
 // --- Config ---
 export interface AgntlyConfig {
   readonly apiKey: string;
-  readonly baseUrl?: string;
-  readonly timeout?: number;
+  readonly baseUrl?: string; // defaults to 'https://sandbox.api.agntly.io'
+  readonly timeout?: number; // defaults to 30000ms
 }
 
 // --- Agents ---
 export interface Agent {
   readonly id: string;
+  readonly ownerId: string;
+  readonly walletId: string;
   readonly name: string;
   readonly description: string;
   readonly endpoint: string;
@@ -189,10 +201,12 @@ export interface Agent {
   readonly reputation: number;
   readonly callsTotal: number;
   readonly uptimePct: number;
+  readonly timeoutMs: number;
   readonly createdAt: string;
 }
 
 export interface RegisterAgentParams {
+  readonly agentId: string;
   readonly name: string;
   readonly description: string;
   readonly endpoint: string;
@@ -213,6 +227,8 @@ export interface UpdateAgentParams {
   readonly description?: string;
   readonly endpoint?: string;
   readonly priceUsdc?: string;
+  readonly category?: string;
+  readonly tags?: readonly string[];
 }
 
 // --- Tasks ---
@@ -227,6 +243,7 @@ export interface Task {
   readonly fee: string;
   readonly escrowTx: string | null;
   readonly settleTx: string | null;
+  readonly deadline: string;
   readonly latencyMs: number | null;
   readonly createdAt: string;
 }
@@ -241,6 +258,7 @@ export interface CreateTaskParams {
 export interface CompleteTaskParams {
   readonly result: Record<string, unknown>;
   readonly completionToken: string;
+  readonly proof?: string;
 }
 
 export interface DisputeTaskParams {
@@ -252,6 +270,7 @@ export interface DisputeTaskParams {
 export interface Wallet {
   readonly id: string;
   readonly ownerId: string;
+  readonly agentId: string | null;
   readonly address: string;
   readonly balance: string;
   readonly locked: string;
@@ -260,6 +279,19 @@ export interface Wallet {
 
 export interface CreateWalletParams {
   readonly agentId?: string;
+}
+
+export interface FundWalletParams {
+  readonly amountUsd: number;
+  readonly method: 'card' | 'ach' | 'usdc';
+}
+
+export interface FundResult {
+  readonly depositId: string;
+  readonly amountUsd: number;
+  readonly usdcAmount: string;
+  readonly status: string;
+  readonly etaSeconds: number;
 }
 
 export interface WithdrawParams {
@@ -326,12 +358,12 @@ Zero runtime dependencies. Uses Node.js built-in `fetch` (Node 18+).
 Unit tests with mocked fetch — no real API calls. Mock `globalThis.fetch` to return controlled responses.
 
 Test cases:
-1. **HttpClient** — correct URL construction, auth header, JSON serialization, error extraction, timeout
-2. **AgentsResource** — register sends correct body, list sends query params, get/update/delist correct paths
-3. **TasksResource** — create returns task + completionToken, complete sends token, get correct path
-4. **WalletsResource** — create, get, withdraw with correct bodies, withdrawals with pagination params
+1. **HttpClient** — correct URL construction, auth header, JSON serialization, error extraction from `{ success: false, error }`, timeout with abort, clearTimeout on success, network error wrapped as AgntlyError(status: 0), non-JSON error body handled gracefully, `getPaginated` returns `{ data, meta }`
+2. **AgentsResource** — register sends agentId + body, list uses getPaginated and returns PaginatedResponse, get/update/delist correct paths, delist returns `{ delisted: boolean }`
+3. **TasksResource** — create reshapes flat response into `{ task, completionToken }`, complete sends token + optional proof, get correct path
+4. **WalletsResource** — create, get, fund sends correct body, withdraw with correct body, withdrawals uses getPaginated
 5. **Error handling** — 400/401/403/404/500 responses throw AgntlyError with correct status and message
-6. **Edge cases** — missing apiKey throws, empty response handled, network error wrapped
+6. **Edge cases** — missing/empty apiKey throws at construction, network error wrapped, empty `data` field handled
 
 ## Files
 
@@ -346,5 +378,7 @@ Test cases:
 | Create | `sdk/typescript/src/resources/wallets.ts` | WalletsResource |
 | Modify | `sdk/typescript/package.json` | Configure as publishable package |
 | Create | `sdk/typescript/tsconfig.json` | TS config (standalone, not monorepo ref) |
-| Create | `sdk/typescript/tests/client.test.ts` | HttpClient unit tests |
-| Create | `sdk/typescript/tests/resources.test.ts` | Resource method unit tests |
+| Create | `sdk/typescript/tests/client.test.ts` | HttpClient unit tests (URL, auth, errors, timeout, network) |
+| Create | `sdk/typescript/tests/agents.test.ts` | AgentsResource unit tests |
+| Create | `sdk/typescript/tests/tasks.test.ts` | TasksResource unit tests (incl. completionToken reshape) |
+| Create | `sdk/typescript/tests/wallets.test.ts` | WalletsResource unit tests (incl. fund, pagination) |
