@@ -155,14 +155,18 @@ function FundWalletSection() {
     setCardState('loading');
 
     try {
-      const meRes = await fetch('/api/auth/me');
-      if (!meRes.ok) throw new Error('Failed to fetch user session.');
-      const { userId } = await meRes.json();
-
-      // In a real integration this would POST to /api/wallet/fund/stripe
-      // and redirect to Stripe Checkout. For now we surface the intent.
-      setCardState('idle');
-      alert(`Stripe Checkout would open for $${parsed.toFixed(2)} USDC (userId: ${userId})`);
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletId: 'demo-wallet', amountUsd: parsed, method: 'card' }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.checkoutUrl) {
+        window.location.href = data.data.checkoutUrl; // Redirect to Stripe
+      } else {
+        setCardState('error');
+        setCardError('Checkout failed: ' + (data.error ?? 'Unknown error'));
+      }
     } catch (err) {
       setCardState('error');
       setCardError(err instanceof Error ? err.message : 'Unexpected error.');
@@ -272,10 +276,10 @@ function WithdrawSection() {
 
     setSubmitState('loading');
     try {
-      const res = await fetch('/api/dashboard/wallet', {
+      const res = await fetch('/api/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, destination }),
+        body: JSON.stringify({ walletId: 'demo-wallet', amount, destination }),
       });
       const json = await res.json();
       if (json.success) {
