@@ -88,12 +88,12 @@ jobs:
             # Build wallet-service dist (payment-service imports from it)
             pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
-            # Rebuild frontend
+            # Rebuild frontend (clean .next cache to pick up new pages)
             source .env
             export AUTH_SERVICE_URL="http://localhost:3001"
             export REGISTRY_SERVICE_URL="http://localhost:3005"
             export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
-            cd frontend && ./node_modules/.bin/next build && cd ..
+            cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
             # Restart all services
             pm2 restart all
