@@ -2,8 +2,10 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { setupTestDb, cleanTestDb, teardownTestDb } from './setup.js';
 import { WalletRepository } from '../../services/wallet-service/src/repositories/wallet-repository.js';
+import { WithdrawalRepository } from '../../services/wallet-service/src/repositories/withdrawal-repository.js';
 import { WalletService } from '../../services/wallet-service/src/services/wallet-service.js';
 import type { DbConnection } from '@agntly/shared';
+import pg from 'pg';
 
 let db: DbConnection;
 let walletService: WalletService;
@@ -12,7 +14,8 @@ beforeAll(async () => {
   const ctx = await setupTestDb();
   db = ctx.db;
   const walletRepo = new WalletRepository(db);
-  walletService = new WalletService(walletRepo);
+  const withdrawalRepo = new WithdrawalRepository(db);
+  walletService = new WalletService(walletRepo, withdrawalRepo, ctx.pool);
 });
 
 beforeEach(async () => {
@@ -163,18 +166,22 @@ describe('Concurrency: 100 concurrent full task cycles', () => {
 
 describe('Concurrency: concurrent withdrawals', () => {
   it('at most floor(9.95) = 9 withdrawals succeed, final balance >= 0', async () => {
-    const wallet = await walletService.createWallet(randomUUID());
+    const ownerId = randomUUID();
+    const wallet = await walletService.createWallet(ownerId);
     // $10 → 9.95 USDC
     await walletService.fundWallet(wallet.id, 10, 'usdc');
 
     const afterFund = await walletService.getWallet(wallet.id);
     expect(parseFloat(afterFund!.balance)).toBeCloseTo(9.95, 4);
 
+    // Valid EIP-55 checksummed address
+    const dest = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045';
+
     // Fire 20 concurrent withdrawals of $1 each
     const results = await Promise.all(
       Array.from({ length: 20 }, () =>
         walletService
-          .withdraw(wallet.id, '1.000000', '0xDestinationAddress', false)
+          .withdraw(ownerId, wallet.id, '1.000000', dest)
           .then(() => true, () => false),
       ),
     );

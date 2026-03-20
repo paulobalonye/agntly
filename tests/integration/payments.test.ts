@@ -3,6 +3,7 @@ import { setupTestDb, cleanTestDb, teardownTestDb } from './setup.js';
 import { PaymentRepository } from '../../services/payment-service/src/repositories/payment-repository.js';
 import { PaymentService } from '../../services/payment-service/src/services/payment-service.js';
 import { WalletRepository } from '../../services/wallet-service/src/repositories/wallet-repository.js';
+import { WithdrawalRepository } from '../../services/wallet-service/src/repositories/withdrawal-repository.js';
 import { WalletService } from '../../services/wallet-service/src/services/wallet-service.js';
 import type {
   IStripeClient,
@@ -60,7 +61,8 @@ describe('Phase 4: Money In — Stripe Checkout → Wallet Funding', () => {
     pool = setup.pool;
     paymentRepo = new PaymentRepository(db);
     walletRepo = new WalletRepository(db);
-    walletService = new WalletService(walletRepo);
+    const withdrawalRepo = new WithdrawalRepository(db);
+    walletService = new WalletService(walletRepo, withdrawalRepo, pool);
   });
 
   afterAll(async () => {
