@@ -26,8 +26,8 @@ export const paymentRoutes: FastifyPluginAsync = async (app) => {
         .send(createErrorResponse('Invalid request: walletId (uuid), amountUsd (1-10000), method (card|ach) required'));
     }
 
-    // userId comes from auth middleware; fall back to demo-user in dev
-    const userId = (request as any).userId ?? 'demo-user';
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
 
     try {
       const result = await paymentService.createCheckout(
@@ -49,8 +49,8 @@ export const paymentRoutes: FastifyPluginAsync = async (app) => {
     const parsed = historySchema.safeParse(request.query);
     const { limit, offset } = parsed.success ? parsed.data : { limit: 20, offset: 0 };
 
-    // userId comes from auth middleware; fall back to demo-user in dev
-    const userId = (request as any).userId ?? 'demo-user';
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
 
     const result = await paymentService.getPaymentHistory(userId, limit, offset);
     // Inline response to include meta field (createApiResponse does not support meta)

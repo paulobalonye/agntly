@@ -1,3 +1,7 @@
+// Set required secrets before any imports that trigger module-level assertions
+process.env.JWT_SECRET = process.env.JWT_SECRET ?? 'test-jwt-secret-at-least-32-characters-long';
+process.env.COMPLETION_TOKEN_SECRET = process.env.COMPLETION_TOKEN_SECRET ?? 'test-completion-secret-at-least-32-chars';
+
 import pg from 'pg';
 import IORedis from 'ioredis';
 import { drizzle } from 'drizzle-orm/node-postgres';

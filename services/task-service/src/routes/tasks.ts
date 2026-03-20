@@ -13,7 +13,9 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
   app.post('/', async (request, reply) => {
     const parsed = createTaskSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid task request'));
-    const { task, completionToken } = await service.createTask('demo-user', parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const { task, completionToken } = await service.createTask(userId, parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
     return reply.status(202).send(createApiResponse({ ...task, completionToken }));
   });
 

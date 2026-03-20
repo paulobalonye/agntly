@@ -15,22 +15,19 @@ export interface UserSession {
 }
 
 /**
- * Reads the agntly_token httpOnly cookie and decodes the JWT payload.
- * Does NOT verify the signature — the auth-service already verified it when issuing.
- * Returns null if no token exists or if the token is expired.
+ * Reads the agntly_token httpOnly cookie and verifies the JWT signature.
+ * Returns null if no token exists, if the signature is invalid, or if the token is expired.
  */
 export async function getSession(): Promise<UserSession | null> {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) return null;
+
   const cookieStore = await cookies();
   const token = cookieStore.get('agntly_token')?.value;
   if (!token) return null;
 
   try {
-    const payload = jwt.decode(token) as JwtPayload | null;
-    if (!payload) return null;
-
-    // Check client-side expiry
-    if (payload.exp * 1000 < Date.now()) return null;
-
+    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
     return { userId: payload.userId, email: payload.email, role: payload.role };
   } catch {
     return null;

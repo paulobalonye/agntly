@@ -34,23 +34,32 @@ export const walletRoutes: FastifyPluginAsync = async (app) => {
   app.post('/', async (request, reply) => {
     const parsed = createSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid input'));
-    const userId = (request as any).userId ?? 'demo-user';
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const wallet = await service.createWallet(userId, parsed.data.agentId);
     return reply.status(201).send(createApiResponse(wallet));
   });
 
   app.get('/:walletId', async (request, reply) => {
     const { walletId } = request.params as { walletId: string };
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const wallet = await service.getWallet(walletId);
     if (!wallet) return reply.status(404).send(createErrorResponse('Wallet not found'));
+    if (wallet.ownerId !== userId) return reply.status(403).send(createErrorResponse('Access denied'));
     return reply.status(200).send(createApiResponse(wallet));
   });
 
   app.post('/:walletId/fund', async (request, reply) => {
     const { walletId } = request.params as { walletId: string };
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const parsed = fundSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid funding request'));
     try {
+      const wallet = await service.getWallet(walletId);
+      if (!wallet) return reply.status(404).send(createErrorResponse('Wallet not found'));
+      if (wallet.ownerId !== userId) return reply.status(403).send(createErrorResponse('Access denied'));
       const result = await service.fundWallet(walletId, parsed.data.amountUsd, parsed.data.method);
       return reply.status(200).send(createApiResponse(result));
     } catch (err) {
@@ -65,7 +74,8 @@ export const walletRoutes: FastifyPluginAsync = async (app) => {
       const msg = parsed.error.issues[0]?.message ?? 'Invalid withdrawal request';
       return reply.status(400).send(createErrorResponse(msg));
     }
-    const userId = (request as any).userId ?? 'demo-user';
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     try {
       const result = await service.withdraw(userId, walletId, parsed.data.amount, parsed.data.destination);
       return reply.status(202).send(createApiResponse(result));
@@ -79,6 +89,11 @@ export const walletRoutes: FastifyPluginAsync = async (app) => {
   // GET /:walletId/withdrawals — Withdrawal history
   app.get('/:walletId/withdrawals', async (request, reply) => {
     const { walletId } = request.params as { walletId: string };
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const wallet = await service.getWallet(walletId);
+    if (!wallet) return reply.status(404).send(createErrorResponse('Wallet not found'));
+    if (wallet.ownerId !== userId) return reply.status(403).send(createErrorResponse('Access denied'));
     const parsed = historySchema.safeParse(request.query);
     const { limit, offset } = parsed.success ? parsed.data : { limit: 20, offset: 0 };
     try {

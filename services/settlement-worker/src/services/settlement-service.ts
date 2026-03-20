@@ -89,9 +89,19 @@ export class SettlementService {
 
     const escrowId = data.escrowId as string;
     const decision = data.decision as string;
+
+    // The winner address must be a valid Ethereum address, not a wallet UUID.
+    // The event publisher must include agentAddress / orchestratorAddress fields.
     const winnerAddress = decision === 'release_to_agent'
-      ? (data.toWalletId as string)
-      : (data.fromWalletId as string);
+      ? (data.agentAddress as string)
+      : (data.orchestratorAddress as string);
+
+    if (!winnerAddress || !winnerAddress.startsWith('0x') || winnerAddress.length !== 42) {
+      throw new Error(
+        `Invalid winner address for dispute resolution: ${winnerAddress}. ` +
+        'The escrow.dispute_resolved event must include agentAddress and orchestratorAddress fields with valid Ethereum addresses.',
+      );
+    }
 
     const txHash = await this.gasManager.walletClient.writeContract({
       address: ESCROW_CONTRACT_ADDRESS,

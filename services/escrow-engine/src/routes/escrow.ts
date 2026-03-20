@@ -17,6 +17,8 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
   const disputeService = (app as any).disputeService as DisputeService;
 
   app.post('/lock', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const parsed = lockSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid escrow request'));
     try {
@@ -35,6 +37,8 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post('/:escrowId/release', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { escrowId } = request.params as { escrowId: string };
     try {
       const result = await service.releaseEscrow(escrowId);
@@ -45,6 +49,8 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post('/:escrowId/refund', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { escrowId } = request.params as { escrowId: string };
     try {
       const result = await service.refundEscrow(escrowId);
@@ -55,6 +61,8 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post('/:escrowId/dispute', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { escrowId } = request.params as { escrowId: string };
     const body = request.body as { reason: string; evidence?: string };
     try {
@@ -73,6 +81,8 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post('/:escrowId/evidence', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { escrowId } = request.params as { escrowId: string };
     const evidenceSchema = z.object({
       evidence: z.string().min(1),
@@ -89,6 +99,10 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post('/:escrowId/resolve', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const userRole = (request as any).userRole;
+    if (userRole !== 'admin') return reply.status(403).send(createErrorResponse('Admin role required'));
     const { escrowId } = request.params as { escrowId: string };
     const resolveSchema = z.object({
       decision: z.enum(['release_to_agent', 'refund_to_orchestrator']),

@@ -1,7 +1,16 @@
 import jwt from 'jsonwebtoken';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
-const JWT_SECRET = process.env.JWT_SECRET ?? 'dev-secret-change-in-production-min-32';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    console.error('FATAL: JWT_SECRET env var is required and must be at least 32 characters');
+    process.exit(1);
+  }
+  return secret;
+}
+
+const JWT_SECRET: string = getJwtSecret();
 
 export interface AuthContext {
   readonly userId: string;

@@ -6,7 +6,7 @@ export interface WebhookSubscriptionRow {
   readonly id: string;
   readonly userId: string;
   readonly url: string;
-  readonly secretHash: string;
+  readonly secretHash: string;  // Misleading name: stores raw secret for HMAC signing, not a hash
   readonly events: string[];
   readonly active: boolean;
   readonly createdAt: Date;
@@ -46,7 +46,7 @@ export class WebhookRepository {
       .values({
         userId: data.userId,
         url: data.url,
-        secretHash: data.secret,
+        secretHash: data.secret,  // Stores raw secret for HMAC signing (field name is misleading)
         events: data.events,
       })
       .returning();

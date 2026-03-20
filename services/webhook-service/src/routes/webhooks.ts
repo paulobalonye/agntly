@@ -49,7 +49,8 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const { url, secret, events } = parsed.data;
-    const userId = 'demo-user';
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
 
     const subscription = await webhookRepo.createSubscription({ userId, url, secret, events });
 
@@ -60,7 +61,8 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
 
   // GET / — List user's subscriptions
   app.get('/', async (request, reply) => {
-    const userId = 'demo-user';
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const subscriptions = await webhookRepo.findSubscriptionsByUserId(userId);
     const safe = subscriptions.map(({ secretHash: _, ...rest }) => rest);
     return reply.status(200).send(createApiResponse(safe));
@@ -69,6 +71,11 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
   // DELETE /:webhookId — Delete subscription
   app.delete('/:webhookId', async (request, reply) => {
     const { webhookId } = request.params as { webhookId: string };
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const sub = await webhookRepo.findSubscriptionById(webhookId);
+    if (!sub) return reply.status(404).send(createErrorResponse('Subscription not found'));
+    if (sub.userId !== userId) return reply.status(403).send(createErrorResponse('Access denied'));
     await webhookRepo.deleteSubscription(webhookId);
     return reply.status(200).send(createApiResponse({ deleted: true }));
   });

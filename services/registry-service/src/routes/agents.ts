@@ -15,7 +15,9 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
   app.post('/', async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse(parsed.error.issues[0]?.message ?? 'Invalid input'));
-    const agent = await registryService.registerAgent('demo-user', parsed.data);
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const agent = await registryService.registerAgent(userId, parsed.data);
     return reply.status(201).send(createApiResponse(agent));
   });
 

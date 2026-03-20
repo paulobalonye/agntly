@@ -1,6 +1,15 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-const COMPLETION_SECRET = process.env.COMPLETION_TOKEN_SECRET ?? 'dev-completion-secret-change-in-production';
+function getCompletionSecret(): string {
+  const secret = process.env.COMPLETION_TOKEN_SECRET;
+  if (!secret || secret.length < 32) {
+    console.error('FATAL: COMPLETION_TOKEN_SECRET env var is required and must be at least 32 characters');
+    process.exit(1);
+  }
+  return secret;
+}
+
+const COMPLETION_SECRET: string = getCompletionSecret();
 
 export function generateCompletionToken(taskId: string, agentId: string): string {
   const payload = `${taskId}:${agentId}`;

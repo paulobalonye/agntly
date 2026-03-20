@@ -33,6 +33,8 @@ export class DeliveryService {
       timestamp: event.timestamp,
     });
 
+    // Note: secretHash is misleadingly named — it stores the raw secret, not a hash.
+    // This is correct for HMAC signing (requires the raw secret).
     const signature = this.signPayload(payload, subscription.secretHash);
 
     const delivery = await this.webhookRepo.createDelivery({
