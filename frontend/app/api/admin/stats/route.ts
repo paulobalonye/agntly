@@ -9,7 +9,7 @@ const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005'
 const PAYMENT_URL = process.env.PAYMENT_SERVICE_URL ?? 'http://localhost:3006';
 
 // List of admin emails — in production, this would be a DB role check
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'admin@agntly.io,drpraize@gmail.com').split(',');
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'admin@agntly.io,drpraize@gmail.com,paul.obalonye@gmail.com').split(',');
 
 async function verifyAdmin(): Promise<{ userId: string } | null> {
   const cookieStore = await cookies();

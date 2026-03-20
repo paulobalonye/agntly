@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
 const AUTH_URL = process.env.AUTH_SERVICE_URL ?? 'http://localhost:3001';
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'admin@agntly.io,drpraize@gmail.com').split(',');
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'admin@agntly.io,drpraize@gmail.com,paul.obalonye@gmail.com').split(',');
 
 async function verifyAdmin(): Promise<{ userId: string } | null> {
   const cookieStore = await cookies();
