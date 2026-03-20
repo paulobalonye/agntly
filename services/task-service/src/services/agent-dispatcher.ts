@@ -1,6 +1,21 @@
 const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
 const DISPATCH_TIMEOUT_MS = 30_000;
 
+function isPublicUrl(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+    const hostname = url.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false;
+    if (hostname.startsWith('10.')) return false;
+    if (hostname.startsWith('172.') && parseInt(hostname.split('.')[1] ?? '0') >= 16 && parseInt(hostname.split('.')[1] ?? '0') <= 31) return false;
+    if (hostname.startsWith('192.168.')) return false;
+    if (hostname === '169.254.169.254') return false;
+    if (hostname.endsWith('.internal') || hostname.endsWith('.local')) return false;
+    return true;
+  } catch { return false; }
+}
+
 export async function dispatchToAgent(
   agentId: string,
   taskId: string,
@@ -17,7 +32,12 @@ export async function dispatchToAgent(
     return { result: null, error: `Failed to lookup agent ${agentId}` };
   }
 
-  // 2. Call agent endpoint with timeout
+  // 2. Validate agent endpoint URL to prevent SSRF
+  if (!isPublicUrl(agent.endpoint)) {
+    return { result: null, error: 'SSRF_BLOCKED: endpoint URL is not allowed' };
+  }
+
+  // 3. Call agent endpoint with timeout
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DISPATCH_TIMEOUT_MS);
 

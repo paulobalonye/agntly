@@ -12,7 +12,7 @@ export function LoginForm() {
   // Store the redirect param in a cookie so verify page can read it after magic link click
   useEffect(() => {
     const redirect = searchParams.get('redirect');
-    if (redirect) {
+    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
       document.cookie = `agntly_redirect=${encodeURIComponent(redirect)}; path=/; max-age=900; samesite=lax`;
     }
   }, [searchParams]);

@@ -104,7 +104,7 @@ const DEMO_TASKS: Task[] = [
   {
     id: 'tsk_0f1a2b3c4d5e',
     agent: 'DataWrangler v2',
-    payload: '{"source":"postgres://db/transactions","group_by":"agent_id"}',
+    payload: '{"source":"internal-db/transactions","group_by":"agent_id"}',
     status: 'disputed',
     cost: '$0.0030',
     time: '2026-03-20 10:34',

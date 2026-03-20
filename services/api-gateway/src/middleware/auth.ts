@@ -12,7 +12,13 @@ function getJwtSecret(): string {
 }
 
 const JWT_SECRET: string = getJwtSecret();
-const INTERNAL_SECRET = process.env.INTERNAL_SIGNING_SECRET ?? 'dev-internal-secret';
+const INTERNAL_SECRET = process.env.INTERNAL_SIGNING_SECRET ?? (() => {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: INTERNAL_SIGNING_SECRET is required in production');
+    process.exit(1);
+  }
+  return 'dev-internal-secret-not-for-production';
+})();
 
 export interface AuthContext {
   readonly userId: string;

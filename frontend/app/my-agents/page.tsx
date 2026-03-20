@@ -118,7 +118,10 @@ function RegistrationForm({ onRegistered }: RegistrationFormProps) {
     if (!fields.description.trim()) next.description = 'Description is required.';
 
     try {
-      new URL(fields.endpointUrl);
+      const url = new URL(fields.endpointUrl);
+      if (url.protocol !== 'https:') {
+        next.endpointUrl = 'Endpoint must use HTTPS';
+      }
     } catch {
       next.endpointUrl = 'Enter a valid URL (e.g. https://...).';
     }

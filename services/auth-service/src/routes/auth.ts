@@ -76,13 +76,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
+  const validateKeySchema = z.object({ key: z.string().min(1).max(256) });
+
   app.post('/validate-key', async (request, reply) => {
-    const body = request.body as { key?: string } | undefined;
-    if (!body?.key) {
-      return reply.status(400).send(createErrorResponse('API key required'));
-    }
+    const parsed = validateKeySchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send(createErrorResponse('Valid API key required'));
     const apiKeyService = decorated.apiKeyService;
-    const userId = await apiKeyService.validateKey(body.key);
+    const userId = await apiKeyService.validateKey(parsed.data.key);
     if (!userId) {
       return reply.status(401).send(createErrorResponse('Invalid API key'));
     }

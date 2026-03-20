@@ -161,7 +161,6 @@ function FundWalletSection() {
 
       // In a real integration this would POST to /api/wallet/fund/stripe
       // and redirect to Stripe Checkout. For now we surface the intent.
-      console.info('[wallet] Stripe checkout for userId:', userId, 'amount:', parsed);
       setCardState('idle');
       alert(`Stripe Checkout would open for $${parsed.toFixed(2)} USDC (userId: ${userId})`);
     } catch (err) {

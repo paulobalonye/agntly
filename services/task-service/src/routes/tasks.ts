@@ -47,8 +47,12 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
 
   app.get('/:taskId', async (request, reply) => {
     const { taskId } = request.params as { taskId: string };
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const task = await service.getTask(taskId);
     if (!task) return reply.status(404).send(createErrorResponse('Task not found'));
+    // Note: In a full implementation, verify task.orchestratorId === userId
+    // For sandbox, allow access (tasks don't have userId linkage yet)
     return reply.status(200).send(createApiResponse(task));
   });
 
@@ -76,6 +80,8 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
 
   app.post('/:taskId/dispute', async (request, reply) => {
     const { taskId } = request.params as { taskId: string };
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const body = request.body as { reason: string; evidence?: string };
     try {
       const task = await service.disputeTask(taskId, body.reason);
