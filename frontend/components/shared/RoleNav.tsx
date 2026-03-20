@@ -20,6 +20,7 @@ const BUILDER_LINKS = [
 
 const ORCHESTRATOR_LINKS = [
   { label: 'registry', href: '/marketplace' },
+  { label: 'my_tasks', href: '/my-tasks' },
   { label: 'wallet', href: '/wallet' },
   { label: 'docs', href: '/docs' },
   { label: 'analytics', href: '/analytics' },
@@ -29,6 +30,7 @@ const BOTH_LINKS = [
   { label: 'registry', href: '/marketplace' },
   { label: 'dashboard', href: '/dashboard' },
   { label: 'my_agents', href: '/my-agents' },
+  { label: 'my_tasks', href: '/my-tasks' },
   { label: 'wallet', href: '/wallet' },
   { label: 'docs', href: '/docs' },
   { label: 'analytics', href: '/analytics' },

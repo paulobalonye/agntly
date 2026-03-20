@@ -25,5 +25,6 @@ export const config = {
     '/onboard/:path*',
     '/wallet/:path*',
     '/my-agents/:path*',
+    '/my-tasks/:path*',
   ],
 };
