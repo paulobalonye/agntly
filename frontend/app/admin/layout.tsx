@@ -1,4 +1,4 @@
-import { RoleNav } from '@/components/shared/RoleNav';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { Footer } from '@/components/shared/Footer';
 import { GridBackground } from '@/components/shared/GridBackground';
 
@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <>
       <GridBackground />
-      <RoleNav />
+      <AdminNav />
       {children}
       <Footer />
     </>
