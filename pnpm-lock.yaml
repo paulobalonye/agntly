@@ -191,6 +191,31 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@25.5.0)(jiti@1.21.7)(tsx@4.21.0)
 
+  services/license-service:
+    dependencies:
+      '@agntly/shared':
+        specifier: workspace:*
+        version: link:../../shared
+      '@fastify/cors':
+        specifier: ^10.0.0
+        version: 10.1.0
+      drizzle-orm:
+        specifier: ^0.45.0
+        version: 0.45.1(@types/pg@8.18.0)(pg@8.20.0)
+      fastify:
+        specifier: ^5.2.0
+        version: 5.8.2
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+    devDependencies:
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
   services/payment-service:
     dependencies:
       '@agntly/shared':

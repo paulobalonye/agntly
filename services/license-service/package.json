@@ -1,0 +1,21 @@
+{
+  "name": "@agntly/license-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "npx tsx src/server.ts"
+  },
+  "dependencies": {
+    "@agntly/shared": "workspace:*",
+    "fastify": "^5.2.0",
+    "@fastify/cors": "^10.0.0",
+    "drizzle-orm": "^0.45.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0"
+  }
+}

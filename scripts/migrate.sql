@@ -307,5 +307,33 @@ CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_sub ON webhook_deliveries(subs
 CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_retry ON webhook_deliveries(next_retry_at) WHERE delivered_at IS NULL AND failed_at IS NULL;
 
 -- ============================================
+-- LICENSE SERVICE
+-- ============================================
+DO $$ BEGIN
+  CREATE TYPE license_status AS ENUM ('active', 'revoked', 'expired');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS licenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  purchase_code TEXT NOT NULL UNIQUE,
+  buyer_email TEXT,
+  buyer_name TEXT,
+  domain TEXT,
+  license_type TEXT NOT NULL DEFAULT 'regular',
+  envato_item_id TEXT,
+  envato_buyer TEXT,
+  status license_status NOT NULL DEFAULT 'active',
+  activated_at TIMESTAMPTZ,
+  deactivated_at TIMESTAMPTZ,
+  last_checked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_licenses_purchase_code ON licenses(purchase_code);
+CREATE INDEX IF NOT EXISTS idx_licenses_domain ON licenses(domain);
+CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
+
+-- ============================================
 -- DONE
 -- ============================================
