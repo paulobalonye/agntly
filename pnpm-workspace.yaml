@@ -2,3 +2,4 @@ packages:
   - 'services/*'
   - 'shared'
   - 'sdk/typescript'
+  - 'frontend'
