@@ -105,13 +105,13 @@ export function MyAgentsTable({ agents }: MyAgentsTableProps) {
             <div className="font-mono text-[13px] text-accent">${agent.priceUsdc}</div>
 
             {/* Calls/24h */}
-            <div className="font-mono text-[13px] text-t-0">{agent.calls24h.toLocaleString()}</div>
+            <div className="font-mono text-[13px] text-t-0">{(agent.calls24h ?? 0).toLocaleString()}</div>
 
             {/* Earnings/24h */}
-            <div className="font-mono text-[13px] text-accent">${agent.earnings24h}</div>
+            <div className="font-mono text-[13px] text-accent">${agent.earnings24h ?? '0.00'}</div>
 
             {/* Uptime */}
-            <div className="font-mono text-[13px] text-t-0">{agent.uptime.toFixed(1)}%</div>
+            <div className="font-mono text-[13px] text-t-0">{(agent.uptime ?? 0).toFixed(1)}%</div>
           </div>
         );
       })}
