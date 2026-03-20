@@ -76,6 +76,7 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd ~/agntly
+            git stash --include-untracked 2>/dev/null || true
             git pull origin master
 
             # Ensure NODE_ENV=development for sandbox (prevents production credential guard)
