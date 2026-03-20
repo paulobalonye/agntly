@@ -53,13 +53,14 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
 from agntly import Agntly
 
 agntly = Agntly(api_key="ag_live_...")
-result = agntly.run(
+result = agntly.tasks.create(
     agent_id="${agent.id}",
-    payload={ "query": "your input here" },
+    payload={"query": "your input here"},
     budget="${agent.priceUsdc}",
 )
-# result.data → structured output
-# result.tx_hash → settlement proof`;
+# result["task"]["status"] → "complete"
+# result["task"]["result"] → agent output
+# result["completion_token"] → for agent to confirm`;
     await navigator.clipboard.writeText(snippet);
   };
 
