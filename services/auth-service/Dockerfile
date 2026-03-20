@@ -16,10 +16,13 @@ COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile
 
 COPY shared/ shared/
+COPY tsconfig.base.json ./
+RUN pnpm --filter @agntly/shared build
+
 COPY services/auth-service/ services/auth-service/
 
 ENV NODE_ENV=production
 ENV PORT=3001
 EXPOSE 3001
 
-CMD ["pnpm", "--filter", "@agntly/auth-service", "exec", "tsx", "src/server.ts"]
+CMD ["node", "--import", "tsx", "services/auth-service/src/server.ts"]

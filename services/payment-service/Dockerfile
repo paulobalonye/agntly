@@ -16,10 +16,13 @@ COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile
 
 COPY shared/ shared/
+COPY tsconfig.base.json ./
+RUN pnpm --filter @agntly/shared build
+
 COPY services/payment-service/ services/payment-service/
 
 ENV NODE_ENV=production
 ENV PORT=3006
 EXPOSE 3006
 
-CMD ["pnpm", "--filter", "@agntly/payment-service", "exec", "tsx", "src/server.ts"]
+CMD ["node", "--import", "tsx", "services/payment-service/src/server.ts"]

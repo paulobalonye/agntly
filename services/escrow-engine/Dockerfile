@@ -16,10 +16,13 @@ COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile
 
 COPY shared/ shared/
+COPY tsconfig.base.json ./
+RUN pnpm --filter @agntly/shared build
+
 COPY services/escrow-engine/ services/escrow-engine/
 
 ENV NODE_ENV=production
 ENV PORT=3003
 EXPOSE 3003
 
-CMD ["pnpm", "--filter", "@agntly/escrow-engine", "exec", "tsx", "src/server.ts"]
+CMD ["node", "--import", "tsx", "services/escrow-engine/src/server.ts"]

@@ -16,10 +16,13 @@ COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile
 
 COPY shared/ shared/
+COPY tsconfig.base.json ./
+RUN pnpm --filter @agntly/shared build
+
 COPY services/registry-service/ services/registry-service/
 
 ENV NODE_ENV=production
 ENV PORT=3005
 EXPOSE 3005
 
-CMD ["pnpm", "--filter", "@agntly/registry-service", "exec", "tsx", "src/server.ts"]
+CMD ["node", "--import", "tsx", "services/registry-service/src/server.ts"]

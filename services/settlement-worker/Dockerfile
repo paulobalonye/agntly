@@ -16,10 +16,13 @@ COPY services/api-gateway/package.json services/api-gateway/
 RUN pnpm install --frozen-lockfile
 
 COPY shared/ shared/
+COPY tsconfig.base.json ./
+RUN pnpm --filter @agntly/shared build
+
 COPY services/settlement-worker/ services/settlement-worker/
 
 ENV NODE_ENV=production
 ENV PORT=3008
 EXPOSE 3008
 
-CMD ["pnpm", "--filter", "@agntly/settlement-worker", "exec", "tsx", "src/server.ts"]
+CMD ["node", "--import", "tsx", "services/settlement-worker/src/server.ts"]
