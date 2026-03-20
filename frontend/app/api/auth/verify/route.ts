@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
   cookieStore.set('agntly_token', accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     sameSite: 'lax',
     maxAge: 900,
     path: '/',
