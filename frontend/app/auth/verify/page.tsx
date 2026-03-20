@@ -28,9 +28,16 @@ function VerifyContent() {
         }
         setStatus('success');
         setTimeout(() => {
+          // Check for stored redirect from login page (saved as cookie)
+          const redirectCookie = document.cookie.match(/agntly_redirect=([^;]+)/)?.[1];
+          const storedRedirect = redirectCookie ? decodeURIComponent(redirectCookie) : null;
+          // Clear the redirect cookie
+          document.cookie = 'agntly_redirect=; path=/; max-age=0';
+
+          // Priority: stored redirect > URL param > role-based default
           const roleCookie = document.cookie.match(/agntly_role=([^;]+)/)?.[1];
           const defaultRedirect = roleCookie === 'builder' ? '/dashboard' : '/marketplace';
-          const redirect = searchParams.get('redirect') || defaultRedirect;
+          const redirect = storedRedirect || searchParams.get('redirect') || defaultRedirect;
           router.push(redirect);
         }, 1500);
       })

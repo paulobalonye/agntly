@@ -1,11 +1,21 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const searchParams = useSearchParams();
+
+  // Store the redirect param in a cookie so verify page can read it after magic link click
+  useEffect(() => {
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      document.cookie = `agntly_redirect=${encodeURIComponent(redirect)}; path=/; max-age=900; samesite=lax`;
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,8 +48,7 @@ export function LoginForm() {
         <div>
           <h2 className="font-display text-2xl font-semibold text-t-0 mb-2">Check your email</h2>
           <p className="text-sm text-t-1">
-            We sent a magic link to{' '}
-            <span className="text-accent font-mono">{email}</span>
+            We sent a magic link to <span className="text-accent font-mono">{email}</span>
           </p>
         </div>
         <button

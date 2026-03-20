@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 export default function LoginPage() {
@@ -12,7 +13,9 @@ export default function LoginPage() {
       <div className="bg-bg-1 border border-border p-10 w-full max-w-md">
         <h1 className="font-display text-2xl font-semibold text-t-0 mb-2">Sign in</h1>
         <p className="text-sm text-t-1 mb-8">Enter your email to receive a magic link</p>
-        <LoginForm />
+        <Suspense fallback={<div className="text-t-2 font-mono text-sm">Loading...</div>}>
+          <LoginForm />
+        </Suspense>
       </div>
       <p className="mt-6 text-xs text-t-2 font-mono">
         No password needed · Link expires in 15 minutes
