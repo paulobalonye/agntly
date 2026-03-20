@@ -40,6 +40,14 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
     return () => document.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
+  const handleConnect = () => {
+    window.alert('Agent connected! Use the SDK snippet above to integrate.');
+  };
+
+  const handleViewDocs = () => {
+    window.open('https://sandbox.api.agntly.io/v1/agents/' + agent.id, '_blank');
+  };
+
   const handleCopy = async () => {
     const snippet = `# pip install agntly
 from agntly import Agntly
@@ -153,10 +161,16 @@ result = agntly.run(
 
           {/* Actions */}
           <div className="flex gap-[10px]">
-            <button className="flex-1 bg-accent border-none text-bg-0 font-mono text-[12px] font-medium py-[10px] tracking-[0.04em] hover:bg-accent-2 transition-colors cursor-pointer">
+            <button
+              className="flex-1 bg-accent border-none text-bg-0 font-mono text-[12px] font-medium py-[10px] tracking-[0.04em] hover:bg-accent-2 transition-colors cursor-pointer"
+              onClick={handleConnect}
+            >
               connect agent
             </button>
-            <button className="bg-transparent border border-border-2 text-t-1 font-mono text-[12px] px-4 py-[10px] tracking-[0.04em] hover:border-t-1 hover:text-t-0 transition-all cursor-pointer">
+            <button
+              className="bg-transparent border border-border-2 text-t-1 font-mono text-[12px] px-4 py-[10px] tracking-[0.04em] hover:border-t-1 hover:text-t-0 transition-all cursor-pointer"
+              onClick={handleViewDocs}
+            >
               view docs
             </button>
             <button

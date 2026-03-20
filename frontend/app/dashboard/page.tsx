@@ -29,15 +29,44 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+const OVERVIEW_FALLBACK = {
+  totalEarned: '0',
+  earningsToday: '0',
+  activeAgents: 0,
+  avgRating: 0,
+};
+
+const WALLET_FALLBACK = {
+  balance: '0',
+  locked: '0',
+  address: '—',
+  withdrawals: [] as {
+    id: string;
+    amount: string;
+    destination: string;
+    status: string;
+    txHash: string | null;
+    date: string;
+  }[],
+};
+
+async function safeFetchJson<T>(path: string, fallback: T): Promise<T> {
+  try {
+    return await fetchJson<T>(path);
+  } catch {
+    return fallback;
+  }
+}
+
 export default async function DashboardPage() {
   const [overview, agents, tasks, wallet] = await Promise.all([
-    fetchJson<{
+    safeFetchJson<{
       totalEarned: string;
       earningsToday: string;
       activeAgents: number;
       avgRating: number;
-    }>('/api/dashboard/overview'),
-    fetchJson<
+    }>('/api/dashboard/overview', OVERVIEW_FALLBACK),
+    safeFetchJson<
       {
         id: string;
         name: string;
@@ -48,8 +77,8 @@ export default async function DashboardPage() {
         earnings24h: string;
         uptime: number;
       }[]
-    >('/api/dashboard/agents'),
-    fetchJson<
+    >('/api/dashboard/agents', []),
+    safeFetchJson<
       {
         id: string;
         agent: string;
@@ -57,8 +86,8 @@ export default async function DashboardPage() {
         status: string;
         timestamp: string;
       }[]
-    >('/api/dashboard/tasks'),
-    fetchJson<{
+    >('/api/dashboard/tasks', []),
+    safeFetchJson<{
       balance: string;
       locked: string;
       address: string;
@@ -70,7 +99,7 @@ export default async function DashboardPage() {
         txHash: string | null;
         date: string;
       }[];
-    }>('/api/dashboard/wallet'),
+    }>('/api/dashboard/wallet', WALLET_FALLBACK),
   ]);
 
   return (

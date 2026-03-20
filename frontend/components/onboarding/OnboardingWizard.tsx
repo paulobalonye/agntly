@@ -45,7 +45,8 @@ export function OnboardingWizard() {
     if (step < 2) {
       setStep((s) => s + 1);
     } else {
-      router.push('/marketplace');
+      const destination = role === 'builder' || role === 'both' ? '/dashboard' : '/marketplace';
+      router.push(destination);
     }
   }
 
