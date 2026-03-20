@@ -48,13 +48,6 @@ export function AdminNav() {
 
       {/* Right: back to app + sign out */}
       <div className="flex items-center gap-3 ml-auto">
-        <Link
-          href="/dashboard"
-          className="bg-transparent border border-border text-t-1 font-mono text-[11px] px-[14px] py-[6px] tracking-[0.04em] hover:border-accent hover:text-accent transition-all"
-        >
-          back to app
-        </Link>
-
         <button
           onClick={async () => {
             try {
