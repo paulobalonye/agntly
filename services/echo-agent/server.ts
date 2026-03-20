@@ -1,24 +1,39 @@
-import Fastify from 'fastify';
+import { createServer } from 'node:http';
 
-const app = Fastify({ logger: true });
+const PORT = 4000;
 
-app.post('/run', async (request, reply) => {
-  const body = request.body as { taskId?: string; payload?: Record<string, unknown> };
+const server = createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', agent: 'echo-agent' }));
+    return;
+  }
 
-  return reply.status(200).send({
-    success: true,
-    result: {
-      echo: body.payload ?? {},
-      message: 'Task processed by Echo Agent',
-      processedAt: new Date().toISOString(),
-      taskId: body.taskId ?? 'unknown',
-    },
-  });
+  if (req.method === 'POST' && req.url === '/run') {
+    let body = '';
+    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+    req.on('end', () => {
+      let parsed: Record<string, unknown> = {};
+      try { parsed = JSON.parse(body); } catch { /* ignore */ }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        result: {
+          echo: parsed.payload ?? {},
+          message: 'Task processed by Echo Agent',
+          processedAt: new Date().toISOString(),
+          taskId: parsed.taskId ?? 'unknown',
+        },
+      }));
+    });
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not found' }));
 });
 
-app.get('/health', async () => ({ status: 'ok', agent: 'echo-agent' }));
-
-const port = 4000;
-app.listen({ port, host: '0.0.0.0' }).then(() => {
-  console.log(`Echo agent running on port ${port}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Echo agent running on port ${PORT}`);
 });
