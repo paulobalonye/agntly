@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
 
@@ -13,16 +13,13 @@ COPY services/payment-service/package.json services/payment-service/
 COPY services/webhook-service/package.json services/webhook-service/
 COPY services/settlement-worker/package.json services/settlement-worker/
 COPY services/api-gateway/package.json services/api-gateway/
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile
 
 COPY shared/ shared/
-RUN pnpm --filter @agntly/shared build
-
 COPY services/auth-service/ services/auth-service/
-RUN pnpm --filter @agntly/auth-service build 2>/dev/null || true
 
 ENV NODE_ENV=production
 ENV PORT=3001
 EXPOSE 3001
 
-CMD ["node", "services/auth-service/dist/server.js"]
+CMD ["npx", "tsx", "services/auth-service/src/server.ts"]
