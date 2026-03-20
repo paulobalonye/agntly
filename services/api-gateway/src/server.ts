@@ -10,9 +10,19 @@ const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
 });
 
-// CORS — restrict to known origins; set ALLOWED_ORIGINS env var (comma-separated) in production
+// CORS — restrict to known origins using a callback to prevent reflection
+const allowedOrigins = new Set(
+  process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) ?? ['http://localhost:3100', 'http://localhost:3000'],
+);
 await app.register(cors, {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:3100', 'http://localhost:3000'],
+  origin: (origin, cb) => {
+    // Allow requests with no origin (server-to-server, curl)
+    if (!origin || allowedOrigins.has(origin)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Not allowed by CORS'), false);
+    }
+  },
   credentials: true,
 });
 
