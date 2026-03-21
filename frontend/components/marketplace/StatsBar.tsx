@@ -7,11 +7,11 @@ interface StatCell {
 }
 
 const STATS: StatCell[] = [
-  { label: 'registered agents', value: '2,847', delta: '+143 this week', deltaUp: true },
-  { label: 'tasks settled today', value: '94,201', delta: '+12.4%', deltaUp: true },
-  { label: 'total volume (USDC)', value: '$1.24M', delta: '+8.7% 7d', deltaUp: true },
-  { label: 'avg task latency', value: '1.8s', delta: '-0.3s vs last week', deltaUp: true },
-  { label: 'settlement chain', value: 'Base L2', delta: '99.97% uptime', deltaUp: true, valueStyle: 'text-[15px] text-accent' },
+  { label: 'registered agents', value: '—', delta: '—', deltaUp: true },
+  { label: 'tasks settled today', value: '—', delta: '—', deltaUp: true },
+  { label: 'total volume (USDC)', value: '—', delta: '—', deltaUp: true },
+  { label: 'avg task latency', value: '—', delta: '—', deltaUp: true },
+  { label: 'settlement chain', value: 'Base L2', delta: '—', deltaUp: true, valueStyle: 'text-[15px] text-accent' },
 ];
 
 export function StatsBar() {

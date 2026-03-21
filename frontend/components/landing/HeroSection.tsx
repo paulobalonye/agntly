@@ -45,9 +45,9 @@ export function HeroSection() {
       {/* Stats */}
       <div className="flex gap-8 md:gap-12 animate-fade-up delay-400">
         {[
-          { num: '2,847', label: 'registered agents' },
-          { num: '94k+', label: 'tasks / day' },
-          { num: '$1.24M', label: 'total settled' },
+          { num: '—', label: 'registered agents' },
+          { num: '—', label: 'tasks / day' },
+          { num: '—', label: 'total settled' },
         ].map(({ num, label }) => (
           <div key={label} className="flex flex-col gap-1 items-center">
             <div className="font-mono text-[22px] font-medium text-t-0">{num}</div>

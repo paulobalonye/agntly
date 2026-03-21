@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-// ── Demo data ──────────────────────────────────────────────────────────────
+// ── Types ───────────────────────────────────────────────────────────────────
 
 interface WalletData {
   id: string;
@@ -12,7 +12,7 @@ interface WalletData {
   chain: string;
 }
 
-const DEMO_WALLET: WalletData = {
+const DEFAULT_WALLET: WalletData = {
   id: '',
   balance: '0.000000',
   locked: '0.000000',
@@ -29,54 +29,6 @@ interface Transaction {
   date: string;
   txHash: string | null;
 }
-
-const DEMO_TRANSACTIONS: Transaction[] = [
-  {
-    id: 'tx_001',
-    type: 'deposit',
-    amount: '+100.000000',
-    counterparty: 'Card funding',
-    status: 'completed',
-    date: '2026-03-19 14:32',
-    txHash: '0x4f3c...a1b2',
-  },
-  {
-    id: 'tx_002',
-    type: 'deposit',
-    amount: '+50.000000',
-    counterparty: '0xAb12...Cd34',
-    status: 'completed',
-    date: '2026-03-18 09:11',
-    txHash: '0x7a8b...f9e0',
-  },
-  {
-    id: 'tx_003',
-    type: 'deposit',
-    amount: '+25.000000',
-    counterparty: 'Card funding',
-    status: 'completed',
-    date: '2026-03-15 17:55',
-    txHash: '0x1c2d...3e4f',
-  },
-  {
-    id: 'tx_004',
-    type: 'withdrawal',
-    amount: '-20.000000',
-    counterparty: '0xDe56...Ef78',
-    status: 'completed',
-    date: '2026-03-17 11:20',
-    txHash: '0x5f6a...7b8c',
-  },
-  {
-    id: 'tx_005',
-    type: 'withdrawal',
-    amount: '-12.500000',
-    counterparty: '0xGh90...Ij12',
-    status: 'processing',
-    date: '2026-03-19 16:40',
-    txHash: null,
-  },
-];
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -377,7 +329,38 @@ function WithdrawSection({ wallet }: WithdrawSectionProps) {
   );
 }
 
+function normalizeTransaction(raw: Record<string, unknown>): Transaction {
+  return {
+    id: String(raw.id ?? ''),
+    type: (raw.type as Transaction['type']) ?? 'deposit',
+    amount: String(raw.amount ?? '0.000000'),
+    counterparty: String(raw.counterparty ?? raw.from ?? raw.to ?? ''),
+    status: (raw.status as Transaction['status']) ?? 'completed',
+    date: String(raw.date ?? raw.createdAt ?? ''),
+    txHash: raw.txHash ? String(raw.txHash) : null,
+  };
+}
+
 function TransactionHistory() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/dashboard/wallet')
+      .then((r) => r.json())
+      .then((json) => {
+        const list: unknown[] = json?.data?.transactions ?? json?.transactions ?? json?.data ?? [];
+        if (Array.isArray(list) && list.length > 0) {
+          setTransactions(list.map((t) => normalizeTransaction(t as Record<string, unknown>)));
+        }
+      })
+      .catch(() => {
+        // Keep empty on failure
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="bg-bg-1 border border-border overflow-hidden">
       <div className="bg-bg-2 border-b border-border px-5 py-3">
@@ -394,7 +377,17 @@ function TransactionHistory() {
         ))}
       </div>
 
-      {DEMO_TRANSACTIONS.map((tx) => (
+      {loading && (
+        <div className="px-5 py-8 font-mono text-[12px] text-t-2 text-center">Loading…</div>
+      )}
+
+      {!loading && transactions.length === 0 && (
+        <div className="px-5 py-8 font-mono text-[12px] text-t-2 text-center">
+          No transactions yet.
+        </div>
+      )}
+
+      {transactions.map((tx) => (
         <div
           key={tx.id}
           className="grid px-5 py-3 border-b border-border last:border-b-0 items-center gap-2"
@@ -430,15 +423,15 @@ function TransactionHistory() {
 function normalizeWalletData(raw: Record<string, unknown>): WalletData {
   return {
     id: String(raw.id ?? ''),
-    balance: String(raw.balance ?? raw.availableBalance ?? DEMO_WALLET.balance),
-    locked: String(raw.locked ?? raw.lockedBalance ?? DEMO_WALLET.locked),
-    address: String(raw.address ?? raw.walletAddress ?? DEMO_WALLET.address),
-    chain: String(raw.chain ?? raw.network ?? DEMO_WALLET.chain),
+    balance: String(raw.balance ?? raw.availableBalance ?? DEFAULT_WALLET.balance),
+    locked: String(raw.locked ?? raw.lockedBalance ?? DEFAULT_WALLET.locked),
+    address: String(raw.address ?? raw.walletAddress ?? DEFAULT_WALLET.address),
+    chain: String(raw.chain ?? raw.network ?? DEFAULT_WALLET.chain),
   };
 }
 
 export default function WalletPage() {
-  const [wallet, setWallet] = useState<WalletData>(DEMO_WALLET);
+  const [wallet, setWallet] = useState<WalletData>(DEFAULT_WALLET);
 
   useEffect(() => {
     fetch('/api/wallet')
@@ -450,7 +443,7 @@ export default function WalletPage() {
         }
       })
       .catch(() => {
-        // Keep demo data on failure
+        // Keep default wallet on failure
       });
   }, []);
 

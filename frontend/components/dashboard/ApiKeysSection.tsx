@@ -9,12 +9,6 @@ interface ApiKey {
   lastUsed: string;
 }
 
-const DEMO_KEYS: ApiKey[] = [
-  { id: 'key_001', prefix: 'ag_live_sk_J3kR...', label: 'production', lastUsed: '2 min ago' },
-  { id: 'key_002', prefix: 'ag_test_sk_X9mP...', label: 'development', lastUsed: '3 days ago' },
-  { id: 'key_003', prefix: 'ag_live_sk_Q7wN...', label: 'ci-pipeline', lastUsed: 'never' },
-];
-
 function normalizeKey(raw: Record<string, unknown>): ApiKey {
   const id = String(raw.id ?? raw.keyId ?? '');
   const label = String(raw.label ?? raw.name ?? '');
@@ -43,12 +37,10 @@ export function ApiKeysSection() {
         const list: unknown[] = json?.data ?? json?.keys ?? json ?? [];
         if (Array.isArray(list) && list.length > 0) {
           setKeys(list.map((k) => normalizeKey(k as Record<string, unknown>)));
-        } else {
-          setKeys(DEMO_KEYS);
         }
       })
       .catch(() => {
-        setKeys(DEMO_KEYS);
+        // Keep empty on failure
       })
       .finally(() => setLoadState('done'));
   }, []);
@@ -135,7 +127,7 @@ export function ApiKeysSection() {
 
       {loadState === 'done' && keys.length === 0 && (
         <div className="px-5 py-6 font-mono text-[12px] text-t-2 text-center">
-          No API keys. Create one below.
+          No API keys yet. Generate one to get started.
         </div>
       )}
 

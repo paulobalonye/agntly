@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type TaskStatus = 'complete' | 'failed' | 'escrowed' | 'disputed';
@@ -21,143 +23,11 @@ interface Task {
   time: string;
 }
 
-// ── Demo data ─────────────────────────────────────────────────────────────────
-
-const SPENDING_OVERVIEW = {
-  totalSpent: '$847.20',
-  tasksToday: '1,247',
-  avgCostPerTask: '$0.0028',
-} as const;
-
-const CONNECTED_AGENTS: ConnectedAgent[] = [
-  { id: 'a1', icon: '🔍', name: 'WebSearch Alpha',  calls: 3421, spent: '$6.84' },
-  { id: 'a2', icon: '📄', name: 'PDFParser NX',     calls: 1208, spent: '$1.21' },
-  { id: 'a3', icon: '⚙️', name: 'CodeExec Pro',     calls: 847,  spent: '$4.24' },
-  { id: 'a4', icon: '📊', name: 'DataWrangler v2',  calls: 312,  spent: '$0.94' },
-];
-
-const DEMO_TASKS: Task[] = [
-  {
-    id: 'tsk_4f3c8a1b2e9d',
-    agent: 'WebSearch Alpha',
-    payload: '{"query":"latest AI model benchmarks 2026","depth":3}',
-    status: 'complete',
-    cost: '$0.0028',
-    time: '2026-03-20 14:47',
-  },
-  {
-    id: 'tsk_7a8bf9e02c1d',
-    agent: 'PDFParser NX',
-    payload: '{"url":"https://arxiv.org/pdf/2403.1234.pdf","pages":"all"}',
-    status: 'complete',
-    cost: '$0.0010',
-    time: '2026-03-20 14:31',
-  },
-  {
-    id: 'tsk_1c2d3e4f5a6b',
-    agent: 'CodeExec Pro',
-    payload: '{"lang":"python","code":"import pandas as pd; df = pd.read_csv..."}',
-    status: 'complete',
-    cost: '$0.0050',
-    time: '2026-03-20 13:58',
-  },
-  {
-    id: 'tsk_9b0a7c6d5e4f',
-    agent: 'DataWrangler v2',
-    payload: '{"source":"s3://bucket/sales-q1.csv","transform":"pivot"}',
-    status: 'failed',
-    cost: '$0.0003',
-    time: '2026-03-20 13:22',
-  },
-  {
-    id: 'tsk_2e3f4a5b6c7d',
-    agent: 'WebSearch Alpha',
-    payload: '{"query":"USDC stablecoin market cap April 2026"}',
-    status: 'complete',
-    cost: '$0.0028',
-    time: '2026-03-20 12:49',
-  },
-  {
-    id: 'tsk_8d9e0f1a2b3c',
-    agent: 'CodeExec Pro',
-    payload: '{"lang":"js","code":"const res = await fetch(url); return res.json()"}',
-    status: 'escrowed',
-    cost: '$0.0050',
-    time: '2026-03-20 12:15',
-  },
-  {
-    id: 'tsk_5a6b7c8d9e0f',
-    agent: 'PDFParser NX',
-    payload: '{"url":"https://company.io/report-2026.pdf","extract":"tables"}',
-    status: 'complete',
-    cost: '$0.0010',
-    time: '2026-03-20 11:43',
-  },
-  {
-    id: 'tsk_3c4d5e6f7a8b',
-    agent: 'WebSearch Alpha',
-    payload: '{"query":"on-chain agent marketplace competitors","max_results":10}',
-    status: 'complete',
-    cost: '$0.0028',
-    time: '2026-03-20 11:07',
-  },
-  {
-    id: 'tsk_0f1a2b3c4d5e',
-    agent: 'DataWrangler v2',
-    payload: '{"source":"internal-db/transactions","group_by":"agent_id"}',
-    status: 'disputed',
-    cost: '$0.0030',
-    time: '2026-03-20 10:34',
-  },
-  {
-    id: 'tsk_6b7c8d9e0f1a',
-    agent: 'CodeExec Pro',
-    payload: '{"lang":"python","code":"import sklearn; model = LinearRegression()"}',
-    status: 'complete',
-    cost: '$0.0050',
-    time: '2026-03-20 10:02',
-  },
-  {
-    id: 'tsk_4e5f6a7b8c9d',
-    agent: 'WebSearch Alpha',
-    payload: '{"query":"LLM inference cost reduction techniques 2026"}',
-    status: 'complete',
-    cost: '$0.0028',
-    time: '2026-03-20 09:18',
-  },
-  {
-    id: 'tsk_2a3b4c5d6e7f',
-    agent: 'PDFParser NX',
-    payload: '{"url":"https://example.org/whitepaper.pdf","pages":"1-5"}',
-    status: 'failed',
-    cost: '$0.0010',
-    time: '2026-03-20 08:55',
-  },
-  {
-    id: 'tsk_8c9d0e1f2a3b',
-    agent: 'DataWrangler v2',
-    payload: '{"source":"s3://bucket/events.jsonl","output":"parquet"}',
-    status: 'complete',
-    cost: '$0.0030',
-    time: '2026-03-20 08:22',
-  },
-  {
-    id: 'tsk_7f8a9b0c1d2e',
-    agent: 'WebSearch Alpha',
-    payload: '{"query":"solidity gas optimization patterns","depth":2}',
-    status: 'complete',
-    cost: '$0.0028',
-    time: '2026-03-20 07:41',
-  },
-  {
-    id: 'tsk_5d6e7f8a9b0c',
-    agent: 'CodeExec Pro',
-    payload: '{"lang":"bash","code":"jq \'.[] | select(.status==\\\"complete\\\")\' tasks.json"}',
-    status: 'escrowed',
-    cost: '$0.0050',
-    time: '2026-03-20 07:05',
-  },
-];
+interface SpendingData {
+  totalSpent: string;
+  tasksToday: string;
+  avgCostPerTask: string;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -190,11 +60,11 @@ function formatCalls(n: number): string {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SpendingOverview() {
+function SpendingOverview({ spending }: { spending: SpendingData }) {
   const cards = [
-    { label: 'Total Spent', value: SPENDING_OVERVIEW.totalSpent, unit: 'USDC' },
-    { label: 'Tasks Today', value: SPENDING_OVERVIEW.tasksToday, unit: null },
-    { label: 'Avg Cost / Task', value: SPENDING_OVERVIEW.avgCostPerTask, unit: 'USDC' },
+    { label: 'Total Spent', value: spending.totalSpent, unit: 'USDC' },
+    { label: 'Tasks Today', value: spending.tasksToday, unit: null },
+    { label: 'Avg Cost / Task', value: spending.avgCostPerTask, unit: 'USDC' },
   ];
 
   return (
@@ -216,7 +86,7 @@ function SpendingOverview() {
   );
 }
 
-function ConnectedAgents() {
+function ConnectedAgents({ agents }: { agents: ConnectedAgent[] }) {
   return (
     <div className="bg-bg-1 border border-border overflow-hidden">
       <div className="bg-bg-2 border-b border-border px-5 py-3">
@@ -225,36 +95,44 @@ function ConnectedAgents() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="flex gap-4 p-5 min-w-max">
-          {CONNECTED_AGENTS.map((agent) => (
-            <div
-              key={agent.id}
-              className="bg-bg-2 border border-border p-4 min-w-[180px] flex-shrink-0 hover:border-accent/40 transition-colors"
-            >
-              <div className="text-[22px] mb-3">{agent.icon}</div>
-              <div className="font-mono text-[12px] text-t-0 font-medium mb-3 leading-snug">
-                {agent.name}
-              </div>
-              <div className="font-mono text-[10px] text-t-2 space-y-1">
-                <div>
-                  <span className="text-t-3">calls </span>
-                  <span className="text-t-1">{formatCalls(agent.calls)}</span>
-                </div>
-                <div>
-                  <span className="text-t-3">spent </span>
-                  <span className="text-accent">{agent.spent}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+      {agents.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <div className="font-mono text-[12px] text-t-2">
+            No connected agents yet.
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <div className="flex gap-4 p-5 min-w-max">
+            {agents.map((agent) => (
+              <div
+                key={agent.id}
+                className="bg-bg-2 border border-border p-4 min-w-[180px] flex-shrink-0 hover:border-accent/40 transition-colors"
+              >
+                <div className="text-[22px] mb-3">{agent.icon}</div>
+                <div className="font-mono text-[12px] text-t-0 font-medium mb-3 leading-snug">
+                  {agent.name}
+                </div>
+                <div className="font-mono text-[10px] text-t-2 space-y-1">
+                  <div>
+                    <span className="text-t-3">calls </span>
+                    <span className="text-t-1">{formatCalls(agent.calls)}</span>
+                  </div>
+                  <div>
+                    <span className="text-t-3">spent </span>
+                    <span className="text-accent">{agent.spent}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function TaskHistoryTable() {
+function TaskHistoryTable({ tasks }: { tasks: Task[] }) {
   const columns = ['task id', 'agent', 'payload', 'status', 'cost', 'time'];
 
   return (
@@ -277,8 +155,17 @@ function TaskHistoryTable() {
         ))}
       </div>
 
+      {/* Empty state */}
+      {tasks.length === 0 && (
+        <div className="px-5 py-10 text-center">
+          <div className="font-mono text-[12px] text-t-2">
+            No tasks yet. Hire an agent from the marketplace to get started.
+          </div>
+        </div>
+      )}
+
       {/* Rows */}
-      {DEMO_TASKS.map((task) => (
+      {tasks.map((task) => (
         <div
           key={task.id}
           className="grid px-5 py-3 border-b border-border last:border-b-0 items-center gap-2 hover:bg-bg-2/40 transition-colors"
@@ -321,7 +208,53 @@ function TaskHistoryTable() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+function normalizeTask(raw: Record<string, unknown>): Task {
+  return {
+    id: String(raw.id ?? ''),
+    agent: String(raw.agent ?? raw.agentName ?? ''),
+    payload: String(raw.payload ?? raw.input ?? ''),
+    status: (raw.status as TaskStatus) ?? 'complete',
+    cost: String(raw.cost ?? raw.price ?? '$0.0000'),
+    time: String(raw.time ?? raw.createdAt ?? ''),
+  };
+}
+
 export default function MyTasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [agents, setAgents] = useState<ConnectedAgent[]>([]);
+  const [spending, setSpending] = useState<SpendingData>({
+    totalSpent: '$0.00',
+    tasksToday: '0',
+    avgCostPerTask: '$0.0000',
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch('/api/tasks')
+      .then((r) => r.json())
+      .then((json) => {
+        const list: unknown[] = json?.data ?? json?.tasks ?? json ?? [];
+        if (Array.isArray(list)) {
+          setTasks(list.map((t) => normalizeTask(t as Record<string, unknown>)));
+        }
+        if (json?.spending && typeof json.spending === 'object') {
+          setSpending({
+            totalSpent: String(json.spending.totalSpent ?? '$0.00'),
+            tasksToday: String(json.spending.tasksToday ?? '0'),
+            avgCostPerTask: String(json.spending.avgCostPerTask ?? '$0.0000'),
+          });
+        }
+        if (Array.isArray(json?.agents)) {
+          setAgents(json.agents as ConnectedAgent[]);
+        }
+      })
+      .catch(() => {
+        // Keep empty defaults on failure
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="relative z-[1] min-h-[calc(100vh-52px-58px)] px-8 py-8 max-w-[1100px] mx-auto">
       <div className="font-mono text-[10px] text-accent tracking-[0.1em] uppercase mb-1">
@@ -331,11 +264,15 @@ export default function MyTasksPage() {
         My Tasks
       </h1>
 
-      <div className="flex flex-col gap-6">
-        <SpendingOverview />
-        <ConnectedAgents />
-        <TaskHistoryTable />
-      </div>
+      {loading ? (
+        <div className="font-mono text-[12px] text-t-2 text-center py-12">Loading…</div>
+      ) : (
+        <div className="flex flex-col gap-6">
+          <SpendingOverview spending={spending} />
+          <ConnectedAgents agents={agents} />
+          <TaskHistoryTable tasks={tasks} />
+        </div>
+      )}
     </div>
   );
 }

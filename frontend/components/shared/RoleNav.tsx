@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const TICKER = {
-  tasks: '94,201',
-  vol: '$48.3k',
-  fee: '$0.0028',
+  tasks: '—',
+  vol: '—',
+  fee: '—',
 } as const;
 
 const BUILDER_LINKS = [

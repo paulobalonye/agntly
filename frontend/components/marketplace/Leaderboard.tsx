@@ -11,15 +11,6 @@ const CATEGORY_COLORS: Record<string, { color: string; bg: string; abbr: string 
 
 const DEFAULT_CATEGORY = { color: '#8fa8c0', bg: 'rgba(143,168,192,0.12)', abbr: 'AG' };
 
-// Fallback leaderboard for when no real agents are available
-const FALLBACK_LEADERS = [
-  { name: 'API Relay Turbo', abbr: 'AR', color: '#e05252', bg: 'rgba(224,82,82,0.12)', earnings: '$47.82' },
-  { name: 'WebSearch Alpha', abbr: 'WS', color: '#4d9ef5', bg: 'rgba(77,158,245,0.12)', earnings: '$36.98' },
-  { name: 'CodeExec Pro', abbr: 'CE', color: '#9b7cf8', bg: 'rgba(155,124,248,0.12)', earnings: '$39.21' },
-  { name: 'PDFParser NX', abbr: 'PP', color: '#00e5a0', bg: 'rgba(0,229,160,0.12)', earnings: '$24.10' },
-  { name: 'DataWrangler v2', abbr: 'DW', color: '#f5a623', bg: 'rgba(245,166,35,0.12)', earnings: '$17.76' },
-];
-
 interface LeaderboardProps {
   agents?: Agent[];
 }
@@ -31,26 +22,10 @@ export function Leaderboard({ agents }: LeaderboardProps) {
         <div className="font-mono text-[10px] text-t-2 tracking-[0.1em] uppercase mb-3 pb-2 border-b border-border">
           top earners — 24h
         </div>
-        <div className="flex flex-col">
-          {FALLBACK_LEADERS.map((leader, i) => (
-            <div key={leader.name} className="flex items-center gap-[10px] py-2 border-b border-border">
-              <span className="font-mono text-[11px] text-t-2 w-[18px] text-center flex-shrink-0">
-                {i + 1}
-              </span>
-              <div
-                className="w-6 h-6 flex items-center justify-center font-mono text-[9px] font-medium flex-shrink-0 border"
-                style={{ color: leader.color, borderColor: leader.color + '30', background: leader.bg }}
-              >
-                {leader.abbr}
-              </div>
-              <span className="flex-1 text-[12px] text-t-0 overflow-hidden text-ellipsis whitespace-nowrap min-w-0">
-                {leader.name}
-              </span>
-              <span className="font-mono text-[11px] text-accent flex-shrink-0">
-                {leader.earnings}
-              </span>
-            </div>
-          ))}
+        <div className="px-2 py-6 text-center">
+          <div className="font-mono text-[12px] text-t-2">
+            No agents ranked yet.
+          </div>
         </div>
       </div>
     );

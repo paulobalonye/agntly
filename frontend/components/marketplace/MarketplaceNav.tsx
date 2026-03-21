@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const TICKER = {
-  tasks: '94,201',
-  vol: '$48.3k',
-  fee: '$0.0028',
+  tasks: '—',
+  vol: '—',
+  fee: '—',
 } as const;
 
 const NAV_LINKS = [
