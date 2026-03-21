@@ -132,6 +132,75 @@ export class LicenseService {
   }
 
   /**
+   * Admin: create a manual license (promo/free licenses).
+   */
+  async createManual(data: {
+    purchaseCode: string;
+    buyerEmail?: string;
+    buyerName?: string;
+    domain?: string;
+    licenseType?: string;
+  }): Promise<{ success: boolean; license?: LicenseRow; error?: string }> {
+    const existing = await this.findByPurchaseCode(data.purchaseCode);
+    if (existing) {
+      return { success: false, error: 'A license with this purchase code already exists.' };
+    }
+
+    const normalizedDomain = data.domain ? this.normalizeDomain(data.domain) : null;
+
+    await this.db.execute(sql`
+      INSERT INTO licenses (purchase_code, buyer_email, buyer_name, domain, license_type, status, activated_at, last_checked_at)
+      VALUES (
+        ${data.purchaseCode},
+        ${data.buyerEmail ?? null},
+        ${data.buyerName ?? null},
+        ${normalizedDomain},
+        ${data.licenseType ?? 'regular'},
+        'active',
+        ${normalizedDomain ? sql`NOW()` : sql`NULL`},
+        NOW()
+      )
+    `);
+
+    const license = await this.findByPurchaseCode(data.purchaseCode);
+    return { success: true, license: license ?? undefined };
+  }
+
+  /**
+   * Admin: update license details.
+   */
+  async update(purchaseCode: string, data: {
+    buyerEmail?: string;
+    buyerName?: string;
+    domain?: string;
+    licenseType?: string;
+    status?: string;
+  }): Promise<{ success: boolean; license?: LicenseRow; error?: string }> {
+    const existing = await this.findByPurchaseCode(purchaseCode);
+    if (!existing) {
+      return { success: false, error: 'License not found.' };
+    }
+
+    const normalizedDomain = data.domain !== undefined
+      ? (data.domain ? this.normalizeDomain(data.domain) : null)
+      : existing.domain;
+
+    await this.db.execute(sql`
+      UPDATE licenses
+      SET
+        buyer_email = ${data.buyerEmail ?? existing.buyerEmail ?? null},
+        buyer_name = ${data.buyerName ?? existing.buyerName ?? null},
+        domain = ${normalizedDomain},
+        license_type = ${data.licenseType ?? existing.licenseType},
+        status = ${data.status ?? existing.status}
+      WHERE purchase_code = ${purchaseCode}
+    `);
+
+    const license = await this.findByPurchaseCode(purchaseCode);
+    return { success: true, license: license ?? undefined };
+  }
+
+  /**
    * Admin: revoke a license.
    */
   async revoke(purchaseCode: string): Promise<{ success: boolean }> {
@@ -141,6 +210,36 @@ export class LicenseService {
       WHERE purchase_code = ${purchaseCode}
     `);
     return { success: true };
+  }
+
+  /**
+   * Admin: delete a license permanently.
+   */
+  async deleteLicense(purchaseCode: string): Promise<{ success: boolean; error?: string }> {
+    const existing = await this.findByPurchaseCode(purchaseCode);
+    if (!existing) {
+      return { success: false, error: 'License not found.' };
+    }
+    await this.db.execute(sql`DELETE FROM licenses WHERE purchase_code = ${purchaseCode}`);
+    return { success: true };
+  }
+
+  /**
+   * Admin: search licenses by domain, email, or purchase code.
+   */
+  async search(query: string, limit = 50): Promise<LicenseRow[]> {
+    const pattern = `%${query}%`;
+    const result = await this.db.execute(sql`
+      SELECT * FROM licenses
+      WHERE purchase_code ILIKE ${pattern}
+        OR domain ILIKE ${pattern}
+        OR buyer_email ILIKE ${pattern}
+        OR buyer_name ILIKE ${pattern}
+        OR envato_buyer ILIKE ${pattern}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `);
+    return (result.rows as Record<string, unknown>[]).map(this.mapRow);
   }
 
   /**

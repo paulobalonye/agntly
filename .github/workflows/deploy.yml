@@ -99,7 +99,16 @@ jobs:
             export AUTH_SERVICE_URL="http://localhost:3001"
             export REGISTRY_SERVICE_URL="http://localhost:3005"
             export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
+            export LICENSE_SERVICE_URL="http://localhost:3009"
             cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
+
+            # Run migrations (creates any new tables like licenses)
+            source .env
+            psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
+
+            # Start license-service if not already in PM2
+            pm2 describe license-service > /dev/null 2>&1 || \
+              pm2 start "npx tsx services/license-service/src/server.ts" --name license-service
 
             # Restart all services with updated env
             pm2 restart all --update-env

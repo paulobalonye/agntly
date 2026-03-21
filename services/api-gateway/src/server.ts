@@ -20,7 +20,7 @@ await app.register(cors, {
     if (!origin || allowedOrigins.has(origin)) {
       cb(null, true);
     } else {
-      cb(new Error('Not allowed by CORS'), false);
+      cb(null, false);
     }
   },
   credentials: true,
