@@ -18,6 +18,13 @@ const app = Fastify({
 
 app.decorate('taskService', taskService);
 
+app.addHook('preHandler', async (request) => {
+  const userId = request.headers['x-user-id'];
+  if (typeof userId === 'string' && userId.length > 0) {
+    (request as any).userId = userId;
+  }
+});
+
 await app.register(cors, { origin: true });
 await app.register(healthRoutes);
 await app.register(taskRoutes, { prefix: '/v1/tasks' });
