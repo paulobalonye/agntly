@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
-import { RegistryService } from '../services/registry-service.js';
+import type { RegistryService } from '../services/registry-service.js';
 
 const registerSchema = z.object({
   agentId: z.string().min(1), name: z.string().min(1), description: z.string(),
@@ -10,7 +10,7 @@ const registerSchema = z.object({
 });
 
 export const agentRoutes: FastifyPluginAsync = async (app) => {
-  const registryService = new RegistryService();
+  const registryService = (app as any).registryService as RegistryService;
 
   app.post('/', async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);

@@ -17,14 +17,56 @@ const createTaskSchema = z.object({
 export const taskRoutes: FastifyPluginAsync = async (app) => {
   const service = (app as any).taskService as TaskService;
 
+  const ESCROW_URL = process.env.ESCROW_SERVICE_URL ?? 'http://localhost:3003';
+  const WALLET_URL = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
+
   app.post('/', async (request, reply) => {
     const parsed = createTaskSchema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send(createErrorResponse('Invalid task request'));
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+
+    // Step 1: Create the task in pending state
     const { task, completionToken } = await service.createTask(userId, parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
 
-    // If dispatch is requested (default true), fire-and-forget call to agent endpoint
+    // Step 2: Lock escrow — caller's wallet → escrow
+    try {
+      // Get orchestrator's wallet
+      const walletRes = await fetch(`${WALLET_URL}/v1/wallets`, {
+        headers: { 'x-user-id': userId },
+      });
+      const walletJson = await walletRes.json() as { data?: { id?: string } };
+      const orchestratorWalletId = walletJson?.data?.id;
+
+      if (orchestratorWalletId) {
+        // Lock funds in escrow
+        const escrowRes = await fetch(`${ESCROW_URL}/v1/escrow/lock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            taskId: task.id,
+            fromWalletId: orchestratorWalletId,
+            toWalletId: orchestratorWalletId, // placeholder — resolved at release
+            amount: parsed.data.budget,
+            deadline: task.deadline.toISOString(),
+          }),
+        });
+
+        if (escrowRes.ok) {
+          // Mark task as escrowed
+          try {
+            await service.markEscrowed(task.id, `escrow-${task.id}`);
+          } catch {
+            // Task may already be in correct state
+          }
+        }
+        // If escrow fails (insufficient funds), task stays pending — still visible
+      }
+    } catch {
+      // Escrow service unavailable — task proceeds without escrow (sandbox mode)
+    }
+
+    // Step 3: Dispatch to agent (fire-and-forget)
     if (parsed.data.dispatch !== false) {
       const capturedToken = completionToken;
       dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload)

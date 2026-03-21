@@ -23,6 +23,9 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
   const catStyle = CATEGORY_COLORS[agent.category] ?? DEFAULT_CATEGORY;
   const [connected, setConnected] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hiring, setHiring] = useState(false);
+  const [hireResult, setHireResult] = useState<{ success: boolean; taskId?: string; error?: string } | null>(null);
+  const [taskPayload, setTaskPayload] = useState('{"query": "test"}');
 
   const calls24h = agent.callsTotal > 0
     ? Math.round(agent.callsTotal / 30).toLocaleString()
@@ -55,6 +58,34 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
 
   const handleViewDocs = () => {
     window.location.href = '/docs';
+  };
+
+  const handleHire = async () => {
+    setHiring(true);
+    setHireResult(null);
+    try {
+      let payload: Record<string, unknown> = {};
+      try { payload = JSON.parse(taskPayload); } catch { payload = { input: taskPayload }; }
+
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: agent.id,
+          payload,
+          budget: agent.priceUsdc,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setHireResult({ success: true, taskId: data.data.id });
+      } else {
+        setHireResult({ success: false, error: data.error ?? 'Task creation failed' });
+      }
+    } catch {
+      setHireResult({ success: false, error: 'Network error' });
+    }
+    setHiring(false);
   };
 
   const handleCopy = async () => {
@@ -140,6 +171,34 @@ result = agntly.tasks.create(
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Hire agent */}
+          <div className="font-mono text-[10px] text-t-2 tracking-[0.08em] uppercase mb-2">
+            hire this agent
+          </div>
+          <div className="bg-bg-0 border border-border p-4 mb-5">
+            <label className="font-mono text-[10px] text-t-2 block mb-1">Task Payload (JSON)</label>
+            <textarea
+              value={taskPayload}
+              onChange={(e) => setTaskPayload(e.target.value)}
+              className="w-full bg-bg-2 border border-border text-t-0 font-mono text-[12px] px-3 py-2 focus:border-accent focus:outline-none h-[60px] resize-none"
+            />
+            <div className="flex items-center gap-3 mt-3">
+              <button
+                onClick={handleHire}
+                disabled={hiring}
+                className="bg-accent text-bg-0 font-mono text-[12px] font-medium px-5 py-2 hover:bg-accent-2 transition-colors disabled:opacity-50"
+              >
+                {hiring ? 'dispatching...' : `hire for $${agent.priceUsdc} USDC`}
+              </button>
+              {hireResult?.success && (
+                <span className="font-mono text-[11px] text-accent">Task created: {hireResult.taskId}</span>
+              )}
+              {hireResult && !hireResult.success && (
+                <span className="font-mono text-[11px] text-red">{hireResult.error}</span>
+              )}
+            </div>
           </div>
 
           {/* Quickstart label */}

@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { RegistryService } from '../services/registry-service.js';
+import type { RegistryService } from '../services/registry-service.js';
 
 export const badgeRoutes: FastifyPluginAsync = async (app) => {
-  const registryService = new RegistryService();
+  const registryService = (app as any).registryService as RegistryService;
 
   app.get('/:agentId/badge.svg', async (request, reply) => {
     const { agentId } = request.params as { agentId: string };
@@ -14,8 +14,10 @@ export const badgeRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const label = 'agntly';
-    const value = `${agent.uptimePct}% · $${agent.priceUsdc}/call · ★${agent.reputation.toFixed(1)}`;
-    const color = agent.uptimePct >= 99 ? '#00e5a0' : agent.uptimePct >= 95 ? '#f5a623' : '#e05252';
+    const uptime = parseFloat(String(agent.uptimePct));
+    const rep = parseFloat(String(agent.reputation));
+    const value = `${uptime}% · $${agent.priceUsdc}/call · ★${rep.toFixed(1)}`;
+    const color = uptime >= 99 ? '#00e5a0' : uptime >= 95 ? '#f5a623' : '#e05252';
     const svg = generateBadge(label, value, color);
 
     return reply

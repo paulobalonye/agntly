@@ -1,46 +1,72 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
-const MOCK_WALLET = {
-  balance: '1,240.500000',
-  locked: '45.000000',
-  address: '0xA9c3B7d8E2f1C4a5D6b9F0e3A7c8B2d1E4f5A6b7',
-  withdrawals: [
-    {
-      id: 'wd_001',
-      amount: '500.000000',
-      destination: '0x71Be63f3...8F5A',
-      status: 'completed',
-      txHash: '0xabc123...def456',
-      date: '2026-03-18',
-    },
-    {
-      id: 'wd_002',
-      amount: '200.000000',
-      destination: '0x71Be63f3...8F5A',
-      status: 'processing',
-      txHash: '0x789xyz...012abc',
-      date: '2026-03-19',
-    },
-    {
-      id: 'wd_003',
-      amount: '100.000000',
-      destination: '0x71Be63f3...8F5A',
-      status: 'queued',
-      txHash: null,
-      date: '2026-03-19',
-    },
-  ],
-};
+const WALLET_URL = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
 
 export async function GET() {
-  return NextResponse.json({ success: true, data: MOCK_WALLET, error: null });
-}
+  const cookieStore = await cookies();
+  const token = cookieStore.get('agntly_token')?.value;
+  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
+  const userId = payload?.userId;
 
-export async function POST() {
-  // Simulated withdrawal — always succeeds
-  return NextResponse.json({
-    success: true,
-    data: { message: 'Withdrawal queued successfully.' },
-    error: null,
-  });
+  if (!userId) {
+    return NextResponse.json({
+      success: true,
+      data: { balance: '0', locked: '0', address: '—', withdrawals: [] },
+      error: null,
+    });
+  }
+
+  try {
+    // Get user's wallet
+    const walletRes = await fetch(`${WALLET_URL}/v1/wallets`, {
+      headers: { 'x-user-id': userId },
+      cache: 'no-store',
+    });
+
+    if (!walletRes.ok) throw new Error('Wallet not found');
+
+    const walletJson = await walletRes.json();
+    const wallet = walletJson?.data;
+    if (!wallet) throw new Error('No wallet data');
+
+    // Get withdrawal history
+    let withdrawals: unknown[] = [];
+    try {
+      const wdRes = await fetch(`${WALLET_URL}/v1/wallets/${wallet.id}/withdrawals?limit=10`, {
+        headers: { 'x-user-id': userId },
+      });
+      if (wdRes.ok) {
+        const wdJson = await wdRes.json();
+        withdrawals = Array.isArray(wdJson.data) ? wdJson.data : [];
+      }
+    } catch {
+      // Withdrawal history unavailable
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        balance: wallet.balance ?? '0',
+        locked: wallet.locked ?? '0',
+        address: wallet.address ?? '—',
+        withdrawals: (withdrawals as Record<string, unknown>[]).map((w) => ({
+          id: w.id,
+          amount: w.amount,
+          destination: w.destination,
+          status: w.status,
+          txHash: w.tx_hash ?? w.txHash ?? null,
+          date: w.created_at ?? w.createdAt ?? '',
+        })),
+      },
+      error: null,
+    });
+  } catch {
+    return NextResponse.json({
+      success: true,
+      data: { balance: '0', locked: '0', address: '—', withdrawals: [] },
+      error: null,
+    });
+  }
 }

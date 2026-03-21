@@ -1,6 +1,3 @@
-// TODO: SECURITY — Nonce management uses in-memory state. On crash-restart, nonces may
-// desync from chain state. For production, always fetch nonce from chain before each tx,
-// or use Redis-based nonce locking for multi-instance coordination.
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
@@ -10,7 +7,6 @@ const RELAYER_PRIVATE_KEY = process.env.RELAYER_PRIVATE_KEY;
 const MIN_ETH_BALANCE = parseEther('0.01');
 
 export class GasManager {
-  private nonce: number | null = null;
   private readonly chain = baseSepolia;
 
   readonly publicClient = createPublicClient({
@@ -26,13 +22,18 @@ export class GasManager {
       })
     : null;
 
+  /**
+   * Always fetch nonce from chain. This avoids desync on crash-restart
+   * and is safe for single-instance deployment.
+   */
   async getNextNonce(): Promise<number> {
-    if (this.nonce === null || this.nonce % 20 === 0) {
-      const account = this.walletClient?.account;
-      if (!account) throw new Error('No relayer wallet configured');
-      this.nonce = await this.publicClient.getTransactionCount({ address: account.address });
-    }
-    return this.nonce++;
+    const account = this.walletClient?.account;
+    if (!account) throw new Error('No relayer wallet configured');
+    const nonce = await this.publicClient.getTransactionCount({
+      address: account.address,
+      blockTag: 'pending',
+    });
+    return nonce;
   }
 
   async checkGasBalance(): Promise<boolean> {
@@ -44,9 +45,5 @@ export class GasManager {
       return false;
     }
     return true;
-  }
-
-  resetNonce(): void {
-    this.nonce = null;
   }
 }

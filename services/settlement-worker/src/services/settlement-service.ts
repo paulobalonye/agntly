@@ -43,7 +43,7 @@ export class SettlementService {
 
     const receipt = await this.gasManager.publicClient.waitForTransactionReceipt({ hash: txHash });
     if (receipt.status === 'reverted') {
-      this.gasManager.resetNonce();
+      // Nonce fetched from chain on each tx — no reset needed
       throw new Error(`Release tx reverted: ${txHash}`);
     }
 
@@ -72,7 +72,7 @@ export class SettlementService {
 
     const receipt = await this.gasManager.publicClient.waitForTransactionReceipt({ hash: txHash });
     if (receipt.status === 'reverted') {
-      this.gasManager.resetNonce();
+      // Nonce fetched from chain on each tx — no reset needed
       throw new Error(`Refund tx reverted: ${txHash}`);
     }
 
@@ -114,7 +114,7 @@ export class SettlementService {
 
     const receipt = await this.gasManager.publicClient.waitForTransactionReceipt({ hash: txHash });
     if (receipt.status === 'reverted') {
-      this.gasManager.resetNonce();
+      // Nonce fetched from chain on each tx — no reset needed
       throw new Error(`Dispute resolution tx reverted: ${txHash}`);
     }
 
@@ -148,7 +148,7 @@ export class SettlementService {
 
     const receipt = await this.gasManager.publicClient.waitForTransactionReceipt({ hash: txHash });
     if (receipt.status === 'reverted') {
-      this.gasManager.resetNonce();
+      // Nonce fetched from chain on each tx — no reset needed
       throw new Error(`Withdrawal tx reverted: ${txHash}`);
     }
 

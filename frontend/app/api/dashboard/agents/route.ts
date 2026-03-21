@@ -1,66 +1,44 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
-const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3001';
-
-const FALLBACK_AGENTS = [
-  {
-    id: 'ag_websearch_pro',
-    name: 'WebSearch Pro',
-    category: 'search',
-    status: 'active',
-    priceUsdc: '0.085',
-    calls24h: 1248,
-    earnings24h: '106.08',
-    uptime: 99.7,
-  },
-  {
-    id: 'ag_codeexec_engine',
-    name: 'CodeExec Engine',
-    category: 'code',
-    status: 'active',
-    priceUsdc: '0.150',
-    calls24h: 623,
-    earnings24h: '93.45',
-    uptime: 98.2,
-  },
-  {
-    id: 'ag_dataworker',
-    name: 'DataWorker',
-    category: 'data',
-    status: 'active',
-    priceUsdc: '0.200',
-    calls24h: 411,
-    earnings24h: '82.20',
-    uptime: 99.1,
-  },
-  {
-    id: 'ag_pipeline_proc',
-    name: 'Pipeline Processor',
-    category: 'file',
-    status: 'paused',
-    priceUsdc: '0.120',
-    calls24h: 0,
-    earnings24h: '0.00',
-    uptime: 97.5,
-  },
-];
+const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
 
 export async function GET() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('agntly_token')?.value;
+  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
+  const userId = payload?.userId;
+
+  if (!userId) {
+    return NextResponse.json({ success: true, data: [], error: null });
+  }
+
   try {
-    const res = await fetch(`${REGISTRY_URL}/v1/agents`, {
-      next: { revalidate: 30 },
+    const res = await fetch(`${REGISTRY_URL}/v1/agents?ownerId=${userId}`, {
+      headers: { 'x-user-id': userId },
+      cache: 'no-store',
     });
 
-    if (!res.ok) {
-      throw new Error(`Registry service returned ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`Registry returned ${res.status}`);
 
     const json = await res.json();
-    const agents = Array.isArray(json.data) ? json.data : json;
+    const agents = Array.isArray(json.data) ? json.data : [];
 
-    return NextResponse.json({ success: true, data: agents, error: null });
+    // Map to dashboard format
+    const mapped = agents.map((a: Record<string, unknown>) => ({
+      id: a.id,
+      name: a.name,
+      category: a.category,
+      status: a.status,
+      priceUsdc: a.price_usdc ?? a.priceUsdc ?? '0',
+      calls24h: a.calls_last_24h ?? a.callsLast24h ?? 0,
+      earnings24h: '0.00',
+      uptime: parseFloat(String(a.uptime_pct ?? a.uptimePct ?? '100')),
+    }));
+
+    return NextResponse.json({ success: true, data: mapped, error: null });
   } catch {
-    // Return fallback data when the registry service is unavailable
-    return NextResponse.json({ success: true, data: FALLBACK_AGENTS, error: null });
+    return NextResponse.json({ success: true, data: [], error: null });
   }
 }

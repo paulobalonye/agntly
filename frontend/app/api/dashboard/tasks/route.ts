@@ -1,18 +1,46 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
-const MOCK_TASKS = [
-  { id: 'task_0x4f3a1b', agent: 'WebSearch Pro', amount: '0.085', status: 'complete', timestamp: '2 min ago' },
-  { id: 'task_0x7c2d9e', agent: 'CodeExec Engine', amount: '0.150', status: 'complete', timestamp: '8 min ago' },
-  { id: 'task_0x1a8f4c', agent: 'WebSearch Pro', amount: '0.085', status: 'failed', timestamp: '15 min ago' },
-  { id: 'task_0x9b5e2d', agent: 'DataWorker', amount: '0.200', status: 'escrowed', timestamp: '23 min ago' },
-  { id: 'task_0x3c7a6f', agent: 'CodeExec Engine', amount: '0.150', status: 'complete', timestamp: '41 min ago' },
-  { id: 'task_0x6d1b8e', agent: 'WebSearch Pro', amount: '0.085', status: 'complete', timestamp: '1 hr ago' },
-  { id: 'task_0x2e9c4a', agent: 'DataWorker', amount: '0.200', status: 'disputed', timestamp: '1 hr ago' },
-  { id: 'task_0x8f3d7b', agent: 'CodeExec Engine', amount: '0.150', status: 'complete', timestamp: '2 hr ago' },
-  { id: 'task_0x5a1e9c', agent: 'WebSearch Pro', amount: '0.085', status: 'complete', timestamp: '3 hr ago' },
-  { id: 'task_0x4b7f2d', agent: 'DataWorker', amount: '0.200', status: 'queued', timestamp: '4 hr ago' },
-];
+const TASK_URL = process.env.TASK_SERVICE_URL ?? 'http://localhost:3004';
 
 export async function GET() {
-  return NextResponse.json({ success: true, data: MOCK_TASKS, error: null });
+  const cookieStore = await cookies();
+  const token = cookieStore.get('agntly_token')?.value;
+  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
+  const userId = payload?.userId;
+
+  if (!userId) {
+    return NextResponse.json({ success: true, data: [], error: null });
+  }
+
+  try {
+    // Fetch recent tasks for this user (as orchestrator)
+    const res = await fetch(`${TASK_URL}/v1/admin/tasks?limit=10`, {
+      headers: { 'x-user-id': userId },
+      cache: 'no-store',
+    });
+
+    if (!res.ok) throw new Error(`Task service returned ${res.status}`);
+
+    const json = await res.json();
+    const tasks = Array.isArray(json.data) ? json.data : [];
+
+    // Map to dashboard format
+    const mapped = tasks
+      .filter((t: Record<string, unknown>) =>
+        t.orchestrator_id === userId || t.orchestratorId === userId
+      )
+      .map((t: Record<string, unknown>) => ({
+        id: String(t.id ?? ''),
+        agent: String(t.agent_id ?? t.agentId ?? ''),
+        amount: String(t.amount ?? '0'),
+        status: String(t.status ?? 'unknown'),
+        timestamp: t.created_at ?? t.createdAt ?? '',
+      }));
+
+    return NextResponse.json({ success: true, data: mapped, error: null });
+  } catch {
+    return NextResponse.json({ success: true, data: [], error: null });
+  }
 }
