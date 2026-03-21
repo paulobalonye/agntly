@@ -106,9 +106,9 @@ jobs:
             source .env
             psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
 
-            # Start license-service if not already in PM2
+            # Start license-service if not already in PM2 (use full tsx path for pnpm workspace)
             pm2 describe license-service > /dev/null 2>&1 || \
-              pm2 start "npx tsx services/license-service/src/server.ts" --name license-service
+              pm2 start node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/cli.mjs --name license-service -- services/license-service/src/server.ts
 
             # Restart all services with updated env
             pm2 restart all --update-env

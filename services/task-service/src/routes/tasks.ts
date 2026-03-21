@@ -74,13 +74,39 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
           if (result && capturedToken) {
             try {
               await service.completeTask(task.id, result, capturedToken);
+
+              // Release escrow on successful completion
+              try {
+                await fetch(`${ESCROW_URL}/v1/escrow/by-task/${task.id}/release`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+                });
+              } catch {
+                console.error(`[task-service] Failed to release escrow for task ${task.id}`);
+              }
             } catch {
               // Already completed or invalid state — ignore
             }
           }
         })
-        .catch(() => {
-          // Dispatch failure is non-fatal; task remains in pending/escrowed state
+        .catch(async () => {
+          // Dispatch failure — refund escrow
+          try {
+            const escrowLookup = await fetch(`${ESCROW_URL}/v1/escrow/by-task/${task.id}`, {
+              headers: { 'x-user-id': 'system' },
+            });
+            if (escrowLookup.ok) {
+              const ej = await escrowLookup.json() as { data?: { id?: string } };
+              if (ej?.data?.id) {
+                await fetch(`${ESCROW_URL}/v1/escrow/${ej.data.id}/refund`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+                });
+              }
+            }
+          } catch {
+            console.error(`[task-service] Failed to refund escrow for failed task ${task.id}`);
+          }
         });
     }
 

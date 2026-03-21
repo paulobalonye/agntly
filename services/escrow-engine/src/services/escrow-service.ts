@@ -139,4 +139,8 @@ export class EscrowService {
   async getEscrow(escrowId: string): Promise<EscrowRow | null> {
     return this.repo.findById(escrowId);
   }
+
+  async getEscrowByTaskId(taskId: string): Promise<EscrowRow | null> {
+    return this.repo.findByTaskId(taskId);
+  }
 }

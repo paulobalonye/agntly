@@ -89,6 +89,27 @@ export const escrowRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(200).send(createApiResponse(escrow));
   });
 
+  // GET /by-task/:taskId — Look up escrow by task ID
+  app.get('/by-task/:taskId', async (request, reply) => {
+    const { taskId } = request.params as { taskId: string };
+    const escrow = await service.getEscrowByTaskId(taskId);
+    if (!escrow) return reply.status(404).send(createErrorResponse('No escrow found for this task'));
+    return reply.status(200).send(createApiResponse(escrow));
+  });
+
+  // POST /by-task/:taskId/release — Release escrow by task ID (used by task-service on completion)
+  app.post('/by-task/:taskId/release', async (request, reply) => {
+    const { taskId } = request.params as { taskId: string };
+    try {
+      const escrow = await service.getEscrowByTaskId(taskId);
+      if (!escrow) return reply.status(404).send(createErrorResponse('No escrow found for this task'));
+      const result = await service.releaseEscrow(escrow.id);
+      return reply.status(200).send(createApiResponse(result));
+    } catch (err) {
+      return reply.status(400).send(createErrorResponse(err instanceof Error ? err.message : 'Release failed'));
+    }
+  });
+
   app.post('/:escrowId/evidence', async (request, reply) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
