@@ -8,8 +8,11 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Skip license check for the activation page itself and API routes
-  const skipLicense = pathname === '/activate' || pathname.startsWith('/api/');
+  // Skip license check for the activation page, API routes, and the main agntly.io domains
+  const host = request.headers.get('host') ?? '';
+  const domain = host.split(':')[0].toLowerCase();
+  const isOfficialDomain = domain === 'agntly.io' || domain === 'www.agntly.io' || domain === 'sandbox.agntly.io';
+  const skipLicense = pathname === '/activate' || pathname.startsWith('/api/') || isOfficialDomain;
 
   if (!skipLicense) {
     // Check if license is activated (stored in cookie after first activation)
