@@ -1,43 +1,166 @@
-version: '3.8'
+version: "3.9"
 
 services:
+  # ── Infrastructure ────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: agntly
       POSTGRES_PASSWORD: agntly
       POSTGRES_DB: agntly
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./scripts/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./scripts/migrate.sql:/docker-entrypoint-initdb.d/01-migrate.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U agntly"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 5
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
-    volumes:
-      - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 5
 
+  # ── Backend Services ──────────────────────────────────────
+  auth-service:
+    build: .
+    command: npx tsx services/auth-service/src/server.ts
+    environment: &common-env
+      DATABASE_URL: postgresql://agntly:agntly@postgres:5432/agntly
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-at-least-32-characters}
+      COMPLETION_TOKEN_SECRET: ${COMPLETION_TOKEN_SECRET:-local-dev-completion-secret-32-chars-min}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@localhost}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      FRONTEND_URL: http://localhost:3100
+      NODE_ENV: development
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  wallet-service:
+    build: .
+    command: npx tsx services/wallet-service/src/server.ts
+    environment:
+      <<: *common-env
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  escrow-engine:
+    build: .
+    command: npx tsx services/escrow-engine/src/server.ts
+    environment:
+      <<: *common-env
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  task-service:
+    build: .
+    command: npx tsx services/task-service/src/server.ts
+    environment:
+      <<: *common-env
+      ESCROW_SERVICE_URL: http://escrow-engine:3003
+      WALLET_SERVICE_URL: http://wallet-service:3002
+      REGISTRY_SERVICE_URL: http://registry-service:3005
+    ports:
+      - "3004:3004"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  registry-service:
+    build: .
+    command: npx tsx services/registry-service/src/server.ts
+    environment:
+      <<: *common-env
+    ports:
+      - "3005:3005"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  payment-service:
+    build: .
+    command: npx tsx services/payment-service/src/server.ts
+    environment:
+      <<: *common-env
+      WALLET_SERVICE_URL: http://wallet-service:3002
+    ports:
+      - "3006:3006"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  webhook-service:
+    build: .
+    command: npx tsx services/webhook-service/src/server.ts
+    environment:
+      <<: *common-env
+      AUTH_SERVICE_URL: http://auth-service:3001
+      REGISTRY_SERVICE_URL: http://registry-service:3005
+    ports:
+      - "3007:3007"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  settlement-worker:
+    build: .
+    command: npx tsx services/settlement-worker/src/server.ts
+    environment:
+      <<: *common-env
+      BASE_RPC_URL: ${BASE_RPC_URL:-https://sepolia.base.org}
+      RELAYER_PRIVATE_KEY: ${RELAYER_PRIVATE_KEY:-}
+    ports:
+      - "3008:3008"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  license-service:
+    build: .
+    command: npx tsx services/license-service/src/server.ts
+    environment:
+      <<: *common-env
+      ENVATO_PERSONAL_TOKEN: ${ENVATO_PERSONAL_TOKEN:-}
+    ports:
+      - "3009:3009"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
   api-gateway:
-    build:
-      context: .
-      dockerfile: services/api-gateway/Dockerfile
+    build: .
+    command: npx tsx services/api-gateway/src/server.ts
+    environment:
+      <<: *common-env
+      AUTH_SERVICE_URL: http://auth-service:3001
+      WALLET_SERVICE_URL: http://wallet-service:3002
+      ESCROW_SERVICE_URL: http://escrow-engine:3003
+      TASK_SERVICE_URL: http://task-service:3004
+      REGISTRY_SERVICE_URL: http://registry-service:3005
+      PAYMENT_SERVICE_URL: http://payment-service:3006
+      ALLOWED_ORIGINS: http://localhost:3100,http://localhost:3000
     ports:
       - "3000:3000"
-    env_file: .env
     depends_on:
       - auth-service
       - wallet-service
@@ -45,116 +168,30 @@ services:
       - task-service
       - registry-service
       - payment-service
-      - webhook-service
 
-  auth-service:
-    build:
-      context: .
-      dockerfile: services/auth-service/Dockerfile
+  echo-agent:
+    build: .
+    command: npx tsx services/echo-agent/server.ts
     ports:
-      - "3001:3001"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - "4000:4000"
 
-  wallet-service:
-    build:
-      context: .
-      dockerfile: services/wallet-service/Dockerfile
-    ports:
-      - "3002:3002"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  escrow-engine:
-    build:
-      context: .
-      dockerfile: services/escrow-engine/Dockerfile
-    ports:
-      - "3003:3003"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  task-service:
-    build:
-      context: .
-      dockerfile: services/task-service/Dockerfile
-    ports:
-      - "3004:3004"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  registry-service:
-    build:
-      context: .
-      dockerfile: services/registry-service/Dockerfile
-    ports:
-      - "3005:3005"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  payment-service:
-    build:
-      context: .
-      dockerfile: services/payment-service/Dockerfile
-    ports:
-      - "3006:3006"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  webhook-service:
-    build:
-      context: .
-      dockerfile: services/webhook-service/Dockerfile
-    ports:
-      - "3007:3007"
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  settlement-worker:
-    build:
-      context: .
-      dockerfile: services/settlement-worker/Dockerfile
-    ports:
-      - "3008:3008"
-    env_file: .env
+  # ── Frontend ──────────────────────────────────────────────
+  frontend:
+    build: .
+    command: npx next start -p 3100
+    working_dir: /app/frontend
     environment:
-      - ESCROW_CONTRACT_ADDRESS=${ESCROW_CONTRACT_ADDRESS:-}
-      - RELAYER_PRIVATE_KEY=${RELAYER_PRIVATE_KEY:-}
-      - BASE_RPC_URL=${BASE_RPC_URL:-https://sepolia.base.org}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      WALLET_SERVICE_URL: http://wallet-service:3002
+      TASK_SERVICE_URL: http://task-service:3004
+      REGISTRY_SERVICE_URL: http://registry-service:3005
+      PAYMENT_SERVICE_URL: http://payment-service:3006
+      LICENSE_SERVICE_URL: http://license-service:3009
+      NEXT_PUBLIC_APP_URL: http://localhost:3100
+    ports:
+      - "3100:3100"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - api-gateway
 
 volumes:
   pgdata:
-  redisdata:
