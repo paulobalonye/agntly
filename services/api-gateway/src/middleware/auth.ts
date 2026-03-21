@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { createHmac } from 'node:crypto';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { enforceApiKeyRateLimit } from './api-key-rate-limit.js';
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -67,6 +68,13 @@ export async function authMiddleware(
       const data = await res.json() as { data: { userId: string; role?: string } };
       const { userId } = data.data;
       const role = data.data.role ?? 'developer';
+
+      // Per-API-key rate limiting (returns false if 429 was sent)
+      const allowed = await enforceApiKeyRateLimit(token, reply);
+      if (!allowed) {
+        return;
+      }
+
       request.headers['x-user-id'] = userId;
       request.headers['x-user-email'] = 'api-key-user';
       request.headers['x-user-role'] = role;

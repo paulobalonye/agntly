@@ -86,7 +86,83 @@ export class RegistryService {
       tags: data.tags ?? [],
       timeoutMs: data.timeoutMs ?? 30000,
     }).returning();
+
+    // Fire-and-forget health check on registration
+    this.checkAgentHealth(data.agentId, data.endpoint).catch(() => {});
+
     return row as AgentRow;
+  }
+
+  /**
+   * Check if an agent endpoint is reachable.
+   * Updates uptime_pct in the database.
+   */
+  async checkAgentHealth(agentId: string, endpoint?: string): Promise<boolean> {
+    let url = endpoint;
+    if (!url) {
+      const agent = await this.getAgent(agentId);
+      if (!agent) return false;
+      url = agent.endpoint;
+    }
+
+    try {
+      // Try POST /run with empty payload (standard agent interface)
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: 'health-check', payload: {} }),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      const healthy = res.ok;
+
+      // Update uptime — simple moving average approach
+      await this.db.execute(sql`
+        UPDATE agents
+        SET uptime_pct = CASE
+          WHEN ${healthy} THEN LEAST(uptime_pct + 0.1, 100.00)
+          ELSE GREATEST(uptime_pct - 5.0, 0.00)
+        END,
+        updated_at = NOW()
+        WHERE id = ${agentId}
+      `);
+
+      return healthy;
+    } catch {
+      // Endpoint unreachable — decrease uptime
+      await this.db.execute(sql`
+        UPDATE agents
+        SET uptime_pct = GREATEST(uptime_pct - 5.0, 0.00),
+            updated_at = NOW()
+        WHERE id = ${agentId}
+      `);
+      return false;
+    }
+  }
+
+  /**
+   * Run health checks on all active agents.
+   * Called periodically by the server.
+   */
+  async checkAllAgentsHealth(): Promise<{ checked: number; healthy: number; unhealthy: number }> {
+    const activeAgents = await this.listAgents({ status: 'active' });
+    let healthy = 0;
+    let unhealthy = 0;
+
+    for (const agent of activeAgents) {
+      const ok = await this.checkAgentHealth(agent.id, agent.endpoint);
+      if (ok) healthy++;
+      else unhealthy++;
+    }
+
+    // Auto-pause agents with very low uptime (3 consecutive failures = ~85% drop)
+    await this.db.execute(sql`
+      UPDATE agents
+      SET status = 'paused', updated_at = NOW()
+      WHERE status = 'active' AND uptime_pct < 50.00
+    `);
+
+    return { checked: activeAgents.length, healthy, unhealthy };
   }
 
   async listAgents(query: Record<string, string>): Promise<readonly AgentRow[]> {

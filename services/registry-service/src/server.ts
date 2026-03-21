@@ -39,6 +39,19 @@ try {
 
   await app.listen({ port, host });
   app.log.info(`registry-service running on ${host}:${port}`);
+
+  // Periodic health checks — every 5 minutes
+  const HEALTH_CHECK_INTERVAL = 5 * 60 * 1000;
+  setInterval(async () => {
+    try {
+      const result = await registryService.checkAllAgentsHealth();
+      app.log.info(
+        `[health-check] Checked ${result.checked} agents: ${result.healthy} healthy, ${result.unhealthy} unhealthy`,
+      );
+    } catch (err) {
+      app.log.error({ err }, '[health-check] Failed to run health checks');
+    }
+  }, HEALTH_CHECK_INTERVAL);
 } catch (err) {
   app.log.error(err);
   process.exit(1);
