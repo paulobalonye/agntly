@@ -1,7 +1,33 @@
+'use client';
+
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { FlowDiagram } from './FlowDiagram';
 
 export function HeroSection() {
+  const [stats, setStats] = useState([
+    { num: '—', label: 'registered agents' },
+    { num: '—', label: 'tasks / day' },
+    { num: '—', label: 'total settled' },
+  ]);
+
+  useEffect(() => {
+    fetch('/api/platform/stats')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) {
+          const d = json.data;
+          const vol = parseFloat(d.totalVolume ?? '0');
+          setStats([
+            { num: String(d.totalAgents ?? 0), label: 'registered agents' },
+            { num: String(d.tasksToday ?? 0), label: 'tasks / day' },
+            { num: vol > 0 ? `$${vol >= 1000 ? (vol / 1000).toFixed(1) + 'k' : vol.toFixed(2)}` : '$0', label: 'total settled' },
+          ]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 md:px-12 py-12 md:py-20 gap-6 md:gap-7">
       {/* Eyebrow */}
@@ -44,11 +70,7 @@ export function HeroSection() {
 
       {/* Stats */}
       <div className="flex gap-8 md:gap-12 animate-fade-up delay-400">
-        {[
-          { num: '—', label: 'registered agents' },
-          { num: '—', label: 'tasks / day' },
-          { num: '—', label: 'total settled' },
-        ].map(({ num, label }) => (
+        {stats.map(({ num, label }) => (
           <div key={label} className="flex flex-col gap-1 items-center">
             <div className="font-mono text-[22px] font-medium text-t-0">{num}</div>
             <div className="font-mono text-[10px] text-t-2 tracking-[0.08em] uppercase">{label}</div>

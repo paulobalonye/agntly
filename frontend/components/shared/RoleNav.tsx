@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const TICKER = {
-  tasks: '—',
-  vol: '—',
-  fee: '—',
-} as const;
+interface TickerData {
+  tasks: string;
+  vol: string;
+  fee: string;
+}
 
 const BUILDER_LINKS = [
   { label: 'dashboard', href: '/dashboard' },
@@ -65,11 +65,29 @@ export function RoleNav() {
   const pathname = usePathname();
   const [role, setRole] = useState<Role>(null);
   const [mounted, setMounted] = useState(false);
+  const [ticker, setTicker] = useState<TickerData>({ tasks: '—', vol: '—', fee: '—' });
 
   useEffect(() => {
     const cookieRole = getCookie('agntly_role') as Role;
     setRole(cookieRole);
     setMounted(true);
+
+    // Fetch live platform stats
+    fetch('/api/platform/stats')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) {
+          const d = json.data;
+          const tasks = Number(d.tasksToday ?? 0);
+          const vol = parseFloat(d.totalVolume ?? '0');
+          setTicker({
+            tasks: tasks > 0 ? tasks.toLocaleString() : '0',
+            vol: vol > 0 ? `$${vol >= 1000 ? (vol / 1000).toFixed(1) + 'k' : vol.toFixed(2)}` : '$0',
+            fee: d.avgFee ? `$${d.avgFee}` : '$0',
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Use ORCHESTRATOR_LINKS until mounted to avoid hydration mismatch
@@ -109,15 +127,15 @@ export function RoleNav() {
         <div className="flex gap-4 font-mono text-[11px]">
           <div className="flex gap-[5px] items-center">
             <span className="text-t-2">TASKS/24H</span>
-            <span className="text-t-0">{TICKER.tasks}</span>
+            <span className="text-t-0">{ticker.tasks}</span>
           </div>
           <div className="flex gap-[5px] items-center">
             <span className="text-t-2">VOL</span>
-            <span className="text-t-0">{TICKER.vol}</span>
+            <span className="text-t-0">{ticker.vol}</span>
           </div>
           <div className="flex gap-[5px] items-center">
             <span className="text-t-2">AVG FEE</span>
-            <span className="text-accent">{TICKER.fee}</span>
+            <span className="text-accent">{ticker.fee}</span>
           </div>
         </div>
 

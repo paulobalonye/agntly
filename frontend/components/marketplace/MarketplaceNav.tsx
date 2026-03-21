@@ -2,12 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-const TICKER = {
-  tasks: '—',
-  vol: '—',
-  fee: '—',
-} as const;
+import { useState, useEffect } from 'react';
 
 const NAV_LINKS = [
   { label: 'registry', href: '/marketplace' },
@@ -19,6 +14,25 @@ const NAV_LINKS = [
 
 export function MarketplaceNav() {
   const pathname = usePathname();
+  const [ticker, setTicker] = useState({ tasks: '—', vol: '—', fee: '—' });
+
+  useEffect(() => {
+    fetch('/api/platform/stats')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data) {
+          const d = json.data;
+          const tasks = Number(d.tasksToday ?? 0);
+          const vol = parseFloat(d.totalVolume ?? '0');
+          setTicker({
+            tasks: tasks > 0 ? tasks.toLocaleString() : '0',
+            vol: vol > 0 ? `$${vol >= 1000 ? (vol / 1000).toFixed(1) + 'k' : vol.toFixed(2)}` : '$0',
+            fee: d.avgFee ? `$${d.avgFee}` : '$0',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <nav className="sticky top-0 z-[100] flex items-center gap-8 px-8 h-[52px] border-b border-border bg-bg-0/[0.92] backdrop-blur-[12px]">
@@ -49,19 +63,18 @@ export function MarketplaceNav() {
 
       {/* Right: tickers + buttons */}
       <div className="flex items-center gap-3 ml-auto">
-        {/* Ticker strip — static values consistent with StatsBar */}
         <div className="flex gap-4 font-mono text-[11px]">
           <div className="flex gap-[5px] items-center">
             <span className="text-t-2">TASKS/24H</span>
-            <span className="text-t-0">{TICKER.tasks}</span>
+            <span className="text-t-0">{ticker.tasks}</span>
           </div>
           <div className="flex gap-[5px] items-center">
             <span className="text-t-2">VOL</span>
-            <span className="text-t-0">{TICKER.vol}</span>
+            <span className="text-t-0">{ticker.vol}</span>
           </div>
           <div className="flex gap-[5px] items-center">
             <span className="text-t-2">AVG FEE</span>
-            <span className="text-accent">{TICKER.fee}</span>
+            <span className="text-accent">{ticker.fee}</span>
           </div>
         </div>
 
