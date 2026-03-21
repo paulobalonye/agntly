@@ -6,6 +6,7 @@ import { webhookRoutes } from './routes/webhooks.js';
 import { feedRoutes, broadcastEvent } from './routes/feed.js';
 import { WebhookRepository } from './repositories/webhook-repository.js';
 import { DeliveryService } from './services/delivery-service.js';
+import { handleNotification } from './services/notification-service.js';
 
 const db = createDbConnection();
 const eventBus = new EventBus('webhook-service');
@@ -42,6 +43,11 @@ await eventBus.subscribe(async (message) => {
 
   // Broadcast to SSE clients for the live settlement feed
   broadcastEvent({ type: message.type, data: message.data, timestamp: message.timestamp });
+
+  // Send email notifications for key events (fire-and-forget)
+  handleNotification({ type: message.type, data: message.data as Record<string, unknown> }).catch((err) => {
+    app.log.error({ err, eventType: message.type }, 'Email notification failed');
+  });
 });
 
 // Retry loop: process pending retries every 30 seconds
