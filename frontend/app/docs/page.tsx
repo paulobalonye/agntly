@@ -81,9 +81,9 @@ function MethodPill({ method }: { method: string }) {
 
 function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
   const exampleRequest = endpoint.method === 'GET'
-    ? `curl -X ${endpoint.method} https://sandbox.api.agntly.io${endpoint.path.replace(':id', '123')} \\
+    ? `curl -X ${endpoint.method} https://api.agntly.io${endpoint.path.replace(':id', '123')} \\
   -H "Authorization: Bearer ag_live_sk_..."`
-    : `curl -X ${endpoint.method} https://sandbox.api.agntly.io${endpoint.path.replace(':id', '123')} \\
+    : `curl -X ${endpoint.method} https://api.agntly.io${endpoint.path.replace(':id', '123')} \\
   -H "Authorization: Bearer ag_live_sk_..." \\
   -H "Content-Type: application/json" \\
   -d '{"key": "value"}'`;
@@ -114,7 +114,7 @@ function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
       </div>
       <p className="font-mono text-[12px] text-t-1 mb-4">{endpoint.description}</p>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-1.5">Request</div>
           <pre className="bg-bg-0 border border-border p-3 font-mono text-[11px] text-t-1 overflow-x-auto leading-relaxed">
@@ -145,9 +145,15 @@ export default function DocsPage() {
         <h1 className="font-display text-[36px] font-semibold text-t-0 tracking-tight mb-4">
           API Documentation
         </h1>
-        <div className="bg-bg-1 border border-border px-5 py-3 inline-flex items-center gap-3">
-          <span className="font-mono text-[10px] text-t-2 uppercase tracking-[0.08em]">Base URL</span>
-          <code className="font-mono text-[13px] text-accent">https://sandbox.api.agntly.io</code>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="bg-bg-1 border border-border px-5 py-3 flex items-center gap-3">
+            <span className="font-mono text-[10px] text-accent uppercase tracking-[0.08em]">Production</span>
+            <code className="font-mono text-[13px] text-t-0">https://api.agntly.io</code>
+          </div>
+          <div className="bg-bg-1 border border-border px-5 py-3 flex items-center gap-3">
+            <span className="font-mono text-[10px] text-amber uppercase tracking-[0.08em]">Sandbox</span>
+            <code className="font-mono text-[13px] text-t-2">https://sandbox.api.agntly.io</code>
+          </div>
         </div>
       </section>
 
@@ -161,12 +167,30 @@ export default function DocsPage() {
         </div>
 
         <div className="space-y-4">
-          <p className="font-mono text-[12px] text-t-1 leading-relaxed">
+          <p className="font-mono text-[12px] text-t-1 leading-relaxed mb-3">
             All authenticated endpoints require a Bearer token in the{' '}
             <code className="text-accent bg-bg-2 px-1.5 py-0.5">Authorization</code> header.
             API keys are prefixed with <code className="text-accent bg-bg-2 px-1.5 py-0.5">ag_live_sk_</code> for production
             or <code className="text-amber bg-bg-2 px-1.5 py-0.5">ag_test_sk_</code> for the sandbox.
           </p>
+
+          <div className="bg-bg-1 border border-border p-4 mb-4">
+            <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-2">Environment URLs</div>
+            <div className="flex flex-col gap-2 font-mono text-[12px]">
+              <div className="flex items-center gap-3">
+                <span className="text-accent w-20">Production</span>
+                <code className="text-t-0">https://api.agntly.io</code>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-amber w-20">Sandbox</span>
+                <code className="text-t-2">https://sandbox.api.agntly.io</code>
+              </div>
+            </div>
+            <p className="font-mono text-[10px] text-t-2 mt-3 leading-relaxed">
+              Use the sandbox for development and testing. Switch to production when ready to go live.
+              Sandbox uses Base Sepolia testnet. Production uses Base mainnet.
+            </p>
+          </div>
 
           <div className="bg-bg-0 border border-border p-4">
             <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-2">Example header</div>
@@ -228,7 +252,7 @@ export default function DocsPage() {
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Python */}
           <div className="bg-bg-1 border border-border p-4">
             <div className="flex items-center gap-2 mb-4">
