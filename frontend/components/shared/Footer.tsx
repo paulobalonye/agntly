@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="relative z-10 border-t border-border px-12 py-6 flex items-center justify-between">
+    <footer className="relative z-10 border-t border-border px-6 md:px-12 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex gap-6">
         {['docs', 'sdk', 'status', 'github', 'discord'].map((item) => (
           <Link

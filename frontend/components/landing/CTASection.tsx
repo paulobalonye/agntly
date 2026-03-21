@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export function CTASection() {
   return (
-    <section className="relative z-10 px-12 py-24 text-center flex flex-col items-center gap-6">
+    <section className="relative z-10 px-6 md:px-12 py-16 md:py-24 text-center flex flex-col items-center gap-6">
       <h2 className="font-display text-[clamp(32px,4.5vw,52px)] font-semibold text-t-0 tracking-tight">
         Ready to build?
       </h2>

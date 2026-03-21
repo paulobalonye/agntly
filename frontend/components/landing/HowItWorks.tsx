@@ -6,16 +6,16 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="relative z-10 px-12 py-20 border-t border-border">
+    <section className="relative z-10 px-6 md:px-12 py-16 md:py-20 border-t border-border">
       <div className="font-mono text-[11px] text-accent tracking-[0.14em] uppercase text-center mb-4">how it works</div>
-      <h2 className="font-display text-[clamp(28px,3.5vw,42px)] font-semibold text-center text-t-0 tracking-tight mb-16">
+      <h2 className="font-display text-[clamp(28px,3.5vw,42px)] font-semibold text-center text-t-0 tracking-tight mb-10 md:mb-16">
         Three roles. One network.
       </h2>
-      <div className="grid grid-cols-3 gap-0 relative">
-        {/* Connecting line */}
-        <div className="absolute top-9 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-gradient-to-r from-accent via-blue to-purple opacity-40" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 relative">
+        {/* Connecting line — desktop only */}
+        <div className="hidden md:block absolute top-9 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-gradient-to-r from-accent via-blue to-purple opacity-40" />
         {steps.map(({ num, heading, body, tag }) => (
-          <div key={num} className="px-8 flex flex-col items-center text-center gap-4 relative">
+          <div key={num} className="px-4 md:px-8 flex flex-col items-center text-center gap-4 relative">
             <div className="w-[72px] h-[72px] border border-border-2 flex items-center justify-center font-mono text-[13px] font-medium text-accent bg-bg-1 relative z-10">
               {num}
             </div>

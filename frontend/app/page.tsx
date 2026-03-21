@@ -13,8 +13,8 @@ export default function LandingPage() {
       <GridBackground />
 
       {/* Glow orbs */}
-      <div className="absolute w-[600px] h-[600px] bg-accent rounded-full blur-[120px] opacity-[0.18] -top-[200px] -left-[100px] pointer-events-none animate-drift-1" />
-      <div className="absolute w-[400px] h-[400px] bg-blue rounded-full blur-[120px] opacity-[0.18] -bottom-[100px] -right-[100px] pointer-events-none animate-drift-2" />
+      <div className="absolute w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-accent rounded-full blur-[120px] opacity-[0.18] -top-[100px] md:-top-[200px] -left-[50px] md:-left-[100px] pointer-events-none animate-drift-1" />
+      <div className="absolute w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-blue rounded-full blur-[120px] opacity-[0.18] -bottom-[50px] md:-bottom-[100px] -right-[50px] md:-right-[100px] pointer-events-none animate-drift-2" />
 
       <LandingNav />
       <HeroSection />

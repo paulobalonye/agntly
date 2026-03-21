@@ -2,7 +2,7 @@
 
 export function FlowDiagram() {
   return (
-    <div className="relative w-full max-w-[760px] mx-auto animate-fade-up delay-300">
+    <div className="relative w-full max-w-[760px] mx-auto animate-fade-up delay-300 hidden md:block">
       <svg className="w-full h-[120px]" viewBox="0 0 760 110" preserveAspectRatio="xMidYMid meet">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">

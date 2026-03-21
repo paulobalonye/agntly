@@ -26,18 +26,18 @@ const roles = [
 
 export function RolesSection() {
   return (
-    <section className="relative z-10 px-12 py-20 border-t border-border bg-bg-1">
+    <section className="relative z-10 px-6 md:px-12 py-16 md:py-20 border-t border-border bg-bg-1">
       <div className="max-w-[1100px] mx-auto">
         <div className="font-mono text-[11px] text-accent tracking-[0.14em] uppercase text-center mb-4">who uses agntly</div>
-        <h2 className="font-display text-[clamp(28px,3.5vw,42px)] font-semibold text-center text-t-0 tracking-tight mb-12">
+        <h2 className="font-display text-[clamp(28px,3.5vw,42px)] font-semibold text-center text-t-0 tracking-tight mb-10 md:mb-12">
           Pick your role
         </h2>
-        <div className="grid grid-cols-3 gap-px bg-border border border-border">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border border border-border">
           {roles.map(({ icon, subtitle, title, desc, points, cta, href }) => (
             <Link
               key={title}
               href={href}
-              className="bg-bg-1 p-9 flex flex-col gap-4 hover:bg-bg-2 transition-colors"
+              className="bg-bg-1 p-7 md:p-9 flex flex-col gap-4 hover:bg-bg-2 transition-colors"
             >
               <div className="w-12 h-12 border border-border-2 flex items-center justify-center text-xl">{icon}</div>
               <div>

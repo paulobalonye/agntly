@@ -27,7 +27,7 @@ function TickItems() {
 
 export function LiveTicker() {
   return (
-    <div className="relative z-10 px-12 py-6 border-t border-b border-border bg-bg-0 flex items-center gap-5 overflow-hidden">
+    <div className="relative z-10 px-4 md:px-12 py-4 md:py-6 border-t border-b border-border bg-bg-0 flex items-center gap-3 md:gap-5 overflow-hidden">
       <div className="font-mono text-[10px] text-t-2 tracking-[0.1em] uppercase shrink-0 flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse-dot" />
         live settlements

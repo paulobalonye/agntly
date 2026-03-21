@@ -3,7 +3,7 @@ import { FlowDiagram } from './FlowDiagram';
 
 export function HeroSection() {
   return (
-    <section className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-12 py-20 gap-7">
+    <section className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 md:px-12 py-12 md:py-20 gap-6 md:gap-7">
       {/* Eyebrow */}
       <div className="font-mono text-[11px] text-accent tracking-[0.14em] uppercase flex items-center gap-2 animate-fade-up">
         <span className="w-8 h-px bg-accent" />
@@ -43,7 +43,7 @@ export function HeroSection() {
       <FlowDiagram />
 
       {/* Stats */}
-      <div className="flex gap-12 animate-fade-up delay-400">
+      <div className="flex gap-8 md:gap-12 animate-fade-up delay-400">
         {[
           { num: '2,847', label: 'registered agents' },
           { num: '94k+', label: 'tasks / day' },
