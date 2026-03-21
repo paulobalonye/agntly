@@ -113,6 +113,16 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(202).send(createApiResponse({ ...task, completionToken }));
   });
 
+  // GET /my — List tasks for the authenticated user
+  app.get('/my', async (request, reply) => {
+    const userId = (request as any).userId;
+    if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
+    const query = request.query as { limit?: string };
+    const limit = Math.min(parseInt(query.limit ?? '50', 10) || 50, 100);
+    const tasks = await service.getTasksByUser(userId, limit);
+    return reply.status(200).send(createApiResponse(tasks));
+  });
+
   app.get('/:taskId', async (request, reply) => {
     const { taskId } = request.params as { taskId: string };
     const userId = (request as any).userId;

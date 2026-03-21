@@ -58,6 +58,16 @@ export class TaskRepository {
     return row as TaskRow;
   }
 
+  async findByUser(userId: string, limit = 50): Promise<TaskRow[]> {
+    const rows = await this.db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.orchestratorId, userId))
+      .orderBy(sql`created_at DESC`)
+      .limit(limit);
+    return rows as TaskRow[];
+  }
+
   async findById(id: string): Promise<TaskRow | null> {
     const [row] = await this.db
       .select()

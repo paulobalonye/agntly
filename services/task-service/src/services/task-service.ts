@@ -55,6 +55,10 @@ export class TaskService {
     return this.repo.findById(taskId);
   }
 
+  async getTasksByUser(userId: string, limit = 50): Promise<TaskRow[]> {
+    return this.repo.findByUser(userId, limit);
+  }
+
   async markEscrowed(taskId: string, escrowTx: string): Promise<TaskRow> {
     const task = await this.repo.transition(taskId, ['pending'], 'escrowed', { escrowTx });
 

@@ -209,13 +209,31 @@ function TaskHistoryTable({ tasks }: { tasks: Task[] }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 function normalizeTask(raw: Record<string, unknown>): Task {
+  const payload = raw.payload;
+  const payloadStr = typeof payload === 'object' && payload !== null
+    ? JSON.stringify(payload)
+    : String(payload ?? '');
+
+  const amount = raw.amount ?? raw.cost ?? raw.price ?? '0';
+  const costStr = String(amount).startsWith('$') ? String(amount) : `$${amount}`;
+
+  const created = raw.created_at ?? raw.createdAt ?? raw.time ?? '';
+  let timeStr = String(created);
+  try {
+    if (timeStr && timeStr.includes('T')) {
+      timeStr = new Date(timeStr).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+    }
+  } catch { /* keep raw */ }
+
   return {
     id: String(raw.id ?? ''),
-    agent: String(raw.agent ?? raw.agentName ?? ''),
-    payload: String(raw.payload ?? raw.input ?? ''),
-    status: (raw.status as TaskStatus) ?? 'complete',
-    cost: String(raw.cost ?? raw.price ?? '$0.0000'),
-    time: String(raw.time ?? raw.createdAt ?? ''),
+    agent: String(raw.agent_id ?? raw.agentId ?? raw.agent ?? ''),
+    payload: payloadStr,
+    status: (String(raw.status ?? 'pending') as TaskStatus),
+    cost: costStr,
+    time: timeStr,
   };
 }
 
@@ -235,18 +253,44 @@ export default function MyTasksPage() {
       .then((r) => r.json())
       .then((json) => {
         const list: unknown[] = json?.data ?? json?.tasks ?? json ?? [];
-        if (Array.isArray(list)) {
-          setTasks(list.map((t) => normalizeTask(t as Record<string, unknown>)));
-        }
-        if (json?.spending && typeof json.spending === 'object') {
+        if (Array.isArray(list) && list.length > 0) {
+          const normalized = list.map((t) => normalizeTask(t as Record<string, unknown>));
+          setTasks(normalized);
+
+          // Compute spending from real data
+          const totalSpent = normalized.reduce((sum, t) => {
+            const val = parseFloat(t.cost.replace('$', ''));
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0);
+          const today = new Date().toDateString();
+          const tasksToday = normalized.filter((t) => {
+            try { return new Date(t.time).toDateString() === today; } catch { return false; }
+          }).length;
+          const avg = normalized.length > 0 ? totalSpent / normalized.length : 0;
+
           setSpending({
-            totalSpent: String(json.spending.totalSpent ?? '$0.00'),
-            tasksToday: String(json.spending.tasksToday ?? '0'),
-            avgCostPerTask: String(json.spending.avgCostPerTask ?? '$0.0000'),
+            totalSpent: `$${totalSpent.toFixed(2)}`,
+            tasksToday: String(tasksToday),
+            avgCostPerTask: `$${avg.toFixed(4)}`,
           });
-        }
-        if (Array.isArray(json?.agents)) {
-          setAgents(json.agents as ConnectedAgent[]);
+
+          // Derive connected agents from task history
+          const agentMap = new Map<string, { calls: number; spent: number }>();
+          for (const t of normalized) {
+            const existing = agentMap.get(t.agent) ?? { calls: 0, spent: 0 };
+            existing.calls += 1;
+            existing.spent += parseFloat(t.cost.replace('$', '')) || 0;
+            agentMap.set(t.agent, existing);
+          }
+          setAgents(
+            Array.from(agentMap.entries()).map(([id, stats]) => ({
+              id,
+              icon: '🤖',
+              name: id,
+              calls: stats.calls,
+              spent: `$${stats.spent.toFixed(4)}`,
+            })),
+          );
         }
       })
       .catch(() => {
