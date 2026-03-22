@@ -19,9 +19,9 @@ export default function LandingPage() {
 
       <LandingNav />
       <HeroSection />
+      <AutonomousSection />
       <HowItWorks />
       <RolesSection />
-      <AutonomousSection />
       <LiveTicker />
       <CTASection />
       <Footer />
