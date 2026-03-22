@@ -4,6 +4,7 @@ import { LandingNav } from '@/components/landing/LandingNav';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { RolesSection } from '@/components/landing/RolesSection';
+import { AutonomousSection } from '@/components/landing/AutonomousSection';
 import { LiveTicker } from '@/components/landing/LiveTicker';
 import { CTASection } from '@/components/landing/CTASection';
 
@@ -20,6 +21,7 @@ export default function LandingPage() {
       <HeroSection />
       <HowItWorks />
       <RolesSection />
+      <AutonomousSection />
       <LiveTicker />
       <CTASection />
       <Footer />
