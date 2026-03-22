@@ -18,7 +18,6 @@ COPY services/webhook-service/package.json services/webhook-service/
 COPY services/settlement-worker/package.json services/settlement-worker/
 COPY services/api-gateway/package.json services/api-gateway/
 COPY services/echo-agent/package.json services/echo-agent/
-COPY services/license-service/package.json services/license-service/
 
 RUN pnpm install --frozen-lockfile
 
@@ -32,4 +31,4 @@ RUN pnpm --filter @agntly/shared build
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN cd frontend && npx next build
 
-EXPOSE 3000 3001 3002 3003 3004 3005 3006 3007 3008 3009 3100 4000
+EXPOSE 3000 3001 3002 3003 3004 3005 3006 3007 3008 3100 4000

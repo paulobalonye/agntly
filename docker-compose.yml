@@ -135,18 +135,6 @@ services:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
 
-  license-service:
-    build: .
-    command: npx tsx services/license-service/src/server.ts
-    environment:
-      <<: *common-env
-      ENVATO_PERSONAL_TOKEN: ${ENVATO_PERSONAL_TOKEN:-}
-    ports:
-      - "3009:3009"
-    depends_on:
-      postgres: { condition: service_healthy }
-      redis: { condition: service_healthy }
-
   api-gateway:
     build: .
     command: npx tsx services/api-gateway/src/server.ts
@@ -186,7 +174,6 @@ services:
       TASK_SERVICE_URL: http://task-service:3004
       REGISTRY_SERVICE_URL: http://registry-service:3005
       PAYMENT_SERVICE_URL: http://payment-service:3006
-      LICENSE_SERVICE_URL: http://license-service:3009
       NEXT_PUBLIC_APP_URL: http://localhost:3100
     ports:
       - "3100:3100"

@@ -8,7 +8,6 @@ const ADMIN_LINKS = [
   { label: 'users', href: '/admin/users' },
   { label: 'agents', href: '/admin/agents' },
   { label: 'transactions', href: '/admin/transactions' },
-  { label: 'licenses', href: '/admin/licenses' },
   { label: 'services', href: '/admin/services' },
 ] as const;
 

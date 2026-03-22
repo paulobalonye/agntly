@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Only allow probing known service ports
-  const allowedPorts = ['3000', '3001', '3002', '3003', '3004', '3005', '3006', '3007', '3008', '3009', '4000'];
+  const allowedPorts = ['3000', '3001', '3002', '3003', '3004', '3005', '3006', '3007', '3008', '4000'];
   if (!allowedPorts.includes(port)) {
     return NextResponse.json({ ok: false, error: 'Invalid port' });
   }
