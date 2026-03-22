@@ -5,6 +5,7 @@ import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './routes/auth.js';
 import { apiKeyRoutes } from './routes/api-keys.js';
 import { adminUserRoutes } from './routes/admin.js';
+import { autonomousRoutes } from './routes/autonomous.js';
 import { AuthService } from './services/auth-service.js';
 import { ApiKeyService } from './services/api-key-service.js';
 import { MagicLinkService } from './services/magic-link-service.js';
@@ -30,6 +31,7 @@ await app.register(healthRoutes);
 await app.register(authRoutes, { prefix: '/v1/auth' });
 await app.register(apiKeyRoutes, { prefix: '/v1/api-keys' });
 await app.register(adminUserRoutes, { prefix: '/v1/admin' });
+await app.register(autonomousRoutes, { prefix: '/v1/autonomous' });
 
 const port = SERVICE_PORTS.auth;
 const host = process.env.HOST ?? '0.0.0.0';

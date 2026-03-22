@@ -8,6 +8,7 @@ export interface RouteMapping {
 
 export const ROUTE_TABLE: readonly RouteMapping[] = [
   { prefix: '/v1/auth', upstream: SERVICE_URLS.auth, requiresAuth: false },
+  { prefix: '/v1/autonomous', upstream: SERVICE_URLS.auth, requiresAuth: false },
   { prefix: '/v1/wallets', upstream: SERVICE_URLS.wallet, requiresAuth: true },
   { prefix: '/v1/escrow', upstream: SERVICE_URLS.escrow, requiresAuth: true },
   { prefix: '/v1/tasks', upstream: SERVICE_URLS.task, requiresAuth: true },
