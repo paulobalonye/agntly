@@ -38,6 +38,9 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { agentId } = request.params as { agentId: string };
+    const existing = await registryService.getAgent(agentId);
+    if (!existing) return reply.status(404).send(createErrorResponse('Agent not found'));
+    if (existing.ownerId !== userId) return reply.status(403).send(createErrorResponse('You can only modify your own agents'));
     const updates = request.body as Record<string, unknown>;
     const agent = await registryService.updateAgent(agentId, updates);
     return reply.status(200).send(createApiResponse(agent));
@@ -47,6 +50,9 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
     const { agentId } = request.params as { agentId: string };
+    const existing = await registryService.getAgent(agentId);
+    if (!existing) return reply.status(404).send(createErrorResponse('Agent not found'));
+    if (existing.ownerId !== userId) return reply.status(403).send(createErrorResponse('You can only delete your own agents'));
     await registryService.delistAgent(agentId);
     return reply.status(200).send(createApiResponse({ delisted: true }));
   });

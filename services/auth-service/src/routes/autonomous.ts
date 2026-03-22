@@ -150,9 +150,28 @@ export const autonomousRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  // POST /register-simple — Simplified registration (no signature, uses shared secret)
+  // Rate limit for registration abuse prevention (5 per IP per hour)
+  const regAttempts = new Map<string, { count: number; resetAt: number }>();
+
+  function checkRegRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const entry = regAttempts.get(ip);
+    if (!entry || entry.resetAt < now) {
+      regAttempts.set(ip, { count: 1, resetAt: now + 3600_000 });
+      return true;
+    }
+    entry.count++;
+    return entry.count <= 5;
+  }
+
+  // POST /register-simple — Simplified registration (no signature)
   // For agents that can't sign Ethereum messages (e.g., Python scripts without web3)
   app.post('/register-simple', async (request, reply) => {
+    const clientIp = String(request.ip ?? request.headers['x-forwarded-for'] ?? 'unknown');
+    if (!checkRegRateLimit(clientIp)) {
+      return reply.status(429).send(createErrorResponse('Too many registrations. Limit: 5 per hour per IP.'));
+    }
+
     const schema = z.object({
       agentName: z.string().min(1).max(100),
       walletAddress: z.string().regex(/^0x[0-9a-fA-F]{40}$/).optional(),
