@@ -4,7 +4,8 @@ import { baseSepolia } from 'viem/chains';
 
 const RPC_URL = process.env.BASE_RPC_URL ?? 'https://sepolia.base.org';
 const RELAYER_PRIVATE_KEY = process.env.RELAYER_PRIVATE_KEY;
-const MIN_ETH_BALANCE = parseEther('0.01');
+// Base Sepolia gas is ~0.001 gwei — 0.001 ETH is sufficient for hundreds of transactions
+const MIN_ETH_BALANCE = parseEther('0.0005');
 
 export class GasManager {
   private readonly chain = baseSepolia;

@@ -10,11 +10,40 @@ const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
 });
 
-app.get('/health', async () => ({
-  status: 'ok',
-  service: 'settlement-worker',
-  timestamp: new Date().toISOString(),
-}));
+app.get('/health', async () => {
+  const hasContract = !!process.env.ESCROW_CONTRACT_ADDRESS;
+  const hasRelayer = !!process.env.RELAYER_PRIVATE_KEY;
+  const hasUsdc = !!process.env.USDC_CONTRACT_ADDRESS;
+
+  let gasBalance: string | null = null;
+  let relayerAddress: string | null = null;
+  try {
+    if (hasRelayer) {
+      const { privateKeyToAccount } = await import('viem/accounts');
+      const account = privateKeyToAccount(process.env.RELAYER_PRIVATE_KEY as `0x${string}`);
+      relayerAddress = account.address;
+      const { createPublicClient, http, formatEther } = await import('viem');
+      const { baseSepolia } = await import('viem/chains');
+      const client = createPublicClient({ chain: baseSepolia, transport: http(process.env.BASE_RPC_URL ?? 'https://sepolia.base.org') });
+      const balance = await client.getBalance({ address: account.address });
+      gasBalance = formatEther(balance);
+    }
+  } catch { /* ignore */ }
+
+  return {
+    status: 'ok',
+    service: 'settlement-worker',
+    onChain: {
+      enabled: hasContract && hasRelayer,
+      escrowContract: process.env.ESCROW_CONTRACT_ADDRESS ?? null,
+      usdcContract: process.env.USDC_CONTRACT_ADDRESS ?? null,
+      relayer: relayerAddress,
+      gasBalance: gasBalance ? `${gasBalance} ETH` : null,
+      chain: 'base-sepolia',
+    },
+    timestamp: new Date().toISOString(),
+  };
+});
 
 async function startEventLoop() {
   await eventBus.subscribe(
