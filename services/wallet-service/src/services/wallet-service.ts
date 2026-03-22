@@ -4,13 +4,53 @@ import type { EventBus } from '@agntly/shared';
 import type { WalletRepository, WalletRow } from '../repositories/wallet-repository.js';
 import type { WithdrawalRepository, WithdrawalRow } from '../repositories/withdrawal-repository.js';
 
+// System owner ID for the platform treasury wallet
+const TREASURY_OWNER_ID = '00000000-0000-0000-0000-000000000001';
+
 export class WalletService {
+  private treasuryWalletId: string | null = null;
+
   constructor(
     private readonly repo: WalletRepository,
     private readonly withdrawalRepo: WithdrawalRepository,
     private readonly pool: pg.Pool,
     private readonly eventBus?: EventBus,
   ) {}
+
+  /**
+   * Get or create the platform treasury wallet.
+   * Called once on startup and cached.
+   */
+  async getTreasuryWalletId(): Promise<string> {
+    if (this.treasuryWalletId) return this.treasuryWalletId;
+
+    // Check if treasury wallet already exists
+    const existing = await this.repo.findByOwner(TREASURY_OWNER_ID);
+    if (existing) {
+      this.treasuryWalletId = existing.id;
+      return existing.id;
+    }
+
+    // Create treasury wallet
+    const treasury = await this.repo.create({
+      ownerId: TREASURY_OWNER_ID,
+      address: '0x0000000000000000000000000000000000000001',
+      chain: 'base-sepolia',
+    });
+    this.treasuryWalletId = treasury.id;
+    console.log(`[wallet-service] Treasury wallet created: ${treasury.id}`);
+    return treasury.id;
+  }
+
+  /**
+   * Get treasury wallet balance.
+   */
+  async getTreasuryBalance(): Promise<{ balance: string; locked: string } | null> {
+    const id = await this.getTreasuryWalletId();
+    const wallet = await this.repo.findById(id);
+    if (!wallet) return null;
+    return { balance: wallet.balance, locked: wallet.locked };
+  }
 
   async createWallet(ownerId: string, agentId?: string): Promise<WalletRow> {
     const id = generateId('wal');
@@ -164,7 +204,23 @@ export class WalletService {
     grossAmount: string,
     netAmount: string,
   ): Promise<boolean> {
-    const released = await this.repo.releaseFunds(fromWalletId, toWalletId, grossAmount, netAmount);
+    // Calculate fee and route to treasury
+    const gross = parseFloat(grossAmount);
+    const net = parseFloat(netAmount);
+    const fee = gross - net;
+    const feeStr = fee > 0 ? fee.toFixed(6) : '0';
+
+    let treasuryId: string | undefined;
+    try {
+      treasuryId = await this.getTreasuryWalletId();
+    } catch {
+      // Treasury not available — proceed without fee routing
+    }
+
+    const released = await this.repo.releaseFunds(
+      fromWalletId, toWalletId, grossAmount, netAmount,
+      treasuryId, feeStr,
+    );
 
     if (released && this.eventBus) {
       await this.eventBus.publish('wallet.unlocked', {
@@ -172,6 +228,8 @@ export class WalletService {
         toWalletId,
         grossAmount,
         netAmount,
+        fee: feeStr,
+        treasuryWalletId: treasuryId ?? null,
       });
     }
 

@@ -81,7 +81,12 @@ export class WalletRepository {
     toWalletId: string,
     grossAmount: string,
     netAmount: string,
+    treasuryWalletId?: string,
+    feeAmount?: string,
   ): Promise<boolean> {
+    // If treasury wallet provided, split payment: net → builder, fee → treasury
+    const hasTreasury = treasuryWalletId && feeAmount && parseFloat(feeAmount) > 0;
+
     const result = await this.db.execute(sql`
       WITH source_check AS (
         SELECT id FROM wallets WHERE id = ${fromWalletId}::uuid AND locked >= ${grossAmount}::numeric
@@ -105,6 +110,16 @@ export class WalletRepository {
           balance = balance + ${netAmount}::numeric,
           updated_at = NOW()
         WHERE id = ${toWalletId}::uuid
+          AND EXISTS (SELECT 1 FROM deducted)
+        RETURNING id
+      ),
+      fee_credited AS (
+        UPDATE wallets
+        SET
+          balance = balance + ${hasTreasury ? feeAmount! : '0'}::numeric,
+          updated_at = NOW()
+        WHERE id = ${hasTreasury ? treasuryWalletId! : fromWalletId}::uuid
+          AND ${hasTreasury ? sql`TRUE` : sql`FALSE`}
           AND EXISTS (SELECT 1 FROM deducted)
         RETURNING id
       )

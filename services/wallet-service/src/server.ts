@@ -38,6 +38,10 @@ const port = SERVICE_PORTS.wallet;
 const host = process.env.HOST ?? '0.0.0.0';
 
 try {
+  // Initialize treasury wallet on startup
+  const treasuryId = await walletService.getTreasuryWalletId();
+  app.log.info(`Treasury wallet: ${treasuryId}`);
+
   await app.listen({ port, host });
   app.log.info(`wallet-service running on ${host}:${port}`);
 } catch (err) {

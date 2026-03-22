@@ -94,6 +94,7 @@ export default function AdminPage() {
             totalWallets: d.wallets?.totalWallets ?? 0,
             totalBalance: d.wallets?.totalBalance ?? '0.00',
             totalLocked: d.wallets?.totalLocked ?? '0.00',
+            platformRevenue: d.treasury?.balance ?? '0.00',
           });
         }
 

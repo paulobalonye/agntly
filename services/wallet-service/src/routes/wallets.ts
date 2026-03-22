@@ -117,4 +117,19 @@ export const walletRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send(createErrorResponse(err instanceof Error ? err.message : 'Failed to get history'));
     }
   });
+
+  // GET /treasury — Get platform treasury balance (admin)
+  app.get('/treasury', async (_request, reply) => {
+    try {
+      const treasury = await service.getTreasuryBalance();
+      if (!treasury) return reply.status(404).send(createErrorResponse('Treasury not initialized'));
+      return reply.status(200).send(createApiResponse({
+        balance: treasury.balance,
+        locked: treasury.locked,
+        description: 'Platform treasury — accumulated 3% fees from all transactions',
+      }));
+    } catch (err) {
+      return reply.status(500).send(createErrorResponse(err instanceof Error ? err.message : 'Failed to get treasury'));
+    }
+  });
 };

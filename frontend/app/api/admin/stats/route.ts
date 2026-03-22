@@ -49,12 +49,13 @@ export async function GET() {
     return NextResponse.json({ success: false, error: 'Admin access required' }, { status: 403 });
   }
 
-  const [userStats, walletStats, taskStats, agentStats, paymentStats] = await Promise.all([
+  const [userStats, walletStats, taskStats, agentStats, paymentStats, treasuryStats] = await Promise.all([
     safeFetch(`${AUTH_URL}/v1/admin/users/stats`, admin.userId),
     safeFetch(`${WALLET_URL}/v1/admin/wallets/stats`, admin.userId),
     safeFetch(`${TASK_URL}/v1/admin/tasks/stats`, admin.userId),
     safeFetch(`${REGISTRY_URL}/v1/admin/agents/stats`, admin.userId),
     safeFetch(`${PAYMENT_URL}/v1/admin/payments/stats`, admin.userId),
+    safeFetch(`${WALLET_URL}/v1/wallets/treasury`, admin.userId),
   ]);
 
   return NextResponse.json({
@@ -65,6 +66,7 @@ export async function GET() {
       tasks: taskStats,
       agents: agentStats,
       payments: paymentStats,
+      treasury: treasuryStats,
     },
     error: null,
   });
