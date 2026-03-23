@@ -70,6 +70,23 @@ const ENDPOINT_GROUPS: EndpointGroup[] = [
     ],
   },
   {
+    group: 'KYC Verification',
+    endpoints: [
+      { method: 'GET', path: '/v1/kyc', description: 'Get your KYC status', auth: true },
+      { method: 'POST', path: '/v1/kyc/tier2', description: 'Submit light KYC (name, country, DOB)', auth: true },
+      { method: 'POST', path: '/v1/kyc/tier3', description: 'Initiate full KYC via provider', auth: true },
+    ],
+  },
+  {
+    group: 'Fiat Banking',
+    endpoints: [
+      { method: 'POST', path: '/v1/fiat/bank-account', description: 'Create a programmatic bank account (requires KYC)', auth: true },
+      { method: 'GET', path: '/v1/fiat/bank-account', description: 'Get your linked bank account', auth: true },
+      { method: 'POST', path: '/v1/fiat/withdraw', description: 'Withdraw USD to bank account via ACH', auth: true },
+      { method: 'GET', path: '/v1/fiat/transfers', description: 'Fiat transfer history', auth: true },
+    ],
+  },
+  {
     group: 'Webhooks',
     endpoints: [
       { method: 'POST', path: '/v1/webhooks', description: 'Subscribe to event notifications', auth: true },

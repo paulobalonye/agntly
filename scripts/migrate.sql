@@ -362,5 +362,76 @@ CREATE INDEX IF NOT EXISTS idx_policies_owner ON spending_policies(owner_id);
 CREATE INDEX IF NOT EXISTS idx_policies_active ON spending_policies(owner_id, active) WHERE active = TRUE;
 
 -- ============================================
+-- KYC VERIFICATION
+-- ============================================
+DO $$ BEGIN
+  CREATE TYPE kyc_tier AS ENUM ('none', 'tier2', 'tier3');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+  CREATE TYPE kyc_verification_status AS ENUM ('unverified', 'pending', 'verified', 'rejected');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS kyc_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE,
+  tier kyc_tier NOT NULL DEFAULT 'none',
+  status kyc_verification_status NOT NULL DEFAULT 'unverified',
+  full_name TEXT,
+  country TEXT,
+  date_of_birth TEXT,
+  provider_id TEXT,
+  provider_status TEXT,
+  verified_at TIMESTAMPTZ,
+  rejected_reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_kyc_user ON kyc_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_kyc_status ON kyc_records(status);
+
+-- ============================================
+-- FIAT BANK ACCOUNTS (Column)
+-- ============================================
+CREATE TABLE IF NOT EXISTS bank_accounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  column_account_id TEXT UNIQUE,
+  account_number_masked TEXT,
+  routing_number TEXT,
+  bank_name TEXT DEFAULT 'Column',
+  account_type TEXT NOT NULL DEFAULT 'checking',
+  currency TEXT NOT NULL DEFAULT 'USD',
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bank_accounts_user ON bank_accounts(user_id);
+
+-- ============================================
+-- FIAT TRANSFERS
+-- ============================================
+CREATE TABLE IF NOT EXISTS fiat_transfers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  bank_account_id UUID REFERENCES bank_accounts(id),
+  direction TEXT NOT NULL CHECK (direction IN ('deposit', 'withdrawal')),
+  amount_usd NUMERIC(12,2) NOT NULL,
+  usdc_amount NUMERIC(18,6),
+  column_transfer_id TEXT,
+  transfer_type TEXT NOT NULL DEFAULT 'ach',
+  status TEXT NOT NULL DEFAULT 'pending',
+  failure_reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_fiat_transfers_user ON fiat_transfers(user_id);
+CREATE INDEX IF NOT EXISTS idx_fiat_transfers_status ON fiat_transfers(status);
+
+-- ============================================
 -- DONE
 -- ============================================
