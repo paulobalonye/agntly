@@ -335,5 +335,29 @@ CREATE INDEX IF NOT EXISTS idx_licenses_domain ON licenses(domain);
 CREATE INDEX IF NOT EXISTS idx_licenses_status ON licenses(status);
 
 -- ============================================
+-- SPENDING POLICIES
+-- ============================================
+CREATE TABLE IF NOT EXISTS spending_policies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL,
+  name TEXT NOT NULL,
+  per_transaction_max NUMERIC(18,6),
+  daily_budget NUMERIC(18,6),
+  monthly_budget NUMERIC(18,6),
+  lifetime_budget NUMERIC(18,6),
+  allowed_categories TEXT[] NOT NULL DEFAULT '{}',
+  blocked_agent_ids TEXT[] NOT NULL DEFAULT '{}',
+  max_price_per_call NUMERIC(18,6),
+  verified_only BOOLEAN NOT NULL DEFAULT FALSE,
+  cooldown_seconds INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_policies_owner ON spending_policies(owner_id);
+CREATE INDEX IF NOT EXISTS idx_policies_active ON spending_policies(owner_id, active) WHERE active = TRUE;
+
+-- ============================================
 -- DONE
 -- ============================================

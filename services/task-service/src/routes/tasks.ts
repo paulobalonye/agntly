@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { createApiResponse, createErrorResponse } from '@agntly/shared';
 import type { TaskService } from '../services/task-service.js';
+import type { PolicyService } from '../services/policy-service.js';
 import { dispatchToAgent } from '../services/agent-dispatcher.js';
 
 const createTaskSchema = z.object({
@@ -16,9 +17,11 @@ const createTaskSchema = z.object({
 
 export const taskRoutes: FastifyPluginAsync = async (app) => {
   const service = (app as any).taskService as TaskService;
+  const policyService = (app as any).policyService as PolicyService;
 
   const ESCROW_URL = process.env.ESCROW_SERVICE_URL ?? 'http://localhost:3003';
   const WALLET_URL = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
+  const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
 
   app.post('/', async (request, reply) => {
     const parsed = createTaskSchema.safeParse(request.body);
@@ -26,8 +29,38 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
 
+    // Step 0: Policy check — enforce spending limits before anything else
+    try {
+      // Look up agent details for policy check
+      let agentCategory = 'unknown';
+      let agentVerified = false;
+      try {
+        const agentRes = await fetch(`${REGISTRY_URL}/v1/agents/${parsed.data.agentId}`);
+        if (agentRes.ok) {
+          const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean } };
+          agentCategory = agentJson?.data?.category ?? 'unknown';
+          agentVerified = agentJson?.data?.verified ?? false;
+        }
+      } catch { /* agent lookup failure is non-fatal */ }
+
+      const policyCheck = await policyService.checkPolicy(
+        userId, parsed.data.agentId, agentCategory, parsed.data.budget, agentVerified,
+      );
+
+      if (!policyCheck.allowed) {
+        return reply.status(403).send(createErrorResponse(`Policy violation: ${policyCheck.reason}`));
+      }
+    } catch {
+      // Policy service failure is non-fatal — allow the task
+    }
+
     // Step 1: Create the task in pending state
     const { task, completionToken } = await service.createTask(userId, parsed.data.agentId, parsed.data.payload, parsed.data.budget, parsed.data.timeoutMs);
+
+    // Record spend for budget tracking
+    try {
+      await policyService.recordSpend(userId, parsed.data.budget);
+    } catch { /* non-fatal */ }
 
     // Step 2: Lock escrow — caller's wallet → escrow
     try {

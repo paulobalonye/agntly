@@ -12,6 +12,7 @@ export const ROUTE_TABLE: readonly RouteMapping[] = [
   { prefix: '/v1/wallets', upstream: SERVICE_URLS.wallet, requiresAuth: true },
   { prefix: '/v1/escrow', upstream: SERVICE_URLS.escrow, requiresAuth: true },
   { prefix: '/v1/tasks', upstream: SERVICE_URLS.task, requiresAuth: true },
+  { prefix: '/v1/policies', upstream: SERVICE_URLS.task, requiresAuth: true },
   // Note: /v1/agents is public for GET (marketplace browsing).
   // Write operations (POST/PUT/DELETE) enforce auth in the registry-service routes.
   { prefix: '/v1/agents', upstream: SERVICE_URLS.registry, requiresAuth: false },
