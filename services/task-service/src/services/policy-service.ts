@@ -10,8 +10,11 @@ export interface SpendingPolicy {
   readonly monthlyBudget: string | null;
   readonly lifetimeBudget: string | null;
   readonly allowedCategories: string[];
+  readonly allowedAgentIds: string[];
+  readonly allowedOwnerIds: string[];
   readonly blockedAgentIds: string[];
   readonly maxPricePerCall: string | null;
+  readonly minReputation: string | null;
   readonly verifiedOnly: boolean;
   readonly cooldownSeconds: number;
   readonly active: boolean;
@@ -40,8 +43,11 @@ function mapRow(row: Record<string, unknown>): SpendingPolicy {
     monthlyBudget: row.monthly_budget ? String(row.monthly_budget) : null,
     lifetimeBudget: row.lifetime_budget ? String(row.lifetime_budget) : null,
     allowedCategories: (row.allowed_categories as string[]) ?? [],
+    allowedAgentIds: (row.allowed_agent_ids as string[]) ?? [],
+    allowedOwnerIds: (row.allowed_owner_ids as string[]) ?? [],
     blockedAgentIds: (row.blocked_agent_ids as string[]) ?? [],
     maxPricePerCall: row.max_price_per_call ? String(row.max_price_per_call) : null,
+    minReputation: row.min_reputation ? String(row.min_reputation) : null,
     verifiedOnly: Boolean(row.verified_only),
     cooldownSeconds: Number(row.cooldown_seconds ?? 0),
     active: Boolean(row.active),
@@ -65,22 +71,27 @@ export class PolicyService {
     monthlyBudget?: string;
     lifetimeBudget?: string;
     allowedCategories?: string[];
+    allowedAgentIds?: string[];
+    allowedOwnerIds?: string[];
     blockedAgentIds?: string[];
     maxPricePerCall?: string;
+    minReputation?: string;
     verifiedOnly?: boolean;
     cooldownSeconds?: number;
   }): Promise<SpendingPolicy> {
     const result = await this.db.execute(sql`
       INSERT INTO spending_policies (
         owner_id, name, per_transaction_max, daily_budget, monthly_budget, lifetime_budget,
-        allowed_categories, blocked_agent_ids, max_price_per_call, verified_only, cooldown_seconds
+        allowed_categories, allowed_agent_ids, allowed_owner_ids, blocked_agent_ids,
+        max_price_per_call, min_reputation, verified_only, cooldown_seconds
       ) VALUES (
         ${ownerId}::uuid, ${data.name},
         ${data.perTransactionMax ?? null}, ${data.dailyBudget ?? null},
         ${data.monthlyBudget ?? null}, ${data.lifetimeBudget ?? null},
-        ${data.allowedCategories ?? []}, ${data.blockedAgentIds ?? []},
-        ${data.maxPricePerCall ?? null}, ${data.verifiedOnly ?? false},
-        ${data.cooldownSeconds ?? 0}
+        ${data.allowedCategories ?? []}, ${data.allowedAgentIds ?? []},
+        ${data.allowedOwnerIds ?? []}, ${data.blockedAgentIds ?? []},
+        ${data.maxPricePerCall ?? null}, ${data.minReputation ?? null},
+        ${data.verifiedOnly ?? false}, ${data.cooldownSeconds ?? 0}
       )
       RETURNING *
     `);
@@ -152,6 +163,8 @@ export class PolicyService {
     agentCategory: string,
     agentPrice: string,
     agentVerified: boolean,
+    agentOwnerId?: string,
+    agentReputation?: number,
   ): Promise<PolicyCheckResult> {
     const policy = await this.getActivePolicy(userId);
 
@@ -202,7 +215,37 @@ export class PolicyService {
       };
     }
 
-    // 5. Verified only
+    // 5. Allowed agent IDs (allowlist — if set, ONLY these agents can be hired)
+    if (policy.allowedAgentIds.length > 0 && !policy.allowedAgentIds.includes(agentId)) {
+      return {
+        allowed: false,
+        reason: `Agent '${agentId}' is not in the allowed agent list`,
+        code: 'AGENT_NOT_ALLOWED',
+      };
+    }
+
+    // 6. Allowed owner IDs (only hire agents from trusted builders)
+    if (policy.allowedOwnerIds.length > 0 && agentOwnerId && !policy.allowedOwnerIds.includes(agentOwnerId)) {
+      return {
+        allowed: false,
+        reason: `Agent owner is not in the trusted builder list`,
+        code: 'OWNER_NOT_ALLOWED',
+      };
+    }
+
+    // 7. Minimum reputation
+    if (policy.minReputation && agentReputation !== undefined) {
+      const minRep = parseFloat(policy.minReputation);
+      if (agentReputation < minRep) {
+        return {
+          allowed: false,
+          reason: `Agent reputation ${agentReputation.toFixed(2)} is below minimum required ${policy.minReputation}`,
+          code: 'REPUTATION_TOO_LOW',
+        };
+      }
+    }
+
+    // 8. Verified only
     if (policy.verifiedOnly && !agentVerified) {
       return {
         allowed: false,

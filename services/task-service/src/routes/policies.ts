@@ -10,8 +10,11 @@ const createSchema = z.object({
   monthlyBudget: z.string().optional(),
   lifetimeBudget: z.string().optional(),
   allowedCategories: z.array(z.string()).optional(),
+  allowedAgentIds: z.array(z.string()).optional(),
+  allowedOwnerIds: z.array(z.string()).optional(),
   blockedAgentIds: z.array(z.string()).optional(),
   maxPricePerCall: z.string().optional(),
+  minReputation: z.string().optional(),
   verifiedOnly: z.boolean().optional(),
   cooldownSeconds: z.number().int().min(0).max(3600).optional(),
 });

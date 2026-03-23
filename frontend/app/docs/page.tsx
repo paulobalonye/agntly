@@ -52,6 +52,24 @@ const ENDPOINT_GROUPS: EndpointGroup[] = [
     ],
   },
   {
+    group: 'Autonomous Registration',
+    endpoints: [
+      { method: 'POST', path: '/v1/autonomous/register-simple', description: 'Register agent programmatically (no email needed)', auth: false },
+      { method: 'GET', path: '/v1/autonomous/challenge', description: 'Get wallet signing challenge', auth: false, note: '?address=0x...' },
+      { method: 'POST', path: '/v1/autonomous/register', description: 'Register with wallet signature', auth: false },
+    ],
+  },
+  {
+    group: 'Spending Policies',
+    endpoints: [
+      { method: 'POST', path: '/v1/policies', description: 'Create a spending policy for your agent', auth: true },
+      { method: 'GET', path: '/v1/policies', description: 'List your policies', auth: true },
+      { method: 'GET', path: '/v1/policies/:id', description: 'Get policy details', auth: true },
+      { method: 'PUT', path: '/v1/policies/:id', description: 'Update a policy', auth: true },
+      { method: 'DELETE', path: '/v1/policies/:id', description: 'Delete a policy', auth: true },
+    ],
+  },
+  {
     group: 'Webhooks',
     endpoints: [
       { method: 'POST', path: '/v1/webhooks', description: 'Subscribe to event notifications', auth: true },

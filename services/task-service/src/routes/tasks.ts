@@ -34,17 +34,22 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       // Look up agent details for policy check
       let agentCategory = 'unknown';
       let agentVerified = false;
+      let agentOwnerId: string | undefined;
+      let agentReputation: number | undefined;
       try {
         const agentRes = await fetch(`${REGISTRY_URL}/v1/agents/${parsed.data.agentId}`);
         if (agentRes.ok) {
-          const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean } };
+          const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean; ownerId?: string; owner_id?: string; reputation?: string | number } };
           agentCategory = agentJson?.data?.category ?? 'unknown';
           agentVerified = agentJson?.data?.verified ?? false;
+          agentOwnerId = agentJson?.data?.ownerId ?? agentJson?.data?.owner_id ?? undefined;
+          agentReputation = agentJson?.data?.reputation ? parseFloat(String(agentJson.data.reputation)) : undefined;
         }
       } catch { /* agent lookup failure is non-fatal */ }
 
       const policyCheck = await policyService.checkPolicy(
         userId, parsed.data.agentId, agentCategory, parsed.data.budget, agentVerified,
+        agentOwnerId, agentReputation,
       );
 
       if (!policyCheck.allowed) {
