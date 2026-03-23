@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
     '/my-agents',
     '/my-tasks',
     '/admin',
+    '/settings',
   ];
 
   const needsAuth = authProtected.some((p) => pathname.startsWith(p));
@@ -40,5 +41,6 @@ export const config = {
     '/my-agents/:path*',
     '/my-tasks/:path*',
     '/admin/:path*',
+    '/settings/:path*',
   ],
 };
