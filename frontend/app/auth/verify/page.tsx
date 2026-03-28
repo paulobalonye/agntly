@@ -23,8 +23,14 @@ function VerifyContent() {
     })
       .then(async (res) => {
         if (!res.ok) {
-          const d = await res.json();
-          throw new Error(d.error || 'Verification failed');
+          let errorMsg = 'Verification failed';
+          try {
+            const d = await res.json();
+            errorMsg = d.error || errorMsg;
+          } catch {
+            // Response wasn't JSON — use default message
+          }
+          throw new Error(errorMsg);
         }
         setStatus('success');
         setTimeout(() => {
