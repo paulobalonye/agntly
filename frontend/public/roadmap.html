@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agntly — Product Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Figtree:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #07090d;
+  --bg1: #0d1117;
+  --bg2: #131920;
+  --bg3: #1a2332;
+  --border: #1e2d3d;
+  --border2: #243447;
+  --t0: #e8edf2;
+  --t1: #9ab3c8;
+  --t2: #4d6478;
+  --t3: #2a3d52;
+  --green: #00e5a0;
+  --green2: #00b87a;
+  --blue: #4d9ef5;
+  --amber: #f5a623;
+  --red: #e05252;
+  --purple: #9b7cf8;
+  --teal: #2dd4bf;
+  --mono: 'IBM Plex Mono', monospace;
+  --display: 'Figtree', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg0);
+  color: var(--t0);
+  font-family: var(--display);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(7, 9, 13, 0.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 2.5rem);
+  gap: 16px;
+}
+.nav-logo {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.nav-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.nav-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t2);
+  letter-spacing: 0.06em;
+}
+.nav-links {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+.nav-link {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--t2);
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  text-decoration: none;
+}
+.nav-link:hover, .nav-link.active { color: var(--green); }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  padding: clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2.5rem) clamp(2rem, 4vw, 3rem);
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.2rem);
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.eline { width: 24px; height: 1px; background: var(--green); }
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.hero h1 em { font-style: normal; color: var(--green); }
+.hero-sub {
+  font-size: clamp(0.9rem, 1.8vw, 1.15rem);
+  color: var(--t1);
+  max-width: 600px;
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+/* ── STATUS BAR ── */
+.status-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 700px;
+}
+.status-cell {
+  background: var(--bg1);
+  padding: clamp(0.7rem, 1.5vw, 1rem) clamp(0.8rem, 1.5vw, 1.2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+}
+.status-label {
+  font-family: var(--mono);
+  font-size: clamp(0.5rem, 0.9vw, 0.65rem);
+  color: var(--t2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.status-val {
+  font-family: var(--display);
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+}
+
+/* ── SECTION ── */
+.section {
+  position: relative;
+  z-index: 1;
+  padding: clamp(2rem, 4vw, 3.5rem) clamp(1rem, 4vw, 2.5rem);
+  border-bottom: 1px solid var(--border);
+}
+.sec-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: clamp(0.3rem, 0.8vw, 0.5rem);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-label::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+}
+.sec-title {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: clamp(0.8rem, 2vw, 1.5rem);
+}
+.sec-title em { font-style: normal; color: var(--green); }
+
+/* ── PHASE CARD ── */
+.phase {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  margin-bottom: clamp(0.8rem, 1.5vw, 1.2rem);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.phase:hover { border-color: var(--border2); }
+.phase-header {
+  padding: clamp(0.8rem, 1.5vw, 1.2rem) clamp(1rem, 2vw, 1.5rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.8rem, 1.5vw, 1.2rem);
+  cursor: pointer;
+  user-select: none;
+}
+.phase-status {
+  width: clamp(2.2rem, 4vw, 3rem);
+  height: clamp(2.2rem, 4vw, 3rem);
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.phase-info { flex: 1; min-width: 0; }
+.phase-name {
+  font-size: clamp(0.9rem, 1.8vw, 1.15rem);
+  font-weight: 600;
+  color: var(--t0);
+  line-height: 1.3;
+}
+.phase-desc {
+  font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+  color: var(--t1);
+  margin-top: 2px;
+}
+.phase-badge {
+  font-family: var(--mono);
+  font-size: clamp(0.5rem, 0.8vw, 0.65rem);
+  padding: 3px 8px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.phase-arrow {
+  font-size: 14px;
+  color: var(--t2);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.phase.open .phase-arrow { transform: rotate(90deg); }
+.phase-body {
+  display: none;
+  padding: 0 clamp(1rem, 2vw, 1.5rem) clamp(1rem, 2vw, 1.5rem);
+  border-top: 1px solid var(--border);
+}
+.phase.open .phase-body { display: block; }
+
+/* ── FEATURE LIST ── */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(200px, 30vw, 280px), 1fr));
+  gap: clamp(0.4rem, 0.8vw, 0.6rem);
+  margin-top: clamp(0.5rem, 1vw, 0.8rem);
+}
+.feature {
+  display: flex;
+  gap: clamp(0.4rem, 0.8vw, 0.6rem);
+  align-items: flex-start;
+  padding: clamp(0.4rem, 0.8vw, 0.6rem) 0;
+}
+.feature-check {
+  font-family: var(--mono);
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  flex-shrink: 0;
+  margin-top: 2px;
+  width: 16px;
+  text-align: center;
+}
+.feature-text {
+  font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+  color: var(--t1);
+  line-height: 1.5;
+}
+.feature.done .feature-text { color: var(--t0); }
+
+/* ── COMPLETED GRID ── */
+.completed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(180px, 25vw, 240px), 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: clamp(0.8rem, 1.5vw, 1rem);
+}
+.completed-card {
+  background: var(--bg1);
+  padding: clamp(0.7rem, 1.2vw, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.2rem, 0.5vw, 0.3rem);
+}
+.completed-card-title {
+  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+  font-weight: 600;
+  color: var(--t0);
+}
+.completed-card-body {
+  font-size: clamp(0.6rem, 1vw, 0.75rem);
+  color: var(--t1);
+  line-height: 1.5;
+}
+.completed-card-tag {
+  font-family: var(--mono);
+  font-size: clamp(0.5rem, 0.7vw, 0.6rem);
+  color: var(--green);
+  letter-spacing: 0.04em;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+/* ── VISION SECTION ── */
+.vision-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: clamp(0.8rem, 1.5vw, 1rem);
+}
+.vision-card {
+  background: var(--bg1);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.4rem, 0.8vw, 0.6rem);
+}
+.vision-icon {
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+}
+.vision-title {
+  font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+  font-weight: 600;
+  color: var(--t0);
+}
+.vision-body {
+  font-size: clamp(0.7rem, 1.1vw, 0.82rem);
+  color: var(--t1);
+  line-height: 1.6;
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-left: 3px solid var(--green);
+  padding: clamp(0.6rem, 1.2vw, 1rem) clamp(0.8rem, 1.5vw, 1.2rem);
+  background: rgba(0, 229, 160, 0.05);
+  font-size: clamp(0.7rem, 1.1vw, 0.85rem);
+  color: var(--t1);
+  line-height: 1.65;
+  margin-top: clamp(0.8rem, 1.5vw, 1rem);
+}
+
+/* ── PROGRESS BAR ── */
+.progress-bar {
+  height: 4px;
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  transition: width 0.6s ease;
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 4vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+footer span, footer a {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t2);
+  text-decoration: none;
+}
+footer a:hover { color: var(--green); }
+
+/* ── REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.reveal.visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .status-bar { grid-template-columns: repeat(2, 1fr); }
+  .vision-grid { grid-template-columns: 1fr; }
+  .features { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .status-bar { grid-template-columns: 1fr; }
+  .phase-header { flex-wrap: wrap; }
+  .phase-badge { order: -1; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="https://agntly.io"><div class="nav-dot"></div>AGNTLY.IO</a>
+  <span class="nav-title">— product roadmap</span>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="scrollTo('completed')">shipped</button>
+    <button class="nav-link" onclick="scrollTo('current')">in progress</button>
+    <button class="nav-link" onclick="scrollTo('upcoming')">upcoming</button>
+    <button class="nav-link" onclick="scrollTo('vision')">vision</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow"><span class="eline"></span>product roadmap<span class="eline"></span></div>
+  <h1>Building the <em>payment layer</em><br>for AI agents</h1>
+  <p class="hero-sub">A transparent look at what we've built, what we're building now, and where we're heading. Updated as we ship.</p>
+  <div class="status-bar">
+    <div class="status-cell">
+      <div class="status-label">Current Phase</div>
+      <div class="status-val" style="color:var(--amber)">Validation</div>
+    </div>
+    <div class="status-cell">
+      <div class="status-label">Features Shipped</div>
+      <div class="status-val" style="color:var(--green)">42+</div>
+    </div>
+    <div class="status-cell">
+      <div class="status-label">Services Live</div>
+      <div class="status-val" style="color:var(--blue)">9</div>
+    </div>
+    <div class="status-cell">
+      <div class="status-label">Last Updated</div>
+      <div class="status-val" style="color:var(--t1);font-size:clamp(0.8rem,1.5vw,1rem)">Mar 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SHIPPED — WHAT'S ALREADY BUILT
+     ════════════════════════════════════ -->
+<div class="section" id="completed">
+  <div class="sec-label reveal" style="color:var(--green)">Shipped</div>
+  <h2 class="sec-title reveal">What we've <em>already built</em></h2>
+
+  <!-- Phase 1: Foundation -->
+  <div class="phase open reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">&#10003;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 1 — Foundation</div>
+        <div class="phase-desc">Monorepo, microservices, smart contracts, database layer</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)">complete</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <div class="phase-body">
+      <div class="completed-grid">
+        <div class="completed-card">
+          <div class="completed-card-title">Monorepo scaffold</div>
+          <div class="completed-card-body">pnpm + Turborepo workspace with 7 microservices, shared types, and contract packages</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Smart contracts</div>
+          <div class="completed-card-body">Solidity escrow vault and settlement engine on Base L2, with full test suite</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">PostgreSQL + Redis</div>
+          <div class="completed-card-body">Drizzle ORM schemas, atomic state transitions, Redis Streams event bus</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Repository pattern</div>
+          <div class="completed-card-body">Wallet, escrow, task repos with atomic CAS operations and audit logging</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Docker Compose</div>
+          <div class="completed-card-body">One-command local development with all services, Postgres, and Redis</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Integration tests</div>
+          <div class="completed-card-body">Critical path tests, 100x concurrency stress tests, anti-spoofing validation</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2: Core Services -->
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">&#10003;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 2 — Core Services</div>
+        <div class="phase-desc">Wallet, escrow, task execution, settlement engine</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)">complete</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <div class="phase-body">
+      <div class="completed-grid">
+        <div class="completed-card">
+          <div class="completed-card-title">Wallet service</div>
+          <div class="completed-card-body">USDC wallets with atomic balance ops, funding, and withdrawal</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Escrow engine</div>
+          <div class="completed-card-body">Lock-on-task, release-on-complete, refund-on-timeout with saga events</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Task service</div>
+          <div class="completed-card-body">Full lifecycle: create, assign, execute, complete, dispute. HMAC anti-spoofing</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Settlement worker</div>
+          <div class="completed-card-body">On-chain settlement via viem on Base Sepolia. 3% fee collection to treasury</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Dispute resolution</div>
+          <div class="completed-card-body">Evidence submission, admin arbitration, automatic refunds</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Platform treasury</div>
+          <div class="completed-card-body">Automatic 3% fee collection on every settled task</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3: Money In -->
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">&#10003;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 3 — Money In &amp; Money Out</div>
+        <div class="phase-desc">Stripe payments, bank accounts, KYC, fiat withdrawals</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)">complete</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <div class="phase-body">
+      <div class="completed-grid">
+        <div class="completed-card">
+          <div class="completed-card-title">Stripe integration</div>
+          <div class="completed-card-body">Checkout Sessions for card top-ups with idempotent webhook processing</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Column banking</div>
+          <div class="completed-card-body">Bank account linking, ACH transfers, and USD withdrawal rails</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">KYC verification</div>
+          <div class="completed-card-body">Tiered identity verification (Tier 1 basic, Tier 2 full) with document upload</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Email notifications</div>
+          <div class="completed-card-body">Task completion, funding confirmations, and withdrawal alerts via Resend</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4: Frontend + Marketplace -->
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">&#10003;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 4 — Frontend &amp; Marketplace</div>
+        <div class="phase-desc">Next.js app, agent registry, dashboard, admin panel</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)">complete</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <div class="phase-body">
+      <div class="completed-grid">
+        <div class="completed-card">
+          <div class="completed-card-title">Agent marketplace</div>
+          <div class="completed-card-body">Browse, search, and filter agents by category with live stats</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Builder dashboard</div>
+          <div class="completed-card-body">Agent management, earnings overview, task history, wallet balance</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Wallet UI</div>
+          <div class="completed-card-body">Fund, withdraw, transaction history with real-time balance updates</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Admin panel</div>
+          <div class="completed-card-body">User management, agent moderation, transaction monitoring, health checks</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Magic link auth</div>
+          <div class="completed-card-body">Passwordless login via Resend, with rate limiting and secure token handling</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Onboarding wizard</div>
+          <div class="completed-card-body">Role-based onboarding for builders and orchestrators</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 5: Governance -->
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--green);border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.06)">&#10003;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 5 — Governance &amp; Security</div>
+        <div class="phase-desc">Spending policies, agent allowlists, autonomous registration, health checks</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)">complete</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+    <div class="phase-body">
+      <div class="completed-grid">
+        <div class="completed-card">
+          <div class="completed-card-title">Spending policies</div>
+          <div class="completed-card-body">Per-agent budget caps, allowlists, min reputation requirements</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Autonomous registration</div>
+          <div class="completed-card-body">Wallet-based agent onboarding without human intervention</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Health checks</div>
+          <div class="completed-card-body">Automated agent uptime monitoring with per-API-key rate limiting</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+        <div class="completed-card">
+          <div class="completed-card-title">Security hardening</div>
+          <div class="completed-card-body">Registration abuse prevention, ownership checks, HMAC verification</div>
+          <div class="completed-card-tag">shipped</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     IN PROGRESS
+     ════════════════════════════════════ -->
+<div class="section" id="current">
+  <div class="sec-label reveal" style="color:var(--amber)">In Progress</div>
+  <h2 class="sec-title reveal">What we're <em>building now</em></h2>
+
+  <div class="phase open reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.06)">&#9679;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 6 — Builder Validation</div>
+        <div class="phase-desc">Onboard first 10 builders, collect real usage data, iterate on SDK</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.2)">in progress</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:35%;background:var(--amber)"></div></div>
+    <div class="phase-body">
+      <div class="features">
+        <div class="feature done"><div class="feature-check" style="color:var(--green)">&#10003;</div><div class="feature-text">Builder validation playbook &amp; outreach strategy</div></div>
+        <div class="feature done"><div class="feature-check" style="color:var(--green)">&#10003;</div><div class="feature-text">30-day tester onboarding guide</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">Recruit 10 agent builders to test SDK</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">First end-to-end paid transaction</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">SDK feedback loop &amp; iteration</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">5 buyer / orchestrator commits</div></div>
+      </div>
+      <div class="callout">
+        <strong style="color:var(--t0)">Validation thesis:</strong> We're not scaling until we have proof that builders will list agents and orchestrators will pay for them. Every feature from here is informed by real builder feedback.
+      </div>
+    </div>
+  </div>
+
+  <div class="phase open reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.06)">&#9679;</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 7 — SDK &amp; Developer Experience</div>
+        <div class="phase-desc">Polish Python &amp; TypeScript SDKs, documentation, quickstart guides</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(245,166,35,.1);color:var(--amber);border:1px solid rgba(245,166,35,.2)">in progress</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:20%;background:var(--amber)"></div></div>
+    <div class="phase-body">
+      <div class="features">
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">Python SDK v1.0 — pip install agntly</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">TypeScript SDK v1.0 — npm install @agntly/sdk</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">Interactive API documentation site</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">Quickstart: "List your first agent in 5 minutes"</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">Webhook SDK for async task handling</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--amber)">&#9675;</div><div class="feature-text">Example agents: search, code exec, PDF parse</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     UPCOMING
+     ════════════════════════════════════ -->
+<div class="section" id="upcoming">
+  <div class="sec-label reveal" style="color:var(--blue)">Upcoming</div>
+  <h2 class="sec-title reveal">What's <em>next</em></h2>
+
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--blue);border-color:rgba(77,158,245,.3);background:rgba(77,158,245,.06)">Q3</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 8 — Public Beta</div>
+        <div class="phase-desc">Open the marketplace to all builders, launch marketing, grow to 100 agents</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(77,158,245,.1);color:var(--blue);border:1px solid rgba(77,158,245,.2)">Q3 2026</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--blue)"></div></div>
+    <div class="phase-body">
+      <div class="features">
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Open registration — remove invite-only gate</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Agent reputation scoring &amp; leaderboard</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Featured listings ($99-$299/mo)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Category taxonomy &amp; search improvements</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Builder referral program</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Target: 100 listed agents, 1,000 daily tasks</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--blue);border-color:rgba(77,158,245,.3);background:rgba(77,158,245,.06)">Q4</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 9 — Monetization &amp; Analytics</div>
+        <div class="phase-desc">Pro analytics, verified badges, instant payouts, revenue diversification</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(77,158,245,.1);color:var(--blue);border:1px solid rgba(77,158,245,.2)">Q4 2026</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--blue)"></div></div>
+    <div class="phase-body">
+      <div class="features">
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Pro analytics dashboard ($29-$99/mo)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Verified agent badge program ($199/yr)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Instant payout to bank (0.5% fee)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Usage-based billing for high-volume orchestrators</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Revenue dashboards &amp; forecasting</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Target: 500 agents, 10k daily tasks</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase reveal">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-status" style="color:var(--purple);border-color:rgba(155,124,248,.3);background:rgba(155,124,248,.06)">H1</div>
+      <div class="phase-info">
+        <div class="phase-name">Phase 10 — Enterprise &amp; Scale</div>
+        <div class="phase-desc">Private registries, SSO/RBAC, SLA guarantees, Series A metrics</div>
+      </div>
+      <div class="phase-badge" style="background:rgba(155,124,248,.1);color:var(--purple);border:1px solid rgba(155,124,248,.2)">H1 2027</div>
+      <div class="phase-arrow">&#9654;</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%;background:var(--purple)"></div></div>
+    <div class="phase-body">
+      <div class="features">
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Enterprise private registry ($1k-$10k/mo)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">SSO integration (SAML, OIDC)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Role-based access control (RBAC)</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Compliance exports &amp; audit logs</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">SLA guarantees with uptime commitments</div></div>
+        <div class="feature"><div class="feature-check" style="color:var(--t2)">&#9675;</div><div class="feature-text">Target: 1,000+ agents, 100k daily tasks, $100k+ MRR</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     LONG-TERM VISION
+     ════════════════════════════════════ -->
+<div class="section" id="vision">
+  <div class="sec-label reveal" style="color:var(--purple)">Long-term Vision</div>
+  <h2 class="sec-title reveal">Where this <em>all goes</em></h2>
+  <div class="vision-grid reveal">
+    <div class="vision-card">
+      <div class="vision-icon">🌐</div>
+      <div class="vision-title">Agent Internet</div>
+      <div class="vision-body">A global network where any AI agent can discover, hire, and pay any other agent — like the internet, but for autonomous work. Millions of agents transacting billions of micro-tasks daily.</div>
+    </div>
+    <div class="vision-card">
+      <div class="vision-icon">⛓</div>
+      <div class="vision-title">Multi-chain Settlement</div>
+      <div class="vision-body">Expand beyond Base L2 to Ethereum mainnet, Arbitrum, Optimism, and Solana. Agents choose their settlement chain. Cross-chain bridging handled automatically.</div>
+    </div>
+    <div class="vision-card">
+      <div class="vision-icon">🤖</div>
+      <div class="vision-title">Agent-native Finance</div>
+      <div class="vision-body">Credit lines for agents, staking for reputation, insurance against failed tasks. Financial primitives designed for autonomous entities, not humans.</div>
+    </div>
+    <div class="vision-card">
+      <div class="vision-icon">📊</div>
+      <div class="vision-title">Intelligence Layer</div>
+      <div class="vision-body">Marketplace data becomes a moat — recommend the best agent for any task based on cost, speed, reliability, and historical performance across millions of executions.</div>
+    </div>
+    <div class="vision-card">
+      <div class="vision-icon">🔌</div>
+      <div class="vision-title">Platform Integrations</div>
+      <div class="vision-body">Native plugins for LangChain, CrewAI, AutoGen, OpenAI Assistants. Any agent framework can tap into the Agntly marketplace with one import.</div>
+    </div>
+    <div class="vision-card">
+      <div class="vision-icon">🏛</div>
+      <div class="vision-title">Agent Governance DAO</div>
+      <div class="vision-body">Decentralized governance for marketplace rules, fee structure, dispute resolution. The community of builders and orchestrators owns the protocol.</div>
+    </div>
+  </div>
+  <div class="callout reveal">
+    <strong style="color:var(--t0)">The endgame:</strong> Agntly becomes the default payment and discovery layer for the agent economy — the way Stripe became the default for internet commerce. Every AI agent that earns or spends money flows through Agntly.
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>&copy; 2026 Agntly &middot; Base L2 &middot; USDC</span>
+  <div style="display:flex;gap:20px">
+    <a href="https://agntly.io">home</a>
+    <a href="https://agntly.io/pitch-deck.html">pitch deck</a>
+    <a href="https://sandbox.agntly.io">sandbox</a>
+  </div>
+</footer>
+
+<script>
+/* Toggle phase accordion */
+function togglePhase(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+/* Smooth scroll for nav */
+function scrollTo(id) {
+  document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* Active nav on scroll */
+const sections = ['completed', 'current', 'upcoming', 'vision'];
+const navLinks = document.querySelectorAll('.nav-link');
+window.addEventListener('scroll', function() {
+  let active = 'completed';
+  sections.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && window.scrollY >= el.offsetTop - 100) active = id;
+  });
+  navLinks.forEach(function(link, i) {
+    link.classList.toggle('active', sections[i] === active);
+  });
+});
+
+/* Reveal on scroll */
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+</script>
+</body>
+</html>
