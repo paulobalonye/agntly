@@ -30,9 +30,9 @@ export function AgentModal({ agent, onClose }: AgentModalProps) {
   const calls24h = agent.callsTotal > 0
     ? Math.round(agent.callsTotal / 30).toLocaleString()
     : '—';
-  const uptime = agent.uptimePct != null ? `${agent.uptimePct.toFixed(1)}%` : '—';
-  const latency = agent.timeoutMs != null ? `${(agent.timeoutMs / 1000).toFixed(1)}s` : '—';
-  const rating = agent.reputation != null ? `${(agent.reputation / 20).toFixed(2)} / 5` : '—';
+  const uptime = agent.uptimePct != null ? `${Number(agent.uptimePct).toFixed(1)}%` : '—';
+  const latency = agent.timeoutMs != null ? `${(Number(agent.timeoutMs) / 1000).toFixed(1)}s` : '—';
+  const rating = agent.reputation != null ? `${(Number(agent.reputation) / 20).toFixed(2)} / 5` : '—';
   const verifiedSince = agent.createdAt
     ? new Date(agent.createdAt).toISOString().slice(0, 7)
     : '—';

@@ -48,7 +48,7 @@ export function AgentCard({ agent, onSelect }: AgentCardProps) {
     : '—';
 
   const uptime = agent.uptimePct != null
-    ? `${agent.uptimePct.toFixed(1)}%`
+    ? `${Number(agent.uptimePct).toFixed(1)}%`
     : '—';
 
   const latency = agent.timeoutMs != null
