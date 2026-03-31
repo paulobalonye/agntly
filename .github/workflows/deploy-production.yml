@@ -61,6 +61,7 @@ jobs:
           git pull origin production
           grep -q 'NEXT_PUBLIC_APP_ENV' .env || echo 'NEXT_PUBLIC_APP_ENV=production' >> .env
           pnpm install --frozen-lockfile
+          rm -f shared/tsconfig.tsbuildinfo
           pnpm --filter @agntly/shared build
           pnpm --filter @agntly/wallet-service build 2>/dev/null || true
           source .env
