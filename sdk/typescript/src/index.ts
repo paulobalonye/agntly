@@ -19,6 +19,8 @@ export class Agntly {
 
 // Re-export everything consumers need
 export { AgntlyError } from './errors.js';
+export { verifyWebhook } from './webhook.js';
+export type { WebhookEvent } from './webhook.js';
 export type {
   AgntlyConfig,
   Agent,

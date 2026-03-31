@@ -21,6 +21,18 @@ const INTERNAL_SECRET = process.env.INTERNAL_SIGNING_SECRET ?? (() => {
   return 'dev-internal-secret-not-for-production';
 })();
 
+const AGNTLY_API_KEY = process.env.AGNTLY_API_KEY ?? null;
+
+/** Constant-time string comparison to prevent timing attacks */
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 export interface AuthContext {
   readonly userId: string;
   readonly email: string;
@@ -50,6 +62,21 @@ export async function authMiddleware(
       data: null,
       error: 'Invalid authorization format. Use: Bearer <token>',
     });
+  }
+
+  // Platform master key — starts with 'agntly_'
+  // Validated directly against AGNTLY_API_KEY env var (no DB lookup)
+  if (token.startsWith('agntly_')) {
+    if (!AGNTLY_API_KEY || !safeEqual(token, AGNTLY_API_KEY)) {
+      return reply.status(401).send({ success: false, data: null, error: 'Invalid API key' });
+    }
+    request.headers['x-user-id'] = 'platform';
+    request.headers['x-user-email'] = 'platform@agntly.io';
+    request.headers['x-user-role'] = 'admin';
+    const signingPayload = 'platform:platform@agntly.io:admin';
+    const signature = createHmac('sha256', INTERNAL_SECRET).update(signingPayload).digest('hex');
+    request.headers['x-gateway-signature'] = signature;
+    return;
   }
 
   // API key — starts with 'ag_'

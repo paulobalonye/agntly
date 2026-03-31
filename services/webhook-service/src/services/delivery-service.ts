@@ -65,7 +65,9 @@ export class DeliveryService {
 
     // Note: secretHash is misleadingly named — it stores the raw secret, not a hash.
     // This is correct for HMAC signing (requires the raw secret).
-    const signature = this.signPayload(payload, subscription.secretHash);
+    // Fall back to AGNTLY_WEBHOOK_SECRET if subscription has no per-subscription secret.
+    const signingSecret = subscription.secretHash || process.env.AGNTLY_WEBHOOK_SECRET || '';
+    const signature = this.signPayload(payload, signingSecret);
 
     const delivery = await this.webhookRepo.createDelivery({
       subscriptionId: subscription.id,

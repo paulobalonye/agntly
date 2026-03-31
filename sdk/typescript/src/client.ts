@@ -6,8 +6,8 @@ export class HttpClient {
   private readonly timeout: number;
 
   constructor(config: { apiKey: string; baseUrl?: string; timeout?: number }) {
-    if (!config.apiKey || !config.apiKey.startsWith('ag_')) {
-      throw new AgntlyError('apiKey must be an Agntly API key starting with ag_', 0);
+    if (!config.apiKey || (!config.apiKey.startsWith('ag_') && !config.apiKey.startsWith('agntly_'))) {
+      throw new AgntlyError('apiKey must be an Agntly API key starting with ag_ or agntly_', 0);
     }
     this.apiKey = config.apiKey;
     this.baseUrl = (config.baseUrl ?? 'https://sandbox.api.agntly.io').replace(/\/$/, '');
