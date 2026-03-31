@@ -1,0 +1,91 @@
+name: Deploy to Sandbox
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agntly
+          POSTGRES_PASSWORD: agntly
+          POSTGRES_DB: agntly
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agntly"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @agntly/shared build
+      - name: Run migrations
+        run: psql -U agntly -h localhost -d agntly -f scripts/migrate.sql
+        env:
+          PGPASSWORD: agntly
+      - name: Run integration tests
+        run: ./node_modules/.bin/vitest run --config vitest.integration.config.ts
+        env:
+          DATABASE_URL: postgresql://agntly:agntly@localhost:5432/agntly
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-test-jwt-secret-at-least-32-characters-long
+          COMPLETION_TOKEN_SECRET: ci-test-completion-secret-at-least-32-chars
+          NODE_ENV: test
+      - name: Run SDK tests
+        run: cd sdk/typescript && npx vitest run
+
+  deploy:
+    name: Deploy to Sandbox VM
+    needs: test
+    runs-on: ubuntu-latest
+    environment: sandbox
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Sandbox VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SANDBOX_VM_HOST }}
+          username: ${{ secrets.SANDBOX_VM_USER }}
+          key: ${{ secrets.SANDBOX_VM_SSH_KEY }}
+          script: |
+            cd ~/agntly
+            git stash pop 2>/dev/null || true
+            git checkout -- . 2>/dev/null || true
+            git pull origin master
+            sed -i 's/NODE_ENV=production/NODE_ENV=development/' .env 2>/dev/null || true
+            pnpm install --frozen-lockfile
+            pnpm --filter @agntly/shared build
+            pnpm --filter @agntly/wallet-service build 2>/dev/null || true
+            source .env
+            export AUTH_SERVICE_URL="http://localhost:3001"
+            export REGISTRY_SERVICE_URL="http://localhost:3005"
+            export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
+            cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
+            source .env
+            psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
+            pm2 delete license-service 2>/dev/null || true
+            pm2 restart all --update-env
+            sleep 3
+            pm2 status
+            echo "Sandbox deployed successfully"

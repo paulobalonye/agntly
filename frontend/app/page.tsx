@@ -7,8 +7,15 @@ import { RolesSection } from '@/components/landing/RolesSection';
 import { AutonomousSection } from '@/components/landing/AutonomousSection';
 import { LiveTicker } from '@/components/landing/LiveTicker';
 import { CTASection } from '@/components/landing/CTASection';
+import SandboxHome from '@/components/sandbox/SandboxHome';
+
+const isSandbox = process.env.NEXT_PUBLIC_APP_ENV === 'sandbox';
 
 export default function LandingPage() {
+  if (isSandbox) {
+    return <SandboxHome />;
+  }
+
   return (
     <div className="flex flex-col min-h-screen overflow-hidden relative">
       <GridBackground />
