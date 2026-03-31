@@ -33,10 +33,6 @@ const port = SERVICE_PORTS.registry;
 const host = process.env.HOST ?? '0.0.0.0';
 
 try {
-  // Seed demo agents on startup (idempotent)
-  await registryService.seedDemoAgents();
-  app.log.info('Demo agents seeded');
-
   await app.listen({ port, host });
   app.log.info(`registry-service running on ${host}:${port}`);
 

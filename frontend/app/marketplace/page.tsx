@@ -10,7 +10,6 @@ async function fetchAgents(): Promise<Agent[]> {
     const res = await fetch(`${baseUrl}/api/agents`, { cache: 'no-store' });
 
     if (!res.ok) {
-      console.warn('[marketplace/page] Registry returned non-OK status:', res.status);
       return [];
     }
 
@@ -21,8 +20,7 @@ async function fetchAgents(): Promise<Agent[]> {
     if (body?.data && Array.isArray(body.data)) return body.data as Agent[];
 
     return [];
-  } catch (err) {
-    console.warn('[marketplace/page] Failed to fetch agents:', err);
+  } catch {
     return [];
   }
 }

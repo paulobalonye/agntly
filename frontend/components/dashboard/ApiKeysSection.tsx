@@ -60,7 +60,6 @@ export function ApiKeysSection() {
       const json = await res.json();
 
       if (!res.ok) {
-        console.error('[ApiKeysSection] create key error:', json);
         setCreateState('idle');
         return;
       }
@@ -73,8 +72,8 @@ export function ApiKeysSection() {
       if (fullKey) {
         setRevealedKey({ id: newKey.id, fullKey });
       }
-    } catch (err) {
-      console.error('[ApiKeysSection] create key failed:', err);
+    } catch {
+      // key creation failed — UI stays in idle state
     } finally {
       setNewLabel('');
       setCreateState('idle');

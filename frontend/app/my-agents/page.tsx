@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,37 +20,6 @@ interface MyAgent {
   earnings: string;
   uptime: string;
 }
-
-// ── Demo data ────────────────────────────────────────────────────────────────
-
-const INITIAL_AGENTS: MyAgent[] = [
-  {
-    id: 'ag_web_search_v2',
-    name: 'WebSearch Pro',
-    description: 'Real-time web search with result ranking and citation extraction.',
-    endpointUrl: 'https://agents.example.com/web-search',
-    pricePerCall: '0.002500',
-    category: 'search',
-    tags: ['search', 'web', 'citations'],
-    status: 'active',
-    callsPer24h: 1284,
-    earnings: '3.210000',
-    uptime: '99.8%',
-  },
-  {
-    id: 'ag_code_review_v1',
-    name: 'CodeReview Agent',
-    description: 'Automated code review with security analysis and best-practice suggestions.',
-    endpointUrl: 'https://agents.example.com/code-review',
-    pricePerCall: '0.005000',
-    category: 'code',
-    tags: ['code', 'review', 'security'],
-    status: 'paused',
-    callsPer24h: 0,
-    earnings: '0.000000',
-    uptime: '0%',
-  },
-];
 
 const CATEGORIES: { value: AgentCategory; label: string }[] = [
   { value: 'search', label: 'Search' },
@@ -398,8 +367,33 @@ function AgentCard({ agent, onStatusChange, onDelist }: AgentCardProps) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MyAgentsPage() {
-  const [agents, setAgents] = useState<MyAgent[]>(INITIAL_AGENTS);
+  const [agents, setAgents] = useState<MyAgent[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/dashboard/agents')
+      .then((r) => r.json())
+      .then((json) => {
+        const data: Record<string, unknown>[] = json?.data ?? [];
+        const mapped: MyAgent[] = data.map((a) => ({
+          id: String(a.id ?? ''),
+          name: String(a.name ?? ''),
+          description: String(a.description ?? ''),
+          endpointUrl: String(a.endpoint ?? a.endpointUrl ?? ''),
+          pricePerCall: String(a.priceUsdc ?? a.pricePerCall ?? '0'),
+          category: (a.category ?? 'search') as AgentCategory,
+          tags: Array.isArray(a.tags) ? a.tags as string[] : [],
+          status: (a.status ?? 'active') as AgentStatus,
+          callsPer24h: Number(a.calls24h ?? a.callsPer24h ?? 0),
+          earnings: String(a.earnings24h ?? a.earnings ?? '0.000000'),
+          uptime: a.uptime != null ? `${Number(a.uptime).toFixed(1)}%` : 'N/A',
+        }));
+        setAgents(mapped);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleRegistered(agent: MyAgent) {
     setAgents((prev) => [...prev, agent]);
@@ -465,7 +459,11 @@ export default function MyAgentsPage() {
 
       {/* Agent list */}
       <div className="flex flex-col gap-4">
-        {agents.length === 0 ? (
+        {loading ? (
+          <div className="bg-bg-1 border border-border px-6 py-10 text-center">
+            <div className="font-mono text-[12px] text-t-2">Loading agents…</div>
+          </div>
+        ) : agents.length === 0 ? (
           <div className="bg-bg-1 border border-border px-6 py-10 text-center">
             <div className="font-mono text-[12px] text-t-2 mb-2">No agents registered yet.</div>
             <div className="font-mono text-[11px] text-t-3">
