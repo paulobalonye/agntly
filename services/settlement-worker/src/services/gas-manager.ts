@@ -1,14 +1,25 @@
 import { createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import { base, baseSepolia } from 'viem/chains';
 
-const RPC_URL = process.env.BASE_RPC_URL ?? 'https://sepolia.base.org';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Base mainnet uses BASE_RPC_URL; Base Sepolia uses BASE_SEPOLIA_RPC.
+const RPC_URL = IS_PRODUCTION
+  ? (process.env.BASE_RPC_URL ?? 'https://mainnet.base.org')
+  : (process.env.BASE_SEPOLIA_RPC ?? 'https://sepolia.base.org');
+
 const RELAYER_PRIVATE_KEY = process.env.RELAYER_PRIVATE_KEY;
-// Base Sepolia gas is ~0.001 gwei — 0.001 ETH is sufficient for hundreds of transactions
-const MIN_ETH_BALANCE = parseEther('0.0005');
+
+// Mainnet gas costs more — require a larger cushion.
+const MIN_ETH_BALANCE = IS_PRODUCTION
+  ? parseEther('0.005')   // ~$15 buffer at current ETH prices
+  : parseEther('0.0005'); // Base Sepolia gas is essentially free
+
+const activeChain = IS_PRODUCTION ? base : baseSepolia;
 
 export class GasManager {
-  private readonly chain = baseSepolia;
+  private readonly chain = activeChain;
 
   readonly publicClient = createPublicClient({
     chain: this.chain,
@@ -24,17 +35,16 @@ export class GasManager {
     : null;
 
   /**
-   * Always fetch nonce from chain. This avoids desync on crash-restart
-   * and is safe for single-instance deployment.
+   * Always fetch nonce from chain — safe for single-instance deployment and
+   * avoids desync after a crash-restart.
    */
   async getNextNonce(): Promise<number> {
     const account = this.walletClient?.account;
     if (!account) throw new Error('No relayer wallet configured');
-    const nonce = await this.publicClient.getTransactionCount({
+    return this.publicClient.getTransactionCount({
       address: account.address,
       blockTag: 'pending',
     });
-    return nonce;
   }
 
   async checkGasBalance(): Promise<boolean> {
@@ -42,7 +52,10 @@ export class GasManager {
     if (!account) return false;
     const balance = await this.publicClient.getBalance({ address: account.address });
     if (balance < MIN_ETH_BALANCE) {
-      console.error(`[GasManager] ALERT: Relayer ETH balance low: ${balance}. Min required: ${MIN_ETH_BALANCE}`);
+      console.error(
+        `[GasManager] ALERT: Relayer ETH balance low on ${IS_PRODUCTION ? 'Base mainnet' : 'Base Sepolia'}: ` +
+        `${balance} wei. Minimum required: ${MIN_ETH_BALANCE} wei`,
+      );
       return false;
     }
     return true;

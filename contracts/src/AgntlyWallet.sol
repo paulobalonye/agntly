@@ -100,12 +100,7 @@ contract AgntlyWallet is ReentrancyGuard {
         usdc = IERC20(_usdc);
         escrowContract = _escrowContract;
         walletOwner = _owner;
-
-        // TODO: SECURITY — Replace infinite approval with per-escrow approval amounts
-        // Current: type(uint256).max approval means escrow contract can drain entire wallet
-        // Fix: Approve exact amount per lockEscrow call, or use increaseAllowance pattern
-        // Auto-approve escrow contract for max amount
-        IERC20(_usdc).approve(_escrowContract, type(uint256).max);
+        // No automatic approval — callers must call approveEscrow(amount) before each lock.
     }
 
     /**

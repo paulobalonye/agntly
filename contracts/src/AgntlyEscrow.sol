@@ -38,6 +38,7 @@ contract AgntlyEscrow is Ownable, ReentrancyGuard, Pausable {
     uint256 public totalEscrowed;
     uint256 public totalSettled;
     uint256 public totalFees;
+    uint256 private _nonce;
 
     mapping(bytes32 => EscrowRecord) public escrows;
 
@@ -83,9 +84,7 @@ contract AgntlyEscrow is Ownable, ReentrancyGuard, Pausable {
         if (amount == 0) revert InvalidAmount();
         if (agent == address(0)) revert InvalidAddress();
 
-        // TODO: SECURITY — escrowId uses block.timestamp which can collide within same block
-        // Fix: Add a contract-level nonce counter to ensure unique IDs
-        escrowId = keccak256(abi.encodePacked(taskId, msg.sender, agent, block.timestamp));
+        escrowId = keccak256(abi.encodePacked(taskId, msg.sender, agent, ++_nonce));
 
         if (escrows[escrowId].state != State.None) revert InvalidState(escrows[escrowId].state, State.None);
 

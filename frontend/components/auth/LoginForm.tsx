@@ -28,8 +28,12 @@ export function LoginForm() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to send');
+        let message = 'Failed to send magic link';
+        try {
+          const data = await res.json();
+          message = (data as { error?: string }).error ?? message;
+        } catch { /* body was empty or non-JSON */ }
+        throw new Error(message);
       }
       setSent(true);
     } catch (err) {
