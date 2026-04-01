@@ -20,7 +20,8 @@ export class ApiKeyService {
   }
 
   async createKey(userId: string, label: string): Promise<{ key: string; id: string; prefix: string; label: string }> {
-    const rawKey = `ag_live_sk_${randomBytes(24).toString('hex')}`;
+    const envTag = process.env.NODE_ENV === 'production' ? 'live' : 'test';
+    const rawKey = `ag_${envTag}_sk_${randomBytes(24).toString('hex')}`;
     const prefix = rawKey.slice(0, 14);
     const keyHash = createHash('sha256').update(rawKey).digest('hex');
 
