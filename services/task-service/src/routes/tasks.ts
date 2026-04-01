@@ -30,6 +30,8 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
 
     // Step 0: Policy check — enforce spending limits before anything else
+    // Also capture agentWalletId here so Step 2 can use it without a second fetch.
+    let agentWalletId: string | undefined;
     try {
       // Look up agent details for policy check
       let agentCategory = 'unknown';
@@ -39,11 +41,12 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       try {
         const agentRes = await fetch(`${REGISTRY_URL}/v1/agents/${parsed.data.agentId}`);
         if (agentRes.ok) {
-          const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean; ownerId?: string; owner_id?: string; reputation?: string | number } };
+          const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean; ownerId?: string; owner_id?: string; reputation?: string | number; walletId?: string } };
           agentCategory = agentJson?.data?.category ?? 'unknown';
           agentVerified = agentJson?.data?.verified ?? false;
           agentOwnerId = agentJson?.data?.ownerId ?? agentJson?.data?.owner_id ?? undefined;
           agentReputation = agentJson?.data?.reputation ? parseFloat(String(agentJson.data.reputation)) : undefined;
+          agentWalletId = agentJson?.data?.walletId;
         }
       } catch { /* agent lookup failure is non-fatal */ }
 
@@ -77,6 +80,14 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       const orchestratorWalletId = walletJson?.data?.id;
 
       if (orchestratorWalletId) {
+        // toWalletId = agent's real wallet (resolved at Step 0 from registry).
+        // Only use it if it's a valid UUID — guards against legacy agents that were
+        // registered before the walletId fix and still have a placeholder ID.
+        const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+        const toWalletId = (agentWalletId && isUuid(agentWalletId))
+          ? agentWalletId
+          : orchestratorWalletId; // fallback: legacy agent — escrow stays in orchestrator wallet
+
         // Lock funds in escrow
         const escrowRes = await fetch(`${ESCROW_URL}/v1/escrow/lock`, {
           method: 'POST',
@@ -84,7 +95,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
           body: JSON.stringify({
             taskId: task.id,
             fromWalletId: orchestratorWalletId,
-            toWalletId: orchestratorWalletId, // placeholder — resolved at release
+            toWalletId,
             amount: parsed.data.budget,
             deadline: task.deadline.toISOString(),
           }),

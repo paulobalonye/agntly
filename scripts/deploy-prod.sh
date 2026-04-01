@@ -62,6 +62,7 @@ echo "[3/8] Installing dependencies..."
 pnpm install --frozen-lockfile
 
 echo "[4/8] Building shared package..."
+rm -f shared/tsconfig.tsbuildinfo
 pnpm --filter @agntly/shared build
 
 echo "[5/8] Building wallet-service..."

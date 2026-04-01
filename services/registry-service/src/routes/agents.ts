@@ -9,6 +9,8 @@ const registerSchema = z.object({
   tags: z.array(z.string()).optional(), timeoutMs: z.number().optional(),
 });
 
+const WALLET_URL = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
+
 export const agentRoutes: FastifyPluginAsync = async (app) => {
   const registryService = (app as any).registryService as RegistryService;
 
@@ -17,7 +19,38 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
     if (!parsed.success) return reply.status(400).send(createErrorResponse(parsed.error.issues[0]?.message ?? 'Invalid input'));
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
-    const agent = await registryService.registerAgent(userId, parsed.data);
+
+    // Resolve owner's real wallet so every agent points to an actual wallet-service record.
+    // All agents owned by the same user share one wallet — earnings consolidate there.
+    // Autonomous agents (registered via register-simple) each have their own user account
+    // and therefore their own wallet, giving them full financial independence.
+    let walletId: string | undefined;
+    try {
+      const getRes = await fetch(`${WALLET_URL}/v1/wallets`, {
+        headers: { 'x-user-id': userId },
+      });
+      if (getRes.ok) {
+        const json = await getRes.json() as { data?: { id?: string } };
+        walletId = json?.data?.id;
+      }
+      if (!walletId) {
+        // No wallet yet — auto-create one for this user
+        const createRes = await fetch(`${WALLET_URL}/v1/wallets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+          body: JSON.stringify({}),
+        });
+        if (createRes.ok) {
+          const json = await createRes.json() as { data?: { id?: string } };
+          walletId = json?.data?.id;
+        }
+      }
+    } catch {
+      // Wallet service unavailable — registration proceeds with a placeholder walletId.
+      // Escrow will fall back to sandbox mode until the agent re-registers or wallet is linked.
+    }
+
+    const agent = await registryService.registerAgent(userId, { ...parsed.data, walletId });
     return reply.status(201).send(createApiResponse(agent));
   });
 
