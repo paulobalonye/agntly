@@ -89,4 +89,16 @@ export const agentRoutes: FastifyPluginAsync = async (app) => {
     await registryService.delistAgent(agentId);
     return reply.status(200).send(createApiResponse({ delisted: true }));
   });
+
+  // POST /:agentId/stats — internal endpoint called by task-service on task completion
+  app.post('/:agentId/stats', async (request, reply) => {
+    const { agentId } = request.params as { agentId: string };
+    const body = request.body as { latencyMs?: number | null };
+    try {
+      await registryService.recordTaskCompletion(agentId, body.latencyMs ?? null);
+      return reply.status(200).send(createApiResponse({ updated: true }));
+    } catch {
+      return reply.status(404).send(createErrorResponse('Agent not found'));
+    }
+  });
 };

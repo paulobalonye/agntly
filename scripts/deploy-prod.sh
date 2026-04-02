@@ -76,8 +76,8 @@ export NEXT_PUBLIC_APP_URL="https://agntly.io"
 cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
 echo "[7/8] Running migrations..."
-source .env
-psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
+# PostgreSQL runs in Docker — use docker exec instead of host psql
+docker exec -i postgres-prod psql -U agntly -d agntly_prod < scripts/migrate.sql 2>/dev/null || true
 
 echo "[8/8] Restarting services..."
 pm2 delete license-service 2>/dev/null || true
