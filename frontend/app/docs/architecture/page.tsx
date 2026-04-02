@@ -427,10 +427,168 @@ Deploy steps:
           </div>
         </Section>
 
+        {/* 13. Monthly Costs */}
+        <Section id="costs" title="13. Monthly Operating Costs">
+          <p className="mb-4">Estimated recurring costs for running both sandbox and production environments:</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm font-mono">
+              <thead>
+                <tr className="border-b border-border text-t-2 text-left">
+                  <th className="py-2 pr-4">Service</th>
+                  <th className="py-2 pr-4">Provider</th>
+                  <th className="py-2 pr-4">Plan / Tier</th>
+                  <th className="py-2 pr-4 text-right">Monthly</th>
+                  <th className="py-2">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="text-t-1">
+                <CostRow service="Production VM" provider="Azure" plan="Standard B2s (2 vCPU, 4 GB)" cost="~$30" notes="agntly-prod-vm, eastus" />
+                <CostRow service="Sandbox VM" provider="Azure" plan="Standard B2s (2 vCPU, 4 GB)" cost="~$30" notes="agntly-vm, eastus" />
+                <CostRow service="Domain (agntly.io)" provider="Registrar" plan=".io domain" cost="~$5" notes="Annual ~$50, prorated" />
+                <CostRow service="Email (magic links)" provider="Resend" plan="Free tier (100/day)" cost="$0" notes="Upgrade to Pro ($20/mo) at scale" />
+                <CostRow service="Payments" provider="Stripe" plan="Pay-as-you-go" cost="$0 base" notes="2.9% + $0.30 per transaction" />
+                <CostRow service="Blockchain RPC" provider="Public RPC" plan="Free (Base)" cost="$0" notes="Upgrade to Alchemy ($49/mo) for reliability" />
+                <CostRow service="GitHub Actions" provider="GitHub" plan="Self-hosted runners" cost="$0" notes="Runs on the Azure VMs directly" />
+                <CostRow service="TLS Certificates" provider="Let's Encrypt" plan="Free" cost="$0" notes="Auto-renewed via certbot" />
+                <CostRow service="Relayer gas (ETH)" provider="Base L2" plan="Variable" cost="~$5" notes="On-chain settlements, Base L2 gas is cheap" />
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border font-semibold">
+                  <td className="py-3" colSpan={3}>Total estimated monthly burn</td>
+                  <td className="py-3 text-right text-accent">~$70</td>
+                  <td className="py-3 text-t-2">Before transaction-based costs</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div className="mt-4 p-4 border border-border bg-bg-1 text-sm text-t-2">
+            <strong className="text-t-1">Revenue model:</strong> 3% platform fee on every escrow settlement (USDC).
+            At $10K monthly GMV, the platform generates ~$300/mo in fees &mdash; covering infrastructure costs at ~4x.
+            Revenue scales linearly with GMV while infrastructure costs remain mostly fixed until ~$500K GMV.
+          </div>
+        </Section>
+
+        {/* 14. Known Issues & Technical Debt */}
+        <Section id="known-issues" title="14. Known Issues &amp; Technical Debt">
+          <p className="mb-4">Transparent list of incomplete items and areas that would benefit from work by a new owner:</p>
+
+          <h3 className="text-lg font-semibold mb-3 text-red">Critical (Should Fix Before Scale)</h3>
+          <div className="space-y-3 mb-8">
+            <IssueCard
+              severity="critical"
+              title="Smart contracts not yet deployed to mainnet"
+              description="AgntlyEscrow.sol is compiled, tested (56 tests passing), and deploy scripts exist for both Base Sepolia and Base mainnet. However, contracts have not been deployed yet. Settlement-worker skips on-chain transactions when ESCROW_CONTRACT_ADDRESS is empty (dev mode). Wallets are currently off-chain custodial (Postgres ledger)."
+              effort="1-2 hours"
+            />
+            <IssueCard
+              severity="critical"
+              title="Redis has no authentication in production"
+              description="Redis is running without a password on the production VM. This is logged as a warning on every wallet-service startup. Should set requirepass in redis.conf and update REDIS_URL with credentials."
+              effort="30 minutes"
+            />
+          </div>
+
+          <h3 className="text-lg font-semibold mb-3 text-yellow-400">Medium (Should Fix for Production Quality)</h3>
+          <div className="space-y-3 mb-8">
+            <IssueCard
+              severity="medium"
+              title="No automated database backups"
+              description="PostgreSQL runs in Docker with no scheduled pg_dump or WAL archiving. A cron job for daily backups to Azure Blob Storage is recommended."
+              effort="2-3 hours"
+            />
+            <IssueCard
+              severity="medium"
+              title="PM2 ecosystem config not in source control"
+              description="The PM2 process list is saved in dump.pm2 on each VM, not in a committed ecosystem.config.js. The frontend port was misconfigured (3001 instead of 3100) because of this. Should commit a canonical ecosystem.config.js."
+              effort="1 hour"
+            />
+            <IssueCard
+              severity="medium"
+              title="Auth rate limiting is global, not per-endpoint"
+              description="The API gateway applies a single rate limit (100 req/min) globally. Auth endpoints (/v1/auth/magic-link) should have a stricter limit (5 req/15min). The MagicLinkService has per-email rate limiting (3/15min), but the gateway doesn't enforce per-IP limits on auth routes."
+              effort="1-2 hours"
+            />
+            <IssueCard
+              severity="medium"
+              title="KYC integration not wired"
+              description="The kyc_records table exists and the wallet-service has KYC routes, but no identity verification provider is integrated yet. Veriff API credentials have been obtained and are ready to wire."
+              effort="4-6 hours"
+            />
+            <IssueCard
+              severity="medium"
+              title="No monitoring or alerting"
+              description="No Grafana/Datadog/Sentry. Services log to PM2 stdout. For production at scale, add structured logging, error tracking, and uptime monitoring."
+              effort="4-8 hours"
+            />
+          </div>
+
+          <h3 className="text-lg font-semibold mb-3 text-t-2">Low (Nice to Have)</h3>
+          <div className="space-y-3">
+            <IssueCard
+              severity="low"
+              title="No TypeScript SDK published to npm"
+              description="The API docs include SDK code examples, but there is no published @agntly/sdk package on npm. Developers integrate via raw HTTP."
+              effort="4-6 hours"
+            />
+            <IssueCard
+              severity="low"
+              title="Agent reputation is static"
+              description="The agents table has reputation, calls_total, avg_latency_ms fields but these are not automatically updated from task completions. Currently requires manual update."
+              effort="2-3 hours"
+            />
+            <IssueCard
+              severity="low"
+              title="No admin panel authentication"
+              description="The /admin pages exist but rely on the same user auth. There is no role-based access control enforced at the frontend level (the backend checks user.role)."
+              effort="2-3 hours"
+            />
+          </div>
+        </Section>
+
+        {/* 15. Acquisition Context */}
+        <Section id="acquisition" title="15. Acquisition Context">
+          <div className="space-y-6">
+            <div className="p-5 border border-border bg-bg-1">
+              <h3 className="font-display text-lg font-semibold mb-3">Motivation</h3>
+              <p className="text-sm text-t-1 leading-relaxed">
+                Agntly was built as a fully functional AI agent marketplace with real escrow, on-chain settlement,
+                and a developer-first API. The decision to sell is driven by a strategic focus shift to
+                <strong> HitchPay</strong>, which requires full attention and resources. Agntly is being offered as a
+                turnkey platform &mdash; fully deployed, with live infrastructure, real developer interest (30+ agents
+                from an external team ready to list), and a clear monetization model (3% escrow fee).
+              </p>
+            </div>
+
+            <div className="p-5 border border-border bg-bg-1">
+              <h3 className="font-display text-lg font-semibold mb-3">What You Get</h3>
+              <ul className="text-sm text-t-1 space-y-2">
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>Full source code</strong> &mdash; TypeScript monorepo (GitHub), 10 microservices + Next.js frontend</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>Domain</strong> &mdash; agntly.io + sandbox.agntly.io</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>Live infrastructure</strong> &mdash; 2 Azure VMs (sandbox + production), PostgreSQL, Redis, Nginx, TLS</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>Smart contracts</strong> &mdash; Audited escrow contract (56 test suite), ready to deploy on Base L2</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>CI/CD</strong> &mdash; GitHub Actions with self-hosted runners, auto-deploy on push</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>API docs</strong> &mdash; Live at /docs with request/response examples for all endpoints</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>Accounts</strong> &mdash; Resend (email), Stripe (payments), Azure (hosting), domain registrar</li>
+                <li className="flex gap-2"><span className="text-accent">&#8226;</span><strong>Developer interest</strong> &mdash; External team with 30 agents, HMAC webhook integration built, ready to list</li>
+              </ul>
+            </div>
+
+            <div className="p-5 border border-border bg-bg-1">
+              <h3 className="font-display text-lg font-semibold mb-3">Timeline</h3>
+              <p className="text-sm text-t-1 leading-relaxed">
+                Preferred closing: <strong>2-4 weeks</strong>. Includes full knowledge transfer, credential handoff,
+                and 30 days of post-sale support for technical questions. The platform is operational today &mdash;
+                no development work is required to close, though the known issues listed above represent
+                opportunities for a new owner to improve and scale.
+              </p>
+            </div>
+          </div>
+        </Section>
+
         {/* Footer */}
         <footer className="border-t border-border pt-8 pb-16 text-center">
           <p className="text-t-2 font-mono text-xs">
-            Agntly Technical Architecture &middot; Confidential &middot; April 2026
+            Agntly Technical Architecture &amp; Due Diligence &middot; Confidential &middot; April 2026
           </p>
         </footer>
       </main>
@@ -530,6 +688,31 @@ function ContractCard({ name, description, functions, security }: { name: string
       <div className="text-xs text-t-2">
         <span className="text-accent">Security:</span> {security}
       </div>
+    </div>
+  );
+}
+
+function CostRow({ service, provider, plan, cost, notes }: { service: string; provider: string; plan: string; cost: string; notes: string }) {
+  return (
+    <tr className="border-b border-border/50">
+      <td className="py-2 pr-4 text-t-0">{service}</td>
+      <td className="py-2 pr-4">{provider}</td>
+      <td className="py-2 pr-4">{plan}</td>
+      <td className="py-2 pr-4 text-right text-accent">{cost}</td>
+      <td className="py-2 text-t-2">{notes}</td>
+    </tr>
+  );
+}
+
+function IssueCard({ severity, title, description, effort }: { severity: string; title: string; description: string; effort: string }) {
+  const borderColor = severity === 'critical' ? 'border-red/40' : severity === 'medium' ? 'border-yellow-400/40' : 'border-border';
+  return (
+    <div className={`p-4 border ${borderColor} bg-bg-1`}>
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="font-semibold text-sm text-t-0">{title}</h4>
+        <span className="font-mono text-xs text-t-2">Est: {effort}</span>
+      </div>
+      <p className="text-sm text-t-2">{description}</p>
     </div>
   );
 }
