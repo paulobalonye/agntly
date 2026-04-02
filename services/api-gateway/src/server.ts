@@ -26,14 +26,21 @@ await app.register(cors, {
   credentials: true,
 });
 
-// Rate limiting — registered globally before proxies so all routes are covered
-// TODO: SECURITY — Auth endpoints (/v1/auth/*) should have a stricter rate limit (e.g. 5 req/15min).
-// The MagicLinkService already enforces per-email rate limiting (3 requests per 15 min).
-// For production, register a dedicated scoped plugin for /v1/auth with a lower max count.
+// Global rate limiting — covers all routes
 await app.register(rateLimit, {
   max: RATE_LIMIT_MAX,
   timeWindow: RATE_LIMIT_WINDOW_MS,
 });
+
+// Stricter rate limit on auth endpoints — 10 requests per 15 minutes per IP.
+// The MagicLinkService also enforces per-email limits (3 per 15 min) as a second layer.
+await app.register(async (scope) => {
+  await scope.register(rateLimit, {
+    max: 10,
+    timeWindow: 15 * 60 * 1000,
+    keyGenerator: (req) => req.ip,
+  });
+}, { prefix: '/v1/auth' });
 
 // Health check — always public, no auth required
 app.get('/health', async () => ({

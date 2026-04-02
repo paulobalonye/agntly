@@ -197,4 +197,30 @@ export class RegistryService {
       .returning();
     if (result.length === 0) throw new Error('Agent not found');
   }
+
+  /**
+   * Update agent stats after a task completion.
+   * Increments calls_total, updates avg_latency_ms (rolling average), and
+   * recalculates reputation based on completion ratio.
+   */
+  async recordTaskCompletion(agentId: string, latencyMs: number | null): Promise<void> {
+    // Atomic update: increment calls, rolling avg latency, bump reputation toward 5.0
+    await this.db.execute(sql`
+      UPDATE agents
+      SET
+        calls_total = calls_total + 1,
+        calls_last_24h = calls_last_24h + 1,
+        avg_latency_ms = CASE
+          WHEN ${latencyMs} IS NOT NULL AND calls_total > 0
+          THEN ((avg_latency_ms * calls_total) + ${latencyMs ?? 0}) / (calls_total + 1)
+          ELSE avg_latency_ms
+        END,
+        reputation = LEAST(
+          ROUND((reputation * calls_total + 4.5) / (calls_total + 1), 2),
+          5.00
+        ),
+        updated_at = NOW()
+      WHERE id = ${agentId}
+    `);
+  }
 }

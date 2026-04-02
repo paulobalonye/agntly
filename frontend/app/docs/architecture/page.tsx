@@ -472,46 +472,32 @@ Deploy steps:
         <Section id="known-issues" title="14. Known Issues &amp; Technical Debt">
           <p className="mb-4">Transparent list of incomplete items and areas that would benefit from work by a new owner:</p>
 
-          <h3 className="text-lg font-semibold mb-3 text-red">Critical (Should Fix Before Scale)</h3>
+          <h3 className="text-lg font-semibold mb-3 text-accent">Recently Fixed</h3>
+          <div className="space-y-3 mb-8">
+            <IssueCard severity="low" title="Redis authentication in production" description="FIXED: Redis now requires password authentication. REDIS_URL updated with credentials." effort="Done" />
+            <IssueCard severity="low" title="Database backups" description="FIXED: Daily pg_dump cron (3 AM UTC) via docker exec, 7-day retention in /home/agntly/backups/." effort="Done" />
+            <IssueCard severity="low" title="PM2 ecosystem config" description="FIXED: Canonical ecosystem.config.js committed to source control with correct frontend port (3100)." effort="Done" />
+            <IssueCard severity="low" title="Auth rate limiting" description="FIXED: /v1/auth/* now has per-IP rate limit of 10 requests per 15 minutes, on top of per-email limits." effort="Done" />
+            <IssueCard severity="low" title="Agent reputation auto-update" description="FIXED: Agent stats (calls_total, avg_latency_ms, reputation) automatically update on each task completion via POST /v1/agents/:id/stats." effort="Done" />
+            <IssueCard severity="low" title="Deploy script migrations" description="FIXED: deploy-prod.sh now runs migrations via docker exec instead of missing host psql." effort="Done" />
+          </div>
+
+          <h3 className="text-lg font-semibold mb-3 text-red">Remaining Critical</h3>
           <div className="space-y-3 mb-8">
             <IssueCard
               severity="critical"
               title="Smart contracts not yet deployed to mainnet"
-              description="AgntlyEscrow.sol is compiled, tested (56 tests passing), and deploy scripts exist for both Base Sepolia and Base mainnet. However, contracts have not been deployed yet. Settlement-worker skips on-chain transactions when ESCROW_CONTRACT_ADDRESS is empty (dev mode). Wallets are currently off-chain custodial (Postgres ledger)."
+              description="AgntlyEscrow.sol is compiled, tested (56 tests passing), and deploy scripts exist for both Base Sepolia and Base mainnet. Requires funding a relayer wallet with ETH and running the deploy script. Settlement-worker will activate automatically once ESCROW_CONTRACT_ADDRESS is set."
               effort="1-2 hours"
-            />
-            <IssueCard
-              severity="critical"
-              title="Redis has no authentication in production"
-              description="Redis is running without a password on the production VM. This is logged as a warning on every wallet-service startup. Should set requirepass in redis.conf and update REDIS_URL with credentials."
-              effort="30 minutes"
             />
           </div>
 
-          <h3 className="text-lg font-semibold mb-3 text-yellow-400">Medium (Should Fix for Production Quality)</h3>
+          <h3 className="text-lg font-semibold mb-3 text-yellow-400">Remaining Medium</h3>
           <div className="space-y-3 mb-8">
             <IssueCard
               severity="medium"
-              title="No automated database backups"
-              description="PostgreSQL runs in Docker with no scheduled pg_dump or WAL archiving. A cron job for daily backups to Azure Blob Storage is recommended."
-              effort="2-3 hours"
-            />
-            <IssueCard
-              severity="medium"
-              title="PM2 ecosystem config not in source control"
-              description="The PM2 process list is saved in dump.pm2 on each VM, not in a committed ecosystem.config.js. The frontend port was misconfigured (3001 instead of 3100) because of this. Should commit a canonical ecosystem.config.js."
-              effort="1 hour"
-            />
-            <IssueCard
-              severity="medium"
-              title="Auth rate limiting is global, not per-endpoint"
-              description="The API gateway applies a single rate limit (100 req/min) globally. Auth endpoints (/v1/auth/magic-link) should have a stricter limit (5 req/15min). The MagicLinkService has per-email rate limiting (3/15min), but the gateway doesn't enforce per-IP limits on auth routes."
-              effort="1-2 hours"
-            />
-            <IssueCard
-              severity="medium"
               title="KYC integration not wired"
-              description="The kyc_records table exists and the wallet-service has KYC routes, but no identity verification provider is integrated yet. Veriff API credentials have been obtained and are ready to wire."
+              description="The kyc_records table exists and the wallet-service has KYC routes. Veriff API credentials have been obtained and are ready to wire."
               effort="4-6 hours"
             />
             <IssueCard
@@ -522,19 +508,13 @@ Deploy steps:
             />
           </div>
 
-          <h3 className="text-lg font-semibold mb-3 text-t-2">Low (Nice to Have)</h3>
+          <h3 className="text-lg font-semibold mb-3 text-t-2">Remaining Low</h3>
           <div className="space-y-3">
             <IssueCard
               severity="low"
               title="No TypeScript SDK published to npm"
               description="The API docs include SDK code examples, but there is no published @agntly/sdk package on npm. Developers integrate via raw HTTP."
               effort="4-6 hours"
-            />
-            <IssueCard
-              severity="low"
-              title="Agent reputation is static"
-              description="The agents table has reputation, calls_total, avg_latency_ms fields but these are not automatically updated from task completions. Currently requires manual update."
-              effort="2-3 hours"
             />
             <IssueCard
               severity="low"

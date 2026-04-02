@@ -127,13 +127,30 @@ export class TaskService {
     if (this.eventBus) {
       await this.eventBus.publish('task.completed', {
         taskId: completedTask.id,
+        agentId: completedTask.agentId,
         result,
         latencyMs: completedTask.latencyMs,
         settleTx: completedTask.settleTx,
       });
     }
 
+    // Update agent stats (fire-and-forget via registry service)
+    this.updateAgentStats(completedTask.agentId, completedTask.latencyMs ?? latencyMs).catch(() => {});
+
     return completedTask;
+  }
+
+  /**
+   * Increment agent call count and update rolling average latency.
+   * Uses the registry service's internal API. Non-fatal if unreachable.
+   */
+  private async updateAgentStats(agentId: string, latencyMs: number | null): Promise<void> {
+    const registryUrl = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
+    await fetch(`${registryUrl}/v1/agents/${agentId}/stats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+      body: JSON.stringify({ latencyMs }),
+    });
   }
 
   async disputeTask(taskId: string, reason: string): Promise<TaskRow> {
