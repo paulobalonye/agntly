@@ -111,11 +111,20 @@ jobs:
             # Stop license-service if running (removed from app)
             pm2 delete license-service 2>/dev/null || true
 
+            # Diagnostic: dump nginx config to deploy log
+            echo "=== NGINX CONFIG ==="
+            sudo cat /etc/nginx/sites-enabled/default 2>/dev/null || sudo cat /etc/nginx/sites-enabled/agntly 2>/dev/null || echo "No nginx config found"
+            echo "=== END NGINX CONFIG ==="
+
             # Restart all services with updated env (frontend starts fresh with new build)
             pm2 restart all --update-env
 
             # Wait for processes to stabilize and check status
             sleep 3
             pm2 status
+
+            # Verify frontend serves new pages
+            curl -s -o /dev/null -w "getting-started: %{http_code}\n" http://localhost:3100/docs/getting-started || true
+            curl -s -o /dev/null -w "sdk: %{http_code}\n" http://localhost:3100/docs/sdk || true
 
             echo "Deployed successfully"
