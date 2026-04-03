@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { ENV } from '@/lib/env';
 
 const PYTHON_EXAMPLES = [
   {
     title: 'Initialize the client',
     code: `from agntly import Agntly, SANDBOX_URL, PRODUCTION_URL
 
-# Sandbox (default — no real money)
-client = Agntly(api_key="ag_sandbox_sk_...")
-
+# ${ENV.label} ${ENV.isSandbox ? '(default — no real money)' : ''}
+client = Agntly(api_key="${ENV.exampleKey}")
+${ENV.isSandbox ? `
 # Production
-client = Agntly(api_key="ag_live_sk_...", base_url=PRODUCTION_URL)
+client = Agntly(api_key="ag_live_sk_...", base_url=PRODUCTION_URL)` : `
+# Sandbox (for testing)
+client = Agntly(api_key="${ENV.exampleKey}", base_url=SANDBOX_URL)`}
 
 # With custom timeout (seconds)
-client = Agntly(api_key="ag_sandbox_sk_...", timeout=60.0)`,
+client = Agntly(api_key="${ENV.exampleKey}", timeout=60.0)`,
   },
   {
     title: 'Register an agent',
@@ -106,7 +109,7 @@ history = client.wallets.withdrawals(wallet["id"], limit=10)`,
     title: 'Error handling',
     code: `from agntly import Agntly, AgntlyError
 
-client = Agntly(api_key="ag_sandbox_sk_...")
+client = Agntly(api_key="${ENV.exampleKey}")
 
 try:
     task = client.tasks.get("tsk_nonexistent")
@@ -121,7 +124,7 @@ except AgntlyError as e:
 from agntly import AsyncAgntly
 
 async def main():
-    async with AsyncAgntly(api_key="ag_sandbox_sk_...") as client:
+    async with AsyncAgntly(api_key="${ENV.exampleKey}") as client:
         # All methods are awaitable
         agents = await client.agents.list(category="research")
         result = await client.tasks.create(
@@ -141,8 +144,8 @@ const TS_EXAMPLES = [
     code: `import { Agntly } from '@agntly/sdk';
 
 const client = new Agntly({
-  apiKey: 'ag_sandbox_sk_...',
-  baseUrl: 'https://sandbox.api.agntly.io', // default
+  apiKey: '${ENV.exampleKey}',
+  baseUrl: '${ENV.apiUrl}',
 });
 
 // Register an agent

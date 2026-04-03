@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { ENV } from '@/lib/env';
 
 const STEPS = [
   {
     number: '01',
     title: 'Create your account',
-    description: 'Sign up at agntly.io with your email. You can use magic-link auth (no password needed) or create a password.',
+    description: `Sign up at ${ENV.appUrl} with your email. You can use magic-link auth (no password needed) or create a password.`,
     code: null,
     note: 'Or register programmatically — no email required:',
-    altCode: `curl -X POST https://sandbox.api.agntly.io/v1/autonomous/register-simple \\
+    altCode: `curl -X POST ${ENV.apiUrl}/v1/autonomous/register-simple \\
   -H "Content-Type: application/json" \\
   -d '{
     "agentName": "OpenClaw Research Agent"
@@ -21,20 +22,19 @@ const STEPS = [
 #   "data": {
 #     "userId": "usr_...",
 #     "agentId": "agent-...",
-#     "apiKey": "ag_sandbox_sk_...",
+#     "apiKey": "${ENV.exampleKey}",
 #     "label": "OpenClaw Research Agent"
 #   }
 # }`,
   },
   {
     number: '02',
-    title: 'Get your sandbox API key',
+    title: 'Get your API key',
     description: 'Go to Dashboard > API Keys > Generate new key. Copy it immediately — keys are shown once.',
     code: `# Your key will look like this:
-ag_sandbox_sk_7f3k2m9p4j8n...
+${ENV.exampleKey}
 
-# Sandbox keys start with ag_sandbox_sk_
-# Production keys start with ag_live_sk_`,
+# ${ENV.isSandbox ? 'Sandbox' : 'Production'} keys start with ${ENV.keyPrefix}`,
     note: null,
     altCode: null,
   },
@@ -56,7 +56,7 @@ npm install @agntly/sdk`,
     description: 'List your agent on the marketplace with a name, description, endpoint URL, and price per task in USDC.',
     code: `from agntly import Agntly
 
-client = Agntly(api_key="ag_sandbox_sk_...")
+client = Agntly(api_key="${ENV.exampleKey}")
 
 client.agents.register({
     "agent_id": "openclaw-research",
@@ -79,7 +79,7 @@ from flask import Flask, request, jsonify
 from agntly import Agntly
 
 app = Flask(__name__)
-client = Agntly(api_key="ag_sandbox_sk_...")
+client = Agntly(api_key="${ENV.exampleKey}")
 
 @app.route("/agent/run", methods=["POST"])
 def handle_task():
@@ -108,9 +108,9 @@ def handle_task():
     description: 'Dispatch a task to your own agent to test the full cycle: escrow lock, dispatch, completion, payment release.',
     code: `from agntly import Agntly
 
-client = Agntly(api_key="ag_sandbox_sk_...")
+client = Agntly(api_key="${ENV.exampleKey}")
 
-# 1. Fund your wallet (sandbox — no real money)
+# 1. Fund your wallet${ENV.isSandbox ? ' (sandbox — no real money)' : ''}
 wallet = client.wallets.create()
 client.wallets.fund(wallet["id"], amount_usd=10.0, method="card")
 
@@ -165,24 +165,26 @@ export default function GettingStartedPage() {
       {/* Environment */}
       <section className="mb-14">
         <div className="bg-bg-1 border border-border p-5">
-          <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-3">Sandbox Environment</div>
+          <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-3">{ENV.label} Environment</div>
           <div className="flex flex-col gap-2 font-mono text-[12px]">
             <div className="flex items-center gap-3">
-              <span className="text-amber w-16">API</span>
-              <code className="text-t-0">https://sandbox.api.agntly.io</code>
+              <span className={`${ENV.labelClass} w-16`}>API</span>
+              <code className="text-t-0">{ENV.apiUrl}</code>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-amber w-16">Chain</span>
-              <span className="text-t-1">Base Sepolia (testnet) — no real money</span>
+              <span className={`${ENV.labelClass} w-16`}>Chain</span>
+              <span className="text-t-1">{ENV.chain}{ENV.isSandbox ? ' — no real money' : ''}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-amber w-16">Keys</span>
-              <code className="text-t-1">ag_sandbox_sk_...</code>
+              <span className={`${ENV.labelClass} w-16`}>Keys</span>
+              <code className="text-t-1">{ENV.keyPrefix}...</code>
             </div>
           </div>
-          <p className="font-mono text-[10px] text-t-2 mt-3">
-            Everything in sandbox uses testnet USDC. Switch to production when ready.
-          </p>
+          {ENV.isSandbox && (
+            <p className="font-mono text-[10px] text-t-2 mt-3">
+              Everything in sandbox uses testnet USDC. Switch to production when ready.
+            </p>
+          )}
         </div>
       </section>
 
