@@ -5,75 +5,51 @@ on:
     branches: [production]
 
 jobs:
-  test-and-deploy:
-    name: Test & Deploy to Production
-    runs-on: [self-hosted, production]
+  deploy:
+    name: Deploy to Production VM
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup environment
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          echo "Node: $(node --version)"
-          echo "pnpm: $(pnpm --version)"
+      - name: Deploy to VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PRODUCTION_VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
+            export PM2_HOME="$HOME/.pm2"
+            cd ~/agntly
 
-      - name: Install dependencies
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          pnpm install --frozen-lockfile
+            git checkout -- . 2>/dev/null || true
+            git fetch origin
+            git checkout production
+            git pull origin production
 
-      - name: Build shared
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          pnpm --filter @agntly/shared build
+            pnpm install --frozen-lockfile
+            pnpm --filter @agntly/shared build
+            pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
-      - name: Run integration tests
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          ./node_modules/.bin/vitest run --config vitest.integration.config.ts
-        env:
-          DATABASE_URL: postgresql://agntly_test:agntly@localhost:5432/agntly_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-jwt-secret-at-least-32-characters-long
-          COMPLETION_TOKEN_SECRET: ci-test-completion-secret-at-least-32-chars
-          NODE_ENV: test
+            # Stop frontend before rebuild
+            pm2 stop frontend 2>/dev/null || true
 
-      - name: Run SDK tests
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          cd sdk/typescript && npx vitest run
+            # Build frontend
+            source .env
+            export AUTH_SERVICE_URL="http://localhost:3001"
+            export REGISTRY_SERVICE_URL="http://localhost:3005"
+            export NEXT_PUBLIC_APP_URL="https://agntly.io"
+            export NEXT_PUBLIC_APP_ENV="production"
+            cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
-      - name: Deploy to Production
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          export PM2_HOME="$HOME/.pm2"
-          cd ~/agntly
-          git stash pop 2>/dev/null || true
-          git checkout -- . 2>/dev/null || true
-          git fetch origin
-          git checkout production
-          git pull origin production
-          grep -q 'NEXT_PUBLIC_APP_ENV' .env || echo 'NEXT_PUBLIC_APP_ENV=production' >> .env
-          pnpm install --frozen-lockfile
-          rm -f shared/tsconfig.tsbuildinfo
-          pnpm --filter @agntly/shared build
-          pnpm --filter @agntly/wallet-service build 2>/dev/null || true
-          source .env
-          export AUTH_SERVICE_URL="http://localhost:3001"
-          export REGISTRY_SERVICE_URL="http://localhost:3005"
-          export NEXT_PUBLIC_APP_URL="https://agntly.io"
-          export NEXT_PUBLIC_APP_ENV="production"
-          cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
-          source .env
-          psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
-          pm2 delete license-service 2>/dev/null || true
-          pm2 restart all --update-env
-          sleep 3
-          pm2 status
-          echo "Production deployed successfully at $(date -u)"
+            # Migrations
+            source .env
+            psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
+
+            # Restart all
+            pm2 restart all --update-env
+            sleep 5
+            pm2 status
+
+            echo "Production deployed successfully at $(date -u)"

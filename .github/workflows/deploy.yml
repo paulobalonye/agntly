@@ -62,7 +62,7 @@ jobs:
         run: cd sdk/typescript && npx vitest run
 
   deploy:
-    name: Deploy to Azure VM
+    name: Deploy to Sandbox VM
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -71,55 +71,40 @@ jobs:
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.VM_HOST }}
+          host: ${{ secrets.SANDBOX_VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          command_timeout: 10m
           script: |
+            export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
+            export PM2_HOME="$HOME/.pm2"
             cd ~/agntly
 
-            # Restore stashed .env if it was accidentally stashed
-            git stash pop 2>/dev/null || true
-
-            # Discard tracked file changes to allow clean pull
             git checkout -- . 2>/dev/null || true
             git pull origin master
 
-            # Ensure NODE_ENV=development for sandbox (prevents production credential guard)
-            sed -i 's/NODE_ENV=production/NODE_ENV=development/' .env 2>/dev/null || true
-
-            # Rebuild shared
             pnpm install --frozen-lockfile
             pnpm --filter @agntly/shared build
-
-            # Build wallet-service dist (payment-service imports from it)
             pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
-            # Stop frontend before rebuilding to avoid stale .next cache
+            # Stop frontend before rebuild
             pm2 stop frontend 2>/dev/null || true
 
-            # Rebuild frontend (clean .next cache to pick up new pages)
+            # Build frontend
             source .env
             export AUTH_SERVICE_URL="http://localhost:3001"
             export REGISTRY_SERVICE_URL="http://localhost:3005"
-            export NEXT_PUBLIC_APP_URL="https://agntly.io"
+            export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
+            export NEXT_PUBLIC_APP_ENV="sandbox"
             cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
-            # Run migrations (creates any new tables like licenses)
+            # Migrations
             source .env
             psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
 
-            # Stop license-service if running (removed from app)
-            pm2 delete license-service 2>/dev/null || true
-
-            # Restart all services with updated env (frontend starts fresh with new build)
+            # Restart all
             pm2 restart all --update-env
-
-            # Wait for processes to stabilize and check status
-            sleep 3
+            sleep 5
             pm2 status
 
-            # Verify frontend serves new pages
-            curl -s -o /dev/null -w "getting-started: %{http_code}\n" http://localhost:3100/docs/getting-started || true
-            curl -s -o /dev/null -w "sdk: %{http_code}\n" http://localhost:3100/docs/sdk || true
-
-            echo "Deployed successfully"
+            echo "Sandbox deployed successfully at $(date -u)"
