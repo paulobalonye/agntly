@@ -1,35 +1,53 @@
 'use client';
 
-import { useState } from 'react';
-import type { FilterState } from './types';
+import { useMemo, useState } from 'react';
+import type { Agent, FilterState } from './types';
 
-interface CategoryOption {
+interface CategoryDef {
   key: string;
   label: string;
   dotColor: string;
-  count: number;
 }
 
-const CATEGORIES: CategoryOption[] = [
-  { key: 'all', label: 'all agents', dotColor: '#8fa8c0', count: 2847 },
-  { key: 'search', label: 'web search', dotColor: '#4d9ef5', count: 612 },
-  { key: 'code', label: 'code executor', dotColor: '#9b7cf8', count: 441 },
-  { key: 'data', label: 'data processor', dotColor: '#f5a623', count: 388 },
-  { key: 'file', label: 'file / doc', dotColor: '#00e5a0', count: 294 },
-  { key: 'api', label: 'API caller', dotColor: '#e05252', count: 277 },
-  { key: 'llm', label: 'LLM wrapper', dotColor: '#c084fc', count: 215 },
+const CATEGORY_DEFS: CategoryDef[] = [
+  { key: 'all', label: 'all agents', dotColor: '#8fa8c0' },
+  { key: 'search', label: 'web search', dotColor: '#4d9ef5' },
+  { key: 'code', label: 'code executor', dotColor: '#9b7cf8' },
+  { key: 'data', label: 'data processor', dotColor: '#f5a623' },
+  { key: 'file', label: 'file / doc', dotColor: '#00e5a0' },
+  { key: 'api', label: 'API caller', dotColor: '#e05252' },
+  { key: 'llm', label: 'LLM wrapper', dotColor: '#c084fc' },
+  { key: 'research', label: 'research', dotColor: '#38bdf8' },
 ];
 
 interface FilterSidebarProps {
+  agents: Agent[];
   onFilterChange: (filters: Partial<FilterState>) => void;
 }
 
-export function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
+export function FilterSidebar({ agents, onFilterChange }: FilterSidebarProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [activeStatus, setActiveStatus] = useState('');
   const [priceVal, setPriceVal] = useState(100);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [searchQ, setSearchQ] = useState('');
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: agents.length };
+    for (const agent of agents) {
+      counts[agent.category] = (counts[agent.category] ?? 0) + 1;
+    }
+    return counts;
+  }, [agents]);
+
+  const statusCounts = useMemo(() => {
+    const counts = { active: 0, paused: 0 };
+    for (const agent of agents) {
+      if (agent.status === 'active') counts.active++;
+      else if (agent.status === 'paused') counts.paused++;
+    }
+    return counts;
+  }, [agents]);
 
   const handleCategory = (key: string) => {
     const next = activeCategory === key ? 'all' : key;
@@ -80,32 +98,35 @@ export function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
         <div className="font-mono text-[10px] text-t-2 tracking-[0.1em] uppercase px-5 mb-2">
           category
         </div>
-        {CATEGORIES.map((cat) => {
-          const isActive = activeCategory === cat.key;
-          return (
-            <div
-              key={cat.key}
-              onClick={() => handleCategory(cat.key)}
-              className={[
-                'flex items-center justify-between px-5 py-[7px] cursor-pointer transition-colors border-l-2',
-                isActive
-                  ? 'bg-accent/[0.06] border-l-accent'
-                  : 'border-l-transparent hover:bg-bg-2',
-              ].join(' ')}
-            >
-              <span className={`text-[13px] flex items-center gap-2 ${isActive ? 'text-accent' : 'text-t-1'}`}>
-                <span
-                  className="w-[6px] h-[6px] rounded-full flex-shrink-0"
-                  style={{ background: cat.dotColor }}
-                />
-                {cat.label}
-              </span>
-              <span className="font-mono text-[11px] text-t-2 bg-bg-3 px-[6px] py-px">
-                {cat.count.toLocaleString()}
-              </span>
-            </div>
-          );
-        })}
+        {CATEGORY_DEFS
+          .filter((cat) => cat.key === 'all' || (categoryCounts[cat.key] ?? 0) > 0)
+          .map((cat) => {
+            const isActive = activeCategory === cat.key;
+            const count = categoryCounts[cat.key] ?? 0;
+            return (
+              <div
+                key={cat.key}
+                onClick={() => handleCategory(cat.key)}
+                className={[
+                  'flex items-center justify-between px-5 py-[7px] cursor-pointer transition-colors border-l-2',
+                  isActive
+                    ? 'bg-accent/[0.06] border-l-accent'
+                    : 'border-l-transparent hover:bg-bg-2',
+                ].join(' ')}
+              >
+                <span className={`text-[13px] flex items-center gap-2 ${isActive ? 'text-accent' : 'text-t-1'}`}>
+                  <span
+                    className="w-[6px] h-[6px] rounded-full flex-shrink-0"
+                    style={{ background: cat.dotColor }}
+                  />
+                  {cat.label}
+                </span>
+                <span className="font-mono text-[11px] text-t-2 bg-bg-3 px-[6px] py-px">
+                  {count.toLocaleString()}
+                </span>
+              </div>
+            );
+          })}
       </div>
 
       {/* Status */}
@@ -114,8 +135,8 @@ export function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
           status
         </div>
         {[
-          { key: 'active', label: 'online', dotColor: '#00e5a0', count: 1941 },
-          { key: 'paused', label: 'busy', dotColor: '#f5a623', count: 603 },
+          { key: 'active', label: 'online', dotColor: '#00e5a0', count: statusCounts.active },
+          { key: 'paused', label: 'busy', dotColor: '#f5a623', count: statusCounts.paused },
         ].map((s) => {
           const isActive = activeStatus === s.key;
           return (

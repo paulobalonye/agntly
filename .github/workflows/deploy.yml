@@ -94,6 +94,9 @@ jobs:
             # Build wallet-service dist (payment-service imports from it)
             pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
+            # Stop frontend before rebuilding to avoid stale .next cache
+            pm2 stop frontend 2>/dev/null || true
+
             # Rebuild frontend (clean .next cache to pick up new pages)
             source .env
             export AUTH_SERVICE_URL="http://localhost:3001"
@@ -108,7 +111,7 @@ jobs:
             # Stop license-service if running (removed from app)
             pm2 delete license-service 2>/dev/null || true
 
-            # Restart all services with updated env
+            # Restart all services with updated env (frontend starts fresh with new build)
             pm2 restart all --update-env
 
             # Wait for processes to stabilize and check status

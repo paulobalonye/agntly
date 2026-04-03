@@ -85,7 +85,7 @@ export function AgentGrid({ initialAgents }: AgentGridProps) {
   return (
     <div className="grid" style={{ gridTemplateColumns: '220px 1fr' }}>
       {/* Left sidebar */}
-      <FilterSidebar onFilterChange={handleFilterChange} />
+      <FilterSidebar agents={agents} onFilterChange={handleFilterChange} />
 
       {/* Main content */}
       <main className="p-6 overflow-y-auto">
