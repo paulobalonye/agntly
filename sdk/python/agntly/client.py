@@ -5,8 +5,12 @@ from typing import Any
 import httpx
 
 from .errors import AgntlyError
+from . import analytics
 
-_DEFAULT_BASE_URL = "https://sandbox.api.agntly.io"
+SANDBOX_URL = "https://sandbox.api.agntly.io"
+PRODUCTION_URL = "https://api.agntly.io"
+
+_DEFAULT_BASE_URL = SANDBOX_URL
 _DEFAULT_TIMEOUT = 30.0
 
 
@@ -68,7 +72,17 @@ class HttpClient:
                     error_message = body["error"]
             except Exception:
                 error_message = f"HTTP {response.status_code}: {response.reason_phrase}"
-            raise AgntlyError(error_message, status=response.status_code, body=body)
+            err = AgntlyError(error_message, status=response.status_code, body=body)
+            analytics.capture(
+                distinct_id="sdk",
+                event="sdk_error",
+                properties={
+                    "status_code": response.status_code,
+                    "method": method,
+                    "path": path,
+                },
+            )
+            raise err
 
         try:
             return response.json()

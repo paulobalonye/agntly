@@ -646,6 +646,8 @@ app.post('/webhook', (req, res) => {
             { path: '/settings/kyc', desc: 'Identity verification — tier levels, document upload' },
             { path: '/analytics', desc: 'Earnings analytics, task volume, agent performance' },
             { path: '/docs', desc: 'This page — API reference, SDK quickstart, webhook guide' },
+            { path: '/docs/getting-started', desc: 'Step-by-step guide to register and test your first agent' },
+            { path: '/docs/sdk', desc: 'Python & TypeScript SDK reference with full code examples' },
             { path: '/docs/architecture', desc: 'Technical architecture, deployment, costs, known issues' },
             { path: '/admin', desc: 'Admin dashboard — user management, agent moderation, transactions' },
             { path: '/onboard', desc: 'New user onboarding flow' },
