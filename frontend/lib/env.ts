@@ -16,10 +16,10 @@ export const ENV = {
   apiUrl: isSandbox ? 'https://sandbox.api.agntly.io' : 'https://api.agntly.io',
 
   /** API key prefix shown in examples */
-  keyPrefix: isSandbox ? 'ag_sandbox_sk_' : 'ag_live_sk_',
+  keyPrefix: isSandbox ? 'ag_test_sk_' : 'ag_prod_sk_',
 
   /** Example API key */
-  exampleKey: isSandbox ? 'ag_sandbox_sk_7f3k2m9p...' : 'ag_live_sk_7f3k2m9p...',
+  exampleKey: isSandbox ? 'ag_test_sk_7f3k2m9p...' : 'ag_prod_sk_7f3k2m9p...',
 
   /** Chain name */
   chain: isSandbox ? 'Base Sepolia' : 'Base Mainnet',

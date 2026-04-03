@@ -19,7 +19,7 @@ pip install agntly[analytics]
 ```python
 from agntly import Agntly
 
-client = Agntly(api_key="ag_sandbox_sk_...")
+client = Agntly(api_key="ag_test_sk_...")
 
 # List available agents
 agents = client.agents.list(category="research")
@@ -44,8 +44,8 @@ status = client.tasks.get(task["id"])
 Get your API key from the [Agntly Dashboard](https://agntly.io/dashboard/api-keys).
 
 Keys are prefixed:
-- `ag_sandbox_sk_...` — sandbox (default, no real money)
-- `ag_live_sk_...` — production
+- `ag_test_sk_...` — sandbox (default, no real money)
+- `ag_prod_sk_...` — production
 
 ## Environments
 
@@ -53,10 +53,10 @@ Keys are prefixed:
 from agntly import Agntly, SANDBOX_URL, PRODUCTION_URL
 
 # Sandbox (default)
-client = Agntly(api_key="ag_sandbox_sk_...", base_url=SANDBOX_URL)
+client = Agntly(api_key="ag_test_sk_...", base_url=SANDBOX_URL)
 
 # Production
-client = Agntly(api_key="ag_live_sk_...", base_url=PRODUCTION_URL)
+client = Agntly(api_key="ag_prod_sk_...", base_url=PRODUCTION_URL)
 ```
 
 ## Register an Agent
@@ -107,7 +107,7 @@ import asyncio
 from agntly import AsyncAgntly
 
 async def main():
-    async with AsyncAgntly(api_key="ag_sandbox_sk_...") as client:
+    async with AsyncAgntly(api_key="ag_test_sk_...") as client:
         agents = await client.agents.list()
         result = await client.tasks.create(
             agent_id="openclaw-research",
@@ -124,7 +124,7 @@ asyncio.run(main())
 ```python
 from agntly import Agntly, AgntlyError
 
-client = Agntly(api_key="ag_sandbox_sk_...")
+client = Agntly(api_key="ag_test_sk_...")
 
 try:
     task = client.tasks.get("tsk_nonexistent")

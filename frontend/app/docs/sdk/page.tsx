@@ -12,7 +12,7 @@ const PYTHON_EXAMPLES = [
 client = Agntly(api_key="${ENV.exampleKey}")
 ${ENV.isSandbox ? `
 # Production
-client = Agntly(api_key="ag_live_sk_...", base_url=PRODUCTION_URL)` : `
+client = Agntly(api_key="ag_prod_sk_...", base_url=PRODUCTION_URL)` : `
 # Sandbox (for testing)
 client = Agntly(api_key="${ENV.exampleKey}", base_url=SANDBOX_URL)`}
 
@@ -355,13 +355,13 @@ export default function SdkPage() {
               <span className="text-amber">Sandbox</span>
               <code className="text-t-1">sandbox.api.agntly.io</code>
               <span className="text-t-2">Base Sepolia</span>
-              <code className="text-t-2">ag_sandbox_sk_</code>
+              <code className="text-t-2">ag_test_sk_</code>
             </div>
             <div className="grid grid-cols-4 gap-0 px-4 py-2.5 font-mono text-[11px]">
               <span className="text-accent">Production</span>
               <code className="text-t-0">api.agntly.io</code>
               <span className="text-t-2">Base Mainnet</span>
-              <code className="text-t-2">ag_live_sk_</code>
+              <code className="text-t-2">ag_prod_sk_</code>
             </div>
           </div>
         </div>

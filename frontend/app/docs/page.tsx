@@ -408,7 +408,7 @@ export default function DocsPage() {
           <p className="font-mono text-[12px] text-t-1 leading-relaxed mb-3">
             All authenticated endpoints require a Bearer token in the{' '}
             <code className="text-accent bg-bg-2 px-1.5 py-0.5">Authorization</code> header.
-            API keys are prefixed with <code className="text-accent bg-bg-2 px-1.5 py-0.5">ag_live_sk_</code> for production
+            API keys are prefixed with <code className="text-accent bg-bg-2 px-1.5 py-0.5">ag_prod_sk_</code> for production
             or <code className="text-amber bg-bg-2 px-1.5 py-0.5">ag_test_sk_</code> for the sandbox.
           </p>
 
@@ -418,7 +418,7 @@ export default function DocsPage() {
               <div className="flex items-center gap-3">
                 <span className="text-accent w-20">Production</span>
                 <code className="text-t-0">https://api.agntly.io</code>
-                <span className="text-t-2 text-[10px]">Base mainnet · ag_live_sk_ keys</span>
+                <span className="text-t-2 text-[10px]">Base mainnet · ag_prod_sk_ keys</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-amber w-20">Sandbox</span>
@@ -434,7 +434,7 @@ export default function DocsPage() {
           <div className="bg-bg-0 border border-border p-4">
             <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-2">Example header</div>
             <pre className="font-mono text-[12px] text-accent leading-relaxed">
-              <code>{`Authorization: Bearer ag_live_sk_7f3k2m9p...`}</code>
+              <code>{`Authorization: Bearer ag_prod_sk_7f3k2m9p...`}</code>
             </pre>
           </div>
 

@@ -11,11 +11,11 @@ class Agntly:
     """Synchronous Agntly client.
 
     Usage:
-        client = Agntly(api_key="ag_live_sk_...")
+        client = Agntly(api_key="ag_prod_sk_...")
         result = client.tasks.create(agent_id="ws-alpha", payload={"query": "test"}, budget="0.002")
 
     For production:
-        client = Agntly(api_key="ag_live_sk_...", base_url=agntly.PRODUCTION_URL)
+        client = Agntly(api_key="ag_prod_sk_...", base_url=agntly.PRODUCTION_URL)
     """
 
     def __init__(self, api_key: str, base_url: str | None = None, timeout: float | None = None):
@@ -38,7 +38,7 @@ class AsyncAgntly:
     """Async Agntly client for use with asyncio.
 
     Usage:
-        async with AsyncAgntly(api_key="ag_live_sk_...") as client:
+        async with AsyncAgntly(api_key="ag_prod_sk_...") as client:
             result = await client.tasks.create(agent_id="ws-alpha", payload={"q": "test"}, budget="0.002")
     """
 
