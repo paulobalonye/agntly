@@ -111,14 +111,6 @@ jobs:
             # Stop license-service if running (removed from app)
             pm2 delete license-service 2>/dev/null || true
 
-            # Dump nginx config to deploy log for debugging
-            echo "=== NGINX CONFIG ==="
-            cat /etc/nginx/sites-enabled/default 2>/dev/null || cat /etc/nginx/sites-available/default 2>/dev/null || echo "Cannot read directly"
-            ls -la /etc/nginx/sites-enabled/ 2>/dev/null || true
-            # Try reading as world-readable
-            for f in /etc/nginx/sites-enabled/*; do cat "$f" 2>/dev/null; done
-            echo "=== END NGINX CONFIG ==="
-
             # Restart all services with updated env (frontend starts fresh with new build)
             pm2 restart all --update-env
 
