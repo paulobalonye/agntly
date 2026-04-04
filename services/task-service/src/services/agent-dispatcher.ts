@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 
 const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
-const DISPATCH_TIMEOUT_MS = 30_000;
+const DEFAULT_DISPATCH_TIMEOUT_MS = 30_000;
 
 function isPublicUrl(urlStr: string): boolean {
   try {
@@ -23,6 +23,7 @@ export async function dispatchToAgent(
   taskId: string,
   payload: Record<string, unknown>,
   completionToken?: string,
+  timeoutMs?: number,
 ): Promise<{ result: Record<string, unknown> | null; error: string | null }> {
   // 1. Get agent details from registry
   let agent: { endpoint: string } | null = null;
@@ -42,7 +43,8 @@ export async function dispatchToAgent(
 
   // 3. Call agent endpoint with timeout, signing the payload with HMAC-SHA256
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), DISPATCH_TIMEOUT_MS);
+  const effectiveTimeout = timeoutMs ?? DEFAULT_DISPATCH_TIMEOUT_MS;
+  const timer = setTimeout(() => controller.abort(), effectiveTimeout);
 
   const body = JSON.stringify({
     id: taskId,

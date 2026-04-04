@@ -132,7 +132,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     // On 2xx from the agent, mark task as "dispatched" — the agent will call
     // POST /v1/tasks/{id}/complete with the completionToken to finalize.
     if (parsed.data.dispatch !== false) {
-      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload, completionToken)
+      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload, completionToken, parsed.data.timeoutMs)
         .then(async ({ error }) => {
           if (!error) {
             // Agent accepted the task — mark as dispatched (not complete)
