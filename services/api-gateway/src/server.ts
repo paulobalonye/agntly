@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
 import proxy from '@fastify/http-proxy';
 import rateLimit from '@fastify/rate-limit';
 import { GATEWAY_PORT, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS } from './config.js';
@@ -8,6 +9,15 @@ import { authMiddleware } from './middleware/auth.js';
 
 const app = Fastify({
   logger: { level: process.env.LOG_LEVEL ?? 'info' },
+});
+
+// HTTP security headers — sets X-Content-Type-Options, X-Frame-Options,
+// Strict-Transport-Security, Referrer-Policy, etc.  CSP is disabled here
+// because this is a JSON API (no HTML served), but HSTS and other headers
+// are still valuable at the TLS termination layer.
+await app.register(helmet, {
+  contentSecurityPolicy: false, // JSON API — no HTML
+  crossOriginEmbedderPolicy: false,
 });
 
 // CORS — restrict to known origins using a callback to prevent reflection
@@ -23,7 +33,11 @@ await app.register(cors, {
       cb(null, false);
     }
   },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-ID'],
+  exposedHeaders: ['X-Request-ID'],
   credentials: true,
+  maxAge: 86400, // preflight cache: 24 h
 });
 
 // Global rate limiting — covers all routes
