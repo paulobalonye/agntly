@@ -84,6 +84,40 @@ export class TaskService {
     return task;
   }
 
+  async markDispatched(taskId: string): Promise<TaskRow> {
+    const isSandbox = process.env.APP_ENV !== 'production';
+    const allowedFromStates: readonly string[] = isSandbox
+      ? ['pending', 'escrowed']
+      : ['escrowed'];
+
+    const task = await this.repo.transition(
+      taskId,
+      allowedFromStates as readonly TaskStatus[],
+      'dispatched',
+    );
+
+    if (!task) {
+      const current = await this.repo.findById(taskId);
+      const stateInfo = current ? `current status: ${current.status}` : 'task not found';
+      throw new Error(`Cannot mark task ${taskId} as dispatched: ${stateInfo}`);
+    }
+
+    await this.repo.addAuditEntry({
+      taskId: task.id,
+      status: 'dispatched',
+      details: 'Task dispatched to agent endpoint',
+    });
+
+    if (this.eventBus) {
+      await this.eventBus.publish('task.dispatched', {
+        taskId: task.id,
+        agentId: task.agentId,
+      });
+    }
+
+    return task;
+  }
+
   async completeTask(
     taskId: string,
     result: Record<string, unknown>,

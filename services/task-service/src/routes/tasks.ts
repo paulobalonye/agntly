@@ -29,27 +29,31 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     const userId = (request as any).userId;
     if (!userId) return reply.status(401).send(createErrorResponse('Authentication required'));
 
-    // Step 0: Policy check — enforce spending limits before anything else
+    // Step 0: Validate agent exists and run policy check.
     // Also capture agentWalletId here so Step 2 can use it without a second fetch.
     let agentWalletId: string | undefined;
-    try {
-      // Look up agent details for policy check
-      let agentCategory = 'unknown';
-      let agentVerified = false;
-      let agentOwnerId: string | undefined;
-      let agentReputation: number | undefined;
-      try {
-        const agentRes = await fetch(`${REGISTRY_URL}/v1/agents/${parsed.data.agentId}`);
-        if (agentRes.ok) {
-          const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean; ownerId?: string; owner_id?: string; reputation?: string | number; walletId?: string } };
-          agentCategory = agentJson?.data?.category ?? 'unknown';
-          agentVerified = agentJson?.data?.verified ?? false;
-          agentOwnerId = agentJson?.data?.ownerId ?? agentJson?.data?.owner_id ?? undefined;
-          agentReputation = agentJson?.data?.reputation ? parseFloat(String(agentJson.data.reputation)) : undefined;
-          agentWalletId = agentJson?.data?.walletId;
-        }
-      } catch { /* agent lookup failure is non-fatal */ }
+    let agentCategory = 'unknown';
+    let agentVerified = false;
+    let agentOwnerId: string | undefined;
+    let agentReputation: number | undefined;
 
+    // Verify the agent exists in the registry
+    try {
+      const agentRes = await fetch(`${REGISTRY_URL}/v1/agents/${parsed.data.agentId}`);
+      if (!agentRes.ok) {
+        return reply.status(404).send(createErrorResponse(`Agent '${parsed.data.agentId}' not found`));
+      }
+      const agentJson = await agentRes.json() as { data?: { category?: string; verified?: boolean; ownerId?: string; owner_id?: string; reputation?: string | number; walletId?: string } };
+      agentCategory = agentJson?.data?.category ?? 'unknown';
+      agentVerified = agentJson?.data?.verified ?? false;
+      agentOwnerId = agentJson?.data?.ownerId ?? agentJson?.data?.owner_id ?? undefined;
+      agentReputation = agentJson?.data?.reputation ? parseFloat(String(agentJson.data.reputation)) : undefined;
+      agentWalletId = agentJson?.data?.walletId;
+    } catch {
+      return reply.status(502).send(createErrorResponse('Registry service unavailable'));
+    }
+
+    try {
       const policyCheck = await policyService.checkPolicy(
         userId, parsed.data.agentId, agentCategory, parsed.data.budget, agentVerified,
         agentOwnerId, agentReputation,
@@ -79,85 +83,87 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
       const walletJson = await walletRes.json() as { data?: { id?: string } };
       const orchestratorWalletId = walletJson?.data?.id;
 
-      if (orchestratorWalletId) {
-        // toWalletId = agent's real wallet (resolved at Step 0 from registry).
-        // Only use it if it's a valid UUID — guards against legacy agents that were
-        // registered before the walletId fix and still have a placeholder ID.
-        const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-        const toWalletId = (agentWalletId && isUuid(agentWalletId))
-          ? agentWalletId
-          : orchestratorWalletId; // fallback: legacy agent — escrow stays in orchestrator wallet
+      if (!orchestratorWalletId) {
+        return reply.status(400).send(createErrorResponse('No wallet found — fund your wallet before creating tasks'));
+      }
 
-        // Lock funds in escrow
-        const escrowRes = await fetch(`${ESCROW_URL}/v1/escrow/lock`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
-          body: JSON.stringify({
-            taskId: task.id,
-            fromWalletId: orchestratorWalletId,
-            toWalletId,
-            amount: parsed.data.budget,
-            deadline: task.deadline.toISOString(),
-          }),
-        });
+      // toWalletId = agent's real wallet (resolved at Step 0 from registry).
+      // Only use it if it's a valid UUID — guards against legacy agents that were
+      // registered before the walletId fix and still have a placeholder ID.
+      const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+      const toWalletId = (agentWalletId && isUuid(agentWalletId))
+        ? agentWalletId
+        : orchestratorWalletId; // fallback: legacy agent — escrow stays in orchestrator wallet
 
-        if (escrowRes.ok) {
-          // Mark task as escrowed
-          try {
-            await service.markEscrowed(task.id, `escrow-${task.id}`);
-          } catch {
-            // Task may already be in correct state
-          }
+      // Lock funds in escrow
+      const escrowRes = await fetch(`${ESCROW_URL}/v1/escrow/lock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
+        body: JSON.stringify({
+          taskId: task.id,
+          fromWalletId: orchestratorWalletId,
+          toWalletId,
+          amount: parsed.data.budget,
+          deadline: task.deadline.toISOString(),
+        }),
+      });
+
+      if (escrowRes.ok) {
+        try {
+          await service.markEscrowed(task.id, `escrow-${task.id}`);
+        } catch {
+          // Task may already be in correct state
         }
-        // If escrow fails (insufficient funds), task stays pending — still visible
+      } else {
+        const escrowErr = await escrowRes.json().catch(() => ({})) as { error?: string };
+        return reply.status(400).send(createErrorResponse(
+          escrowErr?.error ?? 'Escrow lock failed — check wallet balance',
+        ));
       }
     } catch {
-      // Escrow service unavailable — task proceeds without escrow (sandbox mode)
+      // Escrow service unavailable — in sandbox mode, allow task to proceed without escrow
+      const isSandbox = process.env.APP_ENV !== 'production';
+      if (!isSandbox) {
+        return reply.status(502).send(createErrorResponse('Escrow service unavailable'));
+      }
     }
 
     // Step 3: Dispatch to agent (fire-and-forget)
+    // On 2xx from the agent, mark task as "dispatched" — the agent will call
+    // POST /v1/tasks/{id}/complete with the completionToken to finalize.
     if (parsed.data.dispatch !== false) {
-      const capturedToken = completionToken;
-      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload, capturedToken)
-        .then(async ({ result }) => {
-          if (result && capturedToken) {
+      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload, completionToken)
+        .then(async ({ error }) => {
+          if (!error) {
+            // Agent accepted the task — mark as dispatched (not complete)
             try {
-              await service.completeTask(task.id, result, capturedToken);
-
-              // Release escrow on successful completion
-              try {
-                await fetch(`${ESCROW_URL}/v1/escrow/by-task/${task.id}/release`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
-                  body: JSON.stringify({}),
-                });
-              } catch {
-                console.error(`[task-service] Failed to release escrow for task ${task.id}`);
+              await service.markDispatched(task.id);
+            } catch {
+              // Already dispatched or state moved forward — ignore
+            }
+          } else {
+            // Dispatch failed — refund escrow
+            try {
+              const escrowLookup = await fetch(`${ESCROW_URL}/v1/escrow/by-task/${task.id}`, {
+                headers: { 'x-user-id': 'system' },
+              });
+              if (escrowLookup.ok) {
+                const ej = await escrowLookup.json() as { data?: { id?: string } };
+                if (ej?.data?.id) {
+                  await fetch(`${ESCROW_URL}/v1/escrow/${ej.data.id}/refund`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+                    body: JSON.stringify({}),
+                  });
+                }
               }
             } catch {
-              // Already completed or invalid state — ignore
+              console.error(`[task-service] Failed to refund escrow for failed task ${task.id}`);
             }
           }
         })
-        .catch(async () => {
-          // Dispatch failure — refund escrow
-          try {
-            const escrowLookup = await fetch(`${ESCROW_URL}/v1/escrow/by-task/${task.id}`, {
-              headers: { 'x-user-id': 'system' },
-            });
-            if (escrowLookup.ok) {
-              const ej = await escrowLookup.json() as { data?: { id?: string } };
-              if (ej?.data?.id) {
-                await fetch(`${ESCROW_URL}/v1/escrow/${ej.data.id}/refund`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
-                  body: JSON.stringify({}),
-                });
-              }
-            }
-          } catch {
-            console.error(`[task-service] Failed to refund escrow for failed task ${task.id}`);
-          }
+        .catch(() => {
+          // Unexpected dispatch error — logged by dispatchToAgent
         });
     }
 
@@ -199,6 +205,16 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     }
     try {
       const task = await service.completeTask(taskId, parsed.data.result, parsed.data.completionToken);
+
+      // Release escrow on successful completion (fire-and-forget)
+      fetch(`${ESCROW_URL}/v1/escrow/by-task/${taskId}/release`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+        body: JSON.stringify({}),
+      }).catch(() => {
+        console.error(`[task-service] Failed to release escrow for task ${taskId}`);
+      });
+
       return reply.status(200).send(createApiResponse(task));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Complete failed';
