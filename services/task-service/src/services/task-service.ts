@@ -131,6 +131,12 @@ export class TaskService {
       throw new Error('Invalid completion token — only the assigned agent can complete this task');
     }
 
+    // Enforce deadline — reject late completions
+    const deadline = task.deadline instanceof Date ? task.deadline : new Date(String(task.deadline));
+    if (deadline.getTime() < Date.now()) {
+      throw new Error(`Task ${taskId} exceeded its deadline — completion rejected`);
+    }
+
     const createdAt = task.createdAt;
     const latencyMs = createdAt !== undefined ? Date.now() - createdAt.getTime() : null;
     const settleTx = `0x${Buffer.from(taskId).toString('hex').padEnd(64, 'f').slice(0, 64)}`;
@@ -194,10 +200,12 @@ export class TaskService {
   }
 
   async disputeTask(taskId: string, reason: string): Promise<TaskRow> {
+    // Allow disputes on 'complete' tasks — gives orchestrators a window
+    // to challenge results before final settlement clears.
     const isSandbox = process.env.APP_ENV !== 'production';
     const allowedFromStates: readonly string[] = isSandbox
-      ? ['pending', 'escrowed', 'dispatched']
-      : ['escrowed', 'dispatched'];
+      ? ['pending', 'escrowed', 'dispatched', 'complete']
+      : ['escrowed', 'dispatched', 'complete'];
 
     const task = await this.repo.transition(
       taskId,
