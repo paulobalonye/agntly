@@ -1,27 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
-/**
- * Middleware that protects authenticated routes.
- * Redirects to /auth/login if no agntly_token cookie.
- */
-export function middleware(request: NextRequest) {
+const authProtected = [
+  '/marketplace',
+  '/dashboard',
+  '/onboard',
+  '/wallet',
+  '/my-agents',
+  '/my-tasks',
+  '/admin',
+  '/settings',
+];
+
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const authProtected = [
-    '/marketplace',
-    '/dashboard',
-    '/onboard',
-    '/wallet',
-    '/my-agents',
-    '/my-tasks',
-    '/admin',
-    '/settings',
-  ];
+  // Create a mutable response so Supabase can refresh session cookies
+  let response = NextResponse.next({ request });
 
-  const needsAuth = authProtected.some((p) => pathname.startsWith(p));
-  if (needsAuth) {
-    const token = request.cookies.get('agntly_token')?.value;
-    if (!token) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If Supabase is not configured fall through — don't break non-auth pages
+  if (supabaseUrl && supabaseAnonKey) {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          for (const { name, value } of cookiesToSet) {
+            request.cookies.set(name, value);
+          }
+          response = NextResponse.next({ request });
+          for (const { name, value, options } of cookiesToSet) {
+            response.cookies.set(name, value, options);
+          }
+        },
+      },
+    });
+
+    // Refreshes the session and validates the token with Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const needsAuth = authProtected.some((p) => pathname.startsWith(p));
+    if (needsAuth && !user) {
       const loginUrl = new URL('/auth/login', request.url);
       const fullPath = pathname + request.nextUrl.search;
       loginUrl.searchParams.set('redirect', fullPath);
@@ -29,7 +52,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

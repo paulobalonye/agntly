@@ -1,12 +1,4 @@
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
-
-interface JwtPayload {
-  userId: string;
-  email: string;
-  role: string;
-  exp: number;
-}
+import { createSupabaseServerClient } from './supabase';
 
 export interface UserSession {
   userId: string;
@@ -15,20 +7,24 @@ export interface UserSession {
 }
 
 /**
- * Reads the agntly_token httpOnly cookie and verifies the JWT signature.
- * Returns null if no token exists, if the signature is invalid, or if the token is expired.
+ * Returns the current authenticated user session from Supabase cookies,
+ * or null if the user is not signed in or the session has expired.
  */
 export async function getSession(): Promise<UserSession | null> {
-  const JWT_SECRET = process.env.JWT_SECRET;
-  if (!JWT_SECRET) return null;
-
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
-  if (!token) return null;
-
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    return { userId: payload.userId, email: payload.email, role: payload.role };
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) return null;
+
+    // Role is stored in user_metadata — synced on sign-up
+    const role = (user.user_metadata?.role as string | undefined) ?? 'developer';
+
+    return {
+      userId: user.id,
+      email: user.email ?? '',
+      role,
+    };
   } catch {
     return null;
   }
