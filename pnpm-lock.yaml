@@ -36,6 +36,12 @@ importers:
 
   frontend:
     dependencies:
+      '@supabase/ssr':
+        specifier: ^0.10.0
+        version: 0.10.0(@supabase/supabase-js@2.101.1)
+      '@supabase/supabase-js':
+        specifier: ^2.101.1
+        version: 2.101.1
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
@@ -196,31 +202,6 @@ importers:
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@25.5.0)(jiti@1.21.7)(tsx@4.21.0)
-
-  services/license-service:
-    dependencies:
-      '@agntly/shared':
-        specifier: workspace:*
-        version: link:../../shared
-      '@fastify/cors':
-        specifier: ^10.0.0
-        version: 10.1.0
-      drizzle-orm:
-        specifier: ^0.45.0
-        version: 0.45.1(@types/pg@8.18.0)(pg@8.20.0)
-      fastify:
-        specifier: ^5.2.0
-        version: 5.8.2
-      zod:
-        specifier: ^3.24.0
-        version: 3.25.76
-    devDependencies:
-      tsx:
-        specifier: ^4.19.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
 
   services/payment-service:
     dependencies:
@@ -1187,6 +1168,11 @@ packages:
   '@supabase/realtime-js@2.101.1':
     resolution: {integrity: sha512-Oa6dno0OB9I+hv5do5zsZHbFu41ViZnE9IWjmkeeF/8fPmB5fWoHGqeTYEC3/0DAgtpUoFJa4FpvzFH0SBHo1Q==}
     engines: {node: '>=20.0.0'}
+
+  '@supabase/ssr@0.10.0':
+    resolution: {integrity: sha512-36jIu+DuKzg5EgA3fnH+zHvwASvpKcL4zPgmHoZaULroS5Q4mzeHcM69zJ0sXUHddO5IcHjQNZJ9Vyhl/DdbRw==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.100.1
 
   '@supabase/storage-js@2.101.1':
     resolution: {integrity: sha512-WhTaUOBgeEvnKLy95Cdlp6+D5igSF/65yC727w1olxbet5nzUvMlajKUWyzNtQu2efrz2cQ7FcdVBdQqgT9YKQ==}
@@ -3010,6 +2996,11 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  '@supabase/ssr@0.10.0(@supabase/supabase-js@2.101.1)':
+    dependencies:
+      '@supabase/supabase-js': 2.101.1
+      cookie: 1.1.1
 
   '@supabase/storage-js@2.101.1':
     dependencies:
