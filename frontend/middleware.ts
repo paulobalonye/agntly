@@ -24,6 +24,7 @@ export async function middleware(request: NextRequest) {
   // If Supabase is not configured fall through — don't break non-auth pages
   if (supabaseUrl && supabaseAnonKey) {
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      auth: { flowType: 'implicit' },
       cookies: {
         getAll() {
           return request.cookies.getAll();

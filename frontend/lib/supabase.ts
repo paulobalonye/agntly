@@ -9,12 +9,17 @@ function requireEnv(name: string): string {
 
 /**
  * Browser (client component) Supabase client.
- * Uses the public anon key — safe to expose.
+ * Uses implicit flow — the magic link delivers tokens directly in the URL
+ * hash so no PKCE code exchange is needed. Simpler and more reliable for
+ * magic-link-only auth.
  */
 export function createSupabaseBrowserClient() {
   return createBrowserClient(
     requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
     requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+    {
+      auth: { flowType: 'implicit' },
+    },
   );
 }
 
@@ -28,6 +33,7 @@ export async function createSupabaseServerClient() {
     requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
     requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
     {
+      auth: { flowType: 'implicit' },
       cookies: {
         getAll() {
           return cookieStore.getAll();

@@ -1,14 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
-
-function getSupabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
-}
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -28,7 +21,7 @@ export function LoginForm() {
     try {
       // Call signInWithOtp from the browser so the PKCE code verifier
       // is stored in browser cookies — required for the callback to work.
-      const supabase = getSupabase();
+      const supabase = createSupabaseBrowserClient();
       const { error: supabaseError } = await supabase.auth.signInWithOtp({
         email,
         options: {
