@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export function LoginForm() {
@@ -9,23 +9,19 @@ export function LoginForm() {
   const [error, setError] = useState('');
   const searchParams = useSearchParams();
 
-  // Store the redirect param in a cookie so verify page can read it after magic link click
-  useEffect(() => {
-    const redirect = searchParams.get('redirect');
-    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
-      document.cookie = `agntly_redirect=${encodeURIComponent(redirect)}; path=/; max-age=900; samesite=lax`;
-    }
-  }, [searchParams]);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Pass the redirect destination so /auth/callback can honour it
+    const redirect = searchParams.get('redirect') ?? '/dashboard';
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, redirect }),
       });
       if (!res.ok) {
         let message = 'Failed to send magic link';

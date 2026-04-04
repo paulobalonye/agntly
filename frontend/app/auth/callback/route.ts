@@ -6,7 +6,8 @@ import { createSupabaseServerClient } from '@/lib/supabase';
  *
  * After the user clicks the email link, Supabase redirects here with
  * ?code=<pkce_code>. We exchange it for a session, persist it in cookies,
- * and redirect the user to the dashboard (or their original destination).
+ * create a wallet for new users (fire-and-forget), and redirect the user
+ * to their original destination (or /dashboard).
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
@@ -15,15 +16,24 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
-      // Safe redirect: only allow relative paths
+    if (!error && data.user) {
+      // Ensure the user has a wallet — idempotent, safe to call on every login
+      const walletUrl = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
+      fetch(`${walletUrl}/v1/wallets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': data.user.id,
+        },
+        body: JSON.stringify({}),
+      }).catch(() => { /* fire-and-forget */ });
+
       const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
       return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }
 
-  // Exchange failed or no code provided — send to login with error
   return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_error`);
 }
