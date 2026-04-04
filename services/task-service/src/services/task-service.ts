@@ -227,4 +227,41 @@ export class TaskService {
 
     return task;
   }
+
+  /**
+   * Sweep tasks that have exceeded their deadline. Transitions them to 'failed'
+   * and publishes task.failed events. Called on an interval from the server.
+   */
+  async sweepExpiredTasks(): Promise<number> {
+    const expired = await this.repo.findExpired();
+    let count = 0;
+
+    for (const task of expired) {
+      const failed = await this.repo.transition(
+        task.id,
+        ['pending', 'escrowed', 'dispatched'] as readonly TaskStatus[],
+        'failed',
+        { errorMessage: 'Task exceeded deadline' },
+      );
+
+      if (failed) {
+        count++;
+        await this.repo.addAuditEntry({
+          taskId: task.id,
+          status: 'failed',
+          details: `Task timed out (deadline: ${String(task.deadline)})`,
+        });
+
+        if (this.eventBus) {
+          await this.eventBus.publish('task.failed', {
+            taskId: task.id,
+            agentId: task.agentId,
+            reason: 'timeout',
+          });
+        }
+      }
+    }
+
+    return count;
+  }
 }

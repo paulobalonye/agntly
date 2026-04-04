@@ -158,6 +158,17 @@ export class TaskRepository {
     return this.findById(taskId);
   }
 
+  async findExpired(): Promise<TaskRow[]> {
+    const rows = await this.db.execute(sql`
+      SELECT * FROM tasks
+      WHERE status IN ('pending', 'escrowed', 'dispatched')
+        AND deadline < NOW()
+      ORDER BY deadline ASC
+      LIMIT 100
+    `);
+    return (rows.rows ?? []) as TaskRow[];
+  }
+
   async addAuditEntry(data: {
     taskId: string;
     status: TaskStatus;
