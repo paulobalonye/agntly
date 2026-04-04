@@ -1,3 +1,5 @@
+import { createHmac } from 'node:crypto';
+
 const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
 const DISPATCH_TIMEOUT_MS = 30_000;
 
@@ -20,6 +22,7 @@ export async function dispatchToAgent(
   agentId: string,
   taskId: string,
   payload: Record<string, unknown>,
+  completionToken?: string,
 ): Promise<{ result: Record<string, unknown> | null; error: string | null }> {
   // 1. Get agent details from registry
   let agent: { endpoint: string } | null = null;
@@ -37,9 +40,21 @@ export async function dispatchToAgent(
     return { result: null, error: 'SSRF_BLOCKED: endpoint URL is not allowed' };
   }
 
-  // 3. Call agent endpoint with timeout
+  // 3. Call agent endpoint with timeout, signing the payload with HMAC-SHA256
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DISPATCH_TIMEOUT_MS);
+
+  const body = JSON.stringify({
+    id: taskId,
+    taskId,
+    agentId,
+    payload,
+    ...(completionToken ? { completionToken } : {}),
+  });
+  const signingSecret = process.env.AGNTLY_WEBHOOK_SECRET ?? '';
+  const signature = signingSecret
+    ? createHmac('sha256', signingSecret).update(body).digest('hex')
+    : '';
 
   try {
     const res = await fetch(agent.endpoint, {
@@ -47,8 +62,9 @@ export async function dispatchToAgent(
       headers: {
         'Content-Type': 'application/json',
         'X-Agntly-Task-Id': taskId,
+        ...(signature ? { 'X-Agntly-Signature': `sha256=${signature}` } : {}),
       },
-      body: JSON.stringify({ taskId, payload }),
+      body,
       signal: controller.signal,
     });
     clearTimeout(timer);

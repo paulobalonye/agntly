@@ -1,5 +1,5 @@
 import { generateId, calculateFee, DEFAULT_TASK_TIMEOUT_MS, generateCompletionToken, verifyCompletionToken } from '@agntly/shared';
-import type { EventBus } from '@agntly/shared';
+import type { EventBus, TaskStatus } from '@agntly/shared';
 import type { TaskRepository, TaskRow } from '../repositories/task-repository.js';
 
 export class TaskService {
@@ -101,9 +101,15 @@ export class TaskService {
     const latencyMs = createdAt !== undefined ? Date.now() - createdAt.getTime() : null;
     const settleTx = `0x${Buffer.from(taskId).toString('hex').padEnd(64, 'f').slice(0, 64)}`;
 
+    // In sandbox mode, allow completing tasks directly from 'pending' (escrow may be skipped)
+    const isSandbox = process.env.APP_ENV !== 'production';
+    const allowedFromStates: readonly string[] = isSandbox
+      ? ['pending', 'escrowed', 'dispatched']
+      : ['escrowed', 'dispatched'];
+
     const completedTask = await this.repo.transition(
       taskId,
-      ['escrowed', 'dispatched'],
+      allowedFromStates as readonly TaskStatus[],
       'complete',
       {
         result,
@@ -154,9 +160,14 @@ export class TaskService {
   }
 
   async disputeTask(taskId: string, reason: string): Promise<TaskRow> {
+    const isSandbox = process.env.APP_ENV !== 'production';
+    const allowedFromStates: readonly string[] = isSandbox
+      ? ['pending', 'escrowed', 'dispatched']
+      : ['escrowed', 'dispatched'];
+
     const task = await this.repo.transition(
       taskId,
-      ['escrowed', 'dispatched'],
+      allowedFromStates as readonly TaskStatus[],
       'disputed',
       { errorMessage: reason },
     );

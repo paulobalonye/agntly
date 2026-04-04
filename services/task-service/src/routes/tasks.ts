@@ -91,7 +91,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
         // Lock funds in escrow
         const escrowRes = await fetch(`${ESCROW_URL}/v1/escrow/lock`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
           body: JSON.stringify({
             taskId: task.id,
             fromWalletId: orchestratorWalletId,
@@ -118,7 +118,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
     // Step 3: Dispatch to agent (fire-and-forget)
     if (parsed.data.dispatch !== false) {
       const capturedToken = completionToken;
-      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload)
+      dispatchToAgent(parsed.data.agentId, task.id, parsed.data.payload, capturedToken)
         .then(async ({ result }) => {
           if (result && capturedToken) {
             try {
@@ -129,6 +129,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
                 await fetch(`${ESCROW_URL}/v1/escrow/by-task/${task.id}/release`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+                  body: JSON.stringify({}),
                 });
               } catch {
                 console.error(`[task-service] Failed to release escrow for task ${task.id}`);
@@ -150,6 +151,7 @@ export const taskRoutes: FastifyPluginAsync = async (app) => {
                 await fetch(`${ESCROW_URL}/v1/escrow/${ej.data.id}/refund`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'x-user-id': 'system' },
+                  body: JSON.stringify({}),
                 });
               }
             }
