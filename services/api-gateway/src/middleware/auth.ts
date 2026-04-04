@@ -13,13 +13,16 @@ function getJwtSecret(): string {
 }
 
 const JWT_SECRET: string = getJwtSecret();
-const INTERNAL_SECRET = process.env.INTERNAL_SIGNING_SECRET ?? (() => {
-  if (process.env.NODE_ENV === 'production') {
-    console.error('FATAL: INTERNAL_SIGNING_SECRET is required in production');
+function getInternalSecret(): string {
+  const secret = process.env.INTERNAL_SIGNING_SECRET;
+  if (!secret || secret.length < 32) {
+    console.error('FATAL: INTERNAL_SIGNING_SECRET env var is required and must be at least 32 characters');
     process.exit(1);
   }
-  return 'dev-internal-secret-not-for-production';
-})();
+  return secret;
+}
+
+const INTERNAL_SECRET: string = getInternalSecret();
 
 const AGNTLY_API_KEY = process.env.AGNTLY_API_KEY ?? null;
 
