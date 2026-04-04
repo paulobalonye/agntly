@@ -12,8 +12,12 @@ const createTaskSchema = z.object({
     .refine(val => /^\d+(\.\d{1,6})?$/.test(val), 'Budget must be a valid number')
     .refine(val => parseFloat(val) > 0, 'Budget must be positive'),
   timeoutMs: z.number().int().positive().max(86_400_000).optional(), // max 24h
+  timeout_ms: z.number().int().positive().max(86_400_000).optional(), // snake_case alias
   dispatch: z.boolean().optional(),
-});
+}).transform(data => ({
+  ...data,
+  timeoutMs: data.timeoutMs ?? data.timeout_ms,
+}));
 
 export const taskRoutes: FastifyPluginAsync = async (app) => {
   const service = (app as any).taskService as TaskService;
