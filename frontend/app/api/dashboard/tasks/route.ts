@@ -1,23 +1,19 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const TASK_URL = process.env.TASK_SERVICE_URL ?? 'http://localhost:3004';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
-  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
-  const userId = payload?.userId;
+  const token = await getAuthToken();
 
-  if (!userId) {
+  if (!token) {
     return NextResponse.json({ success: true, data: [], error: null });
   }
 
   try {
     // Fetch recent tasks for this user (as orchestrator)
     const res = await fetch(`${TASK_URL}/v1/admin/tasks?limit=10`, {
-      headers: { 'x-user-id': userId },
+      headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store',
     });
 
@@ -28,9 +24,6 @@ export async function GET() {
 
     // Map to dashboard format
     const mapped = tasks
-      .filter((t: Record<string, unknown>) =>
-        t.orchestrator_id === userId || t.orchestratorId === userId
-      )
       .map((t: Record<string, unknown>) => ({
         id: String(t.id ?? ''),
         agent: String(t.agent_id ?? t.agentId ?? ''),

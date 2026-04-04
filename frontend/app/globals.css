@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Accent color tokens — overridden by .sandbox class for environment differentiation */
+:root {
+  --color-accent: 0 229 160;
+  --color-accent-2: 0 184 122;
+}
+
+.sandbox {
+  --color-accent: 245 166 35;
+  --color-accent-2: 212 137 30;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

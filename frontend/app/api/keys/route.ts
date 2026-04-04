@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const AUTH_URL = process.env.AUTH_SERVICE_URL ?? 'http://localhost:3001';
 
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
+  const token = await getAuthToken();
   if (!token) {
     return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
-  }
-
-  const payload = jwt.decode(token) as { userId: string } | null;
-  if (!payload?.userId) {
-    return NextResponse.json({ success: false, error: 'Invalid session' }, { status: 401 });
   }
 
   const body = await request.json();
@@ -24,7 +17,7 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ label: body.label ?? 'default', userId: payload.userId }),
+    body: JSON.stringify({ label: body.label ?? 'default' }),
   });
 
   const data = await res.json();
@@ -32,8 +25,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
+  const token = await getAuthToken();
   if (!token) {
     return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
   }

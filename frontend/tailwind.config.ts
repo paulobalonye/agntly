@@ -25,8 +25,8 @@ const config: Config = {
           3: '#2a3d52',
         },
         accent: {
-          DEFAULT: '#00e5a0',
-          2: '#00b87a',
+          DEFAULT: 'rgb(var(--color-accent) / <alpha-value>)',
+          2: 'rgb(var(--color-accent-2) / <alpha-value>)',
         },
         blue: '#4d9ef5',
         amber: '#f5a623',

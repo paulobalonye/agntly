@@ -1,22 +1,18 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
-  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
-  const userId = payload?.userId;
+  const token = await getAuthToken();
 
-  if (!userId) {
+  if (!token) {
     return NextResponse.json({ success: true, data: [], error: null });
   }
 
   try {
-    const res = await fetch(`${REGISTRY_URL}/v1/agents?ownerId=${userId}`, {
-      headers: { 'x-user-id': userId },
+    const res = await fetch(`${REGISTRY_URL}/v1/agents`, {
+      headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store',
     });
 
