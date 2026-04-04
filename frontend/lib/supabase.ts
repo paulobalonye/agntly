@@ -1,37 +1,20 @@
-import { createBrowserClient, createServerClient } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-function requireEnv(name: string): string {
-  const val = process.env[name];
-  if (!val) throw new Error(`${name} environment variable is required`);
-  return val;
-}
+// Re-export browser client for convenience — but prefer importing from
+// supabase-browser.ts directly in 'use client' files to avoid bundling
+// next/headers into client bundles.
+export { createSupabaseBrowserClient } from './supabase-browser';
 
 /**
- * Browser (client component) Supabase client.
- * Uses implicit flow — the magic link delivers tokens directly in the URL
- * hash so no PKCE code exchange is needed. Simpler and more reliable for
- * magic-link-only auth.
- */
-export function createSupabaseBrowserClient() {
-  return createBrowserClient(
-    requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
-    requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-    {
-      auth: { flowType: 'implicit' },
-    },
-  );
-}
-
-/**
- * Server-side Supabase client (Server Components, API routes).
- * Reads and writes session cookies automatically.
+ * Server-side Supabase client (Server Components, API routes, middleware).
+ * Do NOT import this in 'use client' components — use supabase-browser.ts instead.
  */
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
   return createServerClient(
-    requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
-    requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: { flowType: 'implicit' },
       cookies: {
