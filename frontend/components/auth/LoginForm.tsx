@@ -1,6 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
+
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
+}
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -14,23 +22,25 @@ export function LoginForm() {
     setLoading(true);
     setError('');
 
-    // Pass the redirect destination so /auth/callback can honour it
     const redirect = searchParams.get('redirect') ?? '/dashboard';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, redirect }),
+      // Call signInWithOtp from the browser so the PKCE code verifier
+      // is stored in browser cookies — required for the callback to work.
+      const supabase = getSupabase();
+      const { error: supabaseError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(redirect)}`,
+          shouldCreateUser: true,
+        },
       });
-      if (!res.ok) {
-        let message = 'Failed to send magic link';
-        try {
-          const data = await res.json();
-          message = (data as { error?: string }).error ?? message;
-        } catch { /* body was empty or non-JSON */ }
-        throw new Error(message);
+
+      if (supabaseError) {
+        throw new Error(supabaseError.message);
       }
+
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
