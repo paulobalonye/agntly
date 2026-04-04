@@ -80,6 +80,9 @@ jobs:
             export PM2_HOME="$HOME/.pm2"
             cd ~/agntly
 
+            # Fix ownership in case a previous root-run left locked files
+            sudo chown -R "$USER:$USER" ~/agntly 2>/dev/null || true
+
             git checkout -- . 2>/dev/null || true
             git pull origin master
 
@@ -91,7 +94,7 @@ jobs:
             pm2 stop frontend 2>/dev/null || true
 
             # Build frontend
-            source .env
+            [ -f .env ] && source .env || true
             export AUTH_SERVICE_URL="http://localhost:3001"
             export REGISTRY_SERVICE_URL="http://localhost:3005"
             export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
@@ -99,11 +102,11 @@ jobs:
             cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
             # Migrations
-            source .env
-            psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
+            [ -f .env ] && source .env && psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
 
             # Restart all
             pm2 restart all --update-env
+            pm2 start frontend 2>/dev/null || true
             sleep 5
             pm2 status
 
