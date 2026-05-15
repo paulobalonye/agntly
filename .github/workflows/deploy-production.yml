@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.AGNTLY_VM_HOST }}
           username: agntly
           key: ${{ secrets.VM_SSH_KEY }}
-          command_timeout: 15m
+          command_timeout: 25m
           script: |
             set -e
             APP_DIR=/opt/agntly/production
