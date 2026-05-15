@@ -51,7 +51,7 @@ jobs:
             psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
 
             # Restart PM2 production processes
-            pm2 startOrRestart /opt/agntly/production/ecosystem.config.cjs --update-env
+            pm2 startOrRestart /opt/agntly/production/ecosystem.production.config.cjs --update-env
             sleep 5
             pm2 list
 
