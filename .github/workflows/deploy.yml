@@ -33,22 +33,17 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @agntly/shared build
-
       - name: Run migrations
         run: psql -U agntly -h localhost -d agntly -f scripts/migrate.sql
         env:
           PGPASSWORD: agntly
-
       - name: Run integration tests
         run: ./node_modules/.bin/vitest run --config vitest.integration.config.ts
         env:
@@ -57,57 +52,56 @@ jobs:
           JWT_SECRET: ci-test-jwt-secret-at-least-32-characters-long
           COMPLETION_TOKEN_SECRET: ci-test-completion-secret-at-least-32-chars
           NODE_ENV: test
-
       - name: Run SDK tests
         run: cd sdk/typescript && npx vitest run
 
   deploy:
-    name: Deploy to Sandbox VM
+    name: Deploy Sandbox
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to VM
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SANDBOX_VM_HOST }}
-          username: ${{ secrets.VM_USER }}
+          host: ${{ secrets.AGNTLY_VM_HOST }}
+          username: agntly
           key: ${{ secrets.VM_SSH_KEY }}
-          command_timeout: 10m
+          command_timeout: 15m
           script: |
-            export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
-            export PM2_HOME="$HOME/.pm2"
-            cd ~/agntly
+            set -e
+            APP_DIR=/opt/agntly/sandbox
 
-            # Fix ownership in case a previous root-run left locked files
-            sudo chown -R "$USER:$USER" ~/agntly 2>/dev/null || true
+            # Clone or pull
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git fetch origin master
+            git checkout master
+            git reset --hard origin/master
 
-            git checkout -- . 2>/dev/null || true
-            git pull origin master
-
+            # Install & build
             pnpm install --frozen-lockfile
             pnpm --filter @agntly/shared build
             pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
-            # Stop frontend before rebuild
-            pm2 stop frontend 2>/dev/null || true
-
             # Build frontend
-            [ -f .env ] && source .env || true
-            export AUTH_SERVICE_URL="http://localhost:3001"
-            export REGISTRY_SERVICE_URL="http://localhost:3005"
+            source .env 2>/dev/null || true
+            export AUTH_SERVICE_URL="http://localhost:4001"
+            export REGISTRY_SERVICE_URL="http://localhost:4005"
             export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
             export NEXT_PUBLIC_APP_ENV="sandbox"
             cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
             # Migrations
-            [ -f .env ] && source .env && psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
+            source .env 2>/dev/null || true
+            psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
 
-            # Restart all
-            pm2 restart all --update-env
-            pm2 start frontend 2>/dev/null || true
+            # Restart PM2 sandbox processes
+            pm2 startOrRestart /opt/agntly/sandbox/ecosystem.config.cjs --update-env
             sleep 5
-            pm2 status
+            pm2 list
 
-            echo "Sandbox deployed successfully at $(date -u)"
+            echo "Sandbox deployed at $(date -u)"

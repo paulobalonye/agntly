@@ -6,37 +6,40 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Production VM
+    name: Deploy Production
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: production
 
-      - name: Deploy to VM
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.PRODUCTION_VM_HOST }}
-          username: ${{ secrets.VM_USER }}
+          host: ${{ secrets.AGNTLY_VM_HOST }}
+          username: agntly
           key: ${{ secrets.VM_SSH_KEY }}
-          command_timeout: 10m
+          command_timeout: 15m
           script: |
-            export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
-            export PM2_HOME="$HOME/.pm2"
-            cd ~/agntly
+            set -e
+            APP_DIR=/opt/agntly/production
 
-            git checkout -- . 2>/dev/null || true
-            git fetch origin
+            # Clone or pull
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git fetch origin production
             git checkout production
-            git pull origin production
+            git reset --hard origin/production
 
+            # Install & build
             pnpm install --frozen-lockfile
             pnpm --filter @agntly/shared build
             pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
-            # Stop frontend before rebuild
-            pm2 stop frontend 2>/dev/null || true
-
             # Build frontend
-            source .env
+            source .env 2>/dev/null || true
             export AUTH_SERVICE_URL="http://localhost:3001"
             export REGISTRY_SERVICE_URL="http://localhost:3005"
             export NEXT_PUBLIC_APP_URL="https://agntly.io"
@@ -44,12 +47,12 @@ jobs:
             cd frontend && rm -rf .next && ./node_modules/.bin/next build && cd ..
 
             # Migrations
-            source .env
+            source .env 2>/dev/null || true
             psql "$DATABASE_URL" -f scripts/migrate.sql 2>/dev/null || true
 
-            # Restart all
-            pm2 restart all --update-env
+            # Restart PM2 production processes
+            pm2 startOrRestart /opt/agntly/production/ecosystem.config.cjs --update-env
             sleep 5
-            pm2 status
+            pm2 list
 
-            echo "Production deployed successfully at $(date -u)"
+            echo "Production deployed at $(date -u)"
