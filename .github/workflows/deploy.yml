@@ -73,9 +73,12 @@ jobs:
             set -e
             APP_DIR=/opt/agntly/sandbox
 
-            # Clone or pull
+            # Clone or pull (preserve .env across fresh clones)
             if [ ! -d "$APP_DIR/.git" ]; then
+              [ -f "$APP_DIR/.env" ] && cp "$APP_DIR/.env" /tmp/.env.sandbox.bak
+              rm -rf "$APP_DIR"
               git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+              [ -f /tmp/.env.sandbox.bak ] && cp /tmp/.env.sandbox.bak "$APP_DIR/.env" && rm /tmp/.env.sandbox.bak
             fi
             cd "$APP_DIR"
             git fetch origin master

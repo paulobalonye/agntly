@@ -24,9 +24,12 @@ jobs:
             set -e
             APP_DIR=/opt/agntly/production
 
-            # Clone or pull
+            # Clone or pull (preserve .env across fresh clones)
             if [ ! -d "$APP_DIR/.git" ]; then
+              [ -f "$APP_DIR/.env" ] && cp "$APP_DIR/.env" /tmp/.env.prod.bak
+              rm -rf "$APP_DIR"
               git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+              [ -f /tmp/.env.prod.bak ] && cp /tmp/.env.prod.bak "$APP_DIR/.env" && rm /tmp/.env.prod.bak
             fi
             cd "$APP_DIR"
             git fetch origin production
