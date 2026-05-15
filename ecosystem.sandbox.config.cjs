@@ -46,10 +46,9 @@ module.exports = {
   apps: [
     ...services.map(({ name, script }) => ({
       name,
-      script: 'npx',
-      args: `tsx ${script}`,
+      script: '/bin/bash',
+      args: `-c 'set -a && source ${ENV_FILE} && set +a && exec tsx ${script}'`,
       cwd: APP_DIR,
-      env_file: ENV_FILE,
       env: sharedEnv,
       interpreter: 'none',
       restart_delay: 3000,
@@ -57,10 +56,9 @@ module.exports = {
     })),
     {
       name: 'sb-frontend',
-      script: 'npx',
-      args: 'next start -p 4100',
+      script: '/bin/bash',
+      args: `-c 'set -a && source ${ENV_FILE} && set +a && exec next start -p 4100'`,
       cwd: `${APP_DIR}/frontend`,
-      env_file: ENV_FILE,
       env: {
         ...sharedEnv,
         PORT: '4100',
