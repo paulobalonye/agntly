@@ -90,8 +90,8 @@ jobs:
             pnpm --filter @agntly/shared build
             pnpm --filter @agntly/wallet-service build 2>/dev/null || true
 
-            # Build frontend
-            source .env 2>/dev/null || true
+            # Build frontend (set -a exports all .env vars to child processes so NEXT_PUBLIC_* get baked in)
+            set -a && . .env && set +a
             export AUTH_SERVICE_URL="http://localhost:4001"
             export REGISTRY_SERVICE_URL="http://localhost:4005"
             export NEXT_PUBLIC_APP_URL="https://sandbox.agntly.io"
