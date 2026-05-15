@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const WALLET_URL = process.env.WALLET_SERVICE_URL ?? 'http://localhost:3002';
 const PAYMENT_URL = process.env.PAYMENT_SERVICE_URL ?? 'http://localhost:3006';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
-  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
-  const userId = payload?.userId;
+  const token = await getAuthToken();
 
-  if (!userId) {
+  if (!token) {
     return NextResponse.json({
       success: true,
       data: { balance: '0', locked: '0', address: '—', withdrawals: [] },
@@ -22,7 +18,7 @@ export async function GET() {
   try {
     // Get user's wallet
     const walletRes = await fetch(`${WALLET_URL}/v1/wallets`, {
-      headers: { 'x-user-id': userId },
+      headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store',
     });
 
@@ -36,7 +32,7 @@ export async function GET() {
     let withdrawals: unknown[] = [];
     try {
       const wdRes = await fetch(`${WALLET_URL}/v1/wallets/${wallet.id}/withdrawals?limit=10`, {
-        headers: { 'x-user-id': userId },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (wdRes.ok) {
         const wdJson = await wdRes.json();
@@ -50,7 +46,7 @@ export async function GET() {
     let deposits: unknown[] = [];
     try {
       const depRes = await fetch(`${PAYMENT_URL}/v1/payments/history?limit=10`, {
-        headers: { 'x-user-id': userId },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (depRes.ok) {
         const depJson = await depRes.json();

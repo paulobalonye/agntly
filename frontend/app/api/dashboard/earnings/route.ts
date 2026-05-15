@@ -1,23 +1,19 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const TASK_URL = process.env.TASK_SERVICE_URL ?? 'http://localhost:3004';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
-  const payload = token ? jwt.decode(token) as { userId: string } | null : null;
-  const userId = payload?.userId;
+  const token = await getAuthToken();
 
-  if (!userId) {
+  if (!token) {
     return NextResponse.json({ success: true, data: [], error: null });
   }
 
   try {
     // Fetch completed tasks for the last 14 days to build earnings chart
     const res = await fetch(`${TASK_URL}/v1/admin/tasks?limit=500&status=complete`, {
-      headers: { 'x-user-id': userId },
+      headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store',
     });
 
@@ -38,8 +34,6 @@ export async function GET() {
     }
 
     for (const t of tasks) {
-      const ownerId = t.agent_owner_id ?? t.agentOwnerId;
-      if (ownerId !== userId) continue;
 
       const createdAt = new Date(String(t.created_at ?? t.createdAt ?? ''));
       if (isNaN(createdAt.getTime())) continue;

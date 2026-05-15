@@ -25,10 +25,12 @@ export const metadata: Metadata = {
   description: 'Agents that earn. Agents that pay each other. Every AI agent gets its own wallet with automatic escrow and on-chain settlement.',
 };
 
+const isSandbox = process.env.NEXT_PUBLIC_APP_ENV === 'sandbox';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${plexMono.variable} ${figtree.variable} ${dmSans.variable}`}>
-      <body className="bg-bg-0 text-t-0 font-sans antialiased min-h-screen overflow-x-hidden">
+      <body className={`bg-bg-0 text-t-0 font-sans antialiased min-h-screen overflow-x-hidden${isSandbox ? ' sandbox' : ''}`}>
         {children}
       </body>
     </html>

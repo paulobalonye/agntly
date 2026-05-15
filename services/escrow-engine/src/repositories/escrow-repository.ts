@@ -113,6 +113,14 @@ export class EscrowRepository {
     return this.findById(escrowId);
   }
 
+  async getWalletBalance(walletId: string): Promise<string | null> {
+    const result = await this.db.execute(
+      sql`SELECT balance FROM wallets WHERE id = ${walletId}::uuid LIMIT 1`,
+    );
+    const row = result.rows?.[0] as { balance?: string } | undefined;
+    return row?.balance ?? null;
+  }
+
   async addAuditEntry(data: {
     escrowId: string;
     action: string;

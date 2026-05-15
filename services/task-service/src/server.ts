@@ -51,6 +51,11 @@ await app.register(taskRoutes, { prefix: '/v1/tasks' });
 await app.register(policyRoutes, { prefix: '/v1/policies' });
 await app.register(adminTaskRoutes, { prefix: '/v1/admin' });
 
+// Sweep expired tasks every 10 seconds
+setInterval(() => {
+  taskService.sweepExpiredTasks().catch((err) => app.log.error(err, 'Task sweep failed'));
+}, 10_000);
+
 const port = SERVICE_PORTS.task;
 const host = process.env.HOST ?? '0.0.0.0';
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const REGISTRY_URL = process.env.REGISTRY_SERVICE_URL ?? 'http://localhost:3005';
 
@@ -25,8 +25,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
+  const token = await getAuthToken();
 
   const body = await request.json();
 

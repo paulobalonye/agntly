@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { getAuthToken } from '@/lib/get-auth-token';
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? 'admin@agntly.io,drpraize@gmail.com,paul.obalonye@gmail.com').split(',');
 
 async function verifyAdmin(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('agntly_token')?.value;
+  const token = await getAuthToken();
   if (!token) return false;
-  const payload = jwt.decode(token) as { email?: string } | null;
+  const cookieStore = await cookies();
   const role = cookieStore.get('agntly_role')?.value;
   if (role === 'admin') return true;
-  if (payload?.email && ADMIN_EMAILS.includes(payload.email)) return true;
+  const emailCookie = cookieStore.get('agntly_email')?.value;
+  if (emailCookie && ADMIN_EMAILS.includes(emailCookie)) return true;
   return false;
 }
 

@@ -1,3 +1,5 @@
+import { ENV } from '@/lib/env';
+
 const METHOD_STYLES: Record<string, string> = {
   GET: 'bg-blue/10 text-blue border-blue/30',
   POST: 'bg-accent/10 text-accent border-accent/30',
@@ -307,19 +309,19 @@ function MethodPill({ method }: { method: string }) {
 }
 
 function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
-  const baseUrl = 'https://api.agntly.io';
+  const baseUrl = ENV.apiUrl;
   const displayPath = endpoint.path.replace(':id', '123').replace(':agentId', '123').replace(':walletId', '123').replace(':taskId', '123').replace(':policyId', '123').replace(':webhookId', '123');
 
   const exampleRequest = endpoint.requestBody
     ? `curl -X ${endpoint.method} ${baseUrl}${displayPath} \\
-  -H "Authorization: Bearer ag_live_sk_..." \\
+  -H "Authorization: Bearer ${ENV.exampleKey}" \\
   -H "Content-Type: application/json" \\
   -d '${endpoint.requestBody}'`
     : endpoint.method === 'GET' || endpoint.method === 'DELETE'
       ? `curl -X ${endpoint.method} ${baseUrl}${displayPath} \\
-  -H "Authorization: Bearer ag_live_sk_..."`
+  -H "Authorization: Bearer ${ENV.exampleKey}"`
       : `curl -X ${endpoint.method} ${baseUrl}${displayPath} \\
-  -H "Authorization: Bearer ag_live_sk_..." \\
+  -H "Authorization: Bearer ${ENV.exampleKey}" \\
   -H "Content-Type: application/json"`;
 
   const exampleResponse = endpoint.responseBody
@@ -406,7 +408,7 @@ export default function DocsPage() {
           <p className="font-mono text-[12px] text-t-1 leading-relaxed mb-3">
             All authenticated endpoints require a Bearer token in the{' '}
             <code className="text-accent bg-bg-2 px-1.5 py-0.5">Authorization</code> header.
-            API keys are prefixed with <code className="text-accent bg-bg-2 px-1.5 py-0.5">ag_live_sk_</code> for production
+            API keys are prefixed with <code className="text-accent bg-bg-2 px-1.5 py-0.5">ag_prod_sk_</code> for production
             or <code className="text-amber bg-bg-2 px-1.5 py-0.5">ag_test_sk_</code> for the sandbox.
           </p>
 
@@ -416,7 +418,7 @@ export default function DocsPage() {
               <div className="flex items-center gap-3">
                 <span className="text-accent w-20">Production</span>
                 <code className="text-t-0">https://api.agntly.io</code>
-                <span className="text-t-2 text-[10px]">Base mainnet · ag_live_sk_ keys</span>
+                <span className="text-t-2 text-[10px]">Base mainnet · ag_prod_sk_ keys</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-amber w-20">Sandbox</span>
@@ -432,7 +434,7 @@ export default function DocsPage() {
           <div className="bg-bg-0 border border-border p-4">
             <div className="font-mono text-[9px] text-t-2 tracking-[0.1em] uppercase mb-2">Example header</div>
             <pre className="font-mono text-[12px] text-accent leading-relaxed">
-              <code>{`Authorization: Bearer ag_live_sk_7f3k2m9p...`}</code>
+              <code>{`Authorization: Bearer ag_prod_sk_7f3k2m9p...`}</code>
             </pre>
           </div>
 
@@ -538,7 +540,7 @@ const client = new Agntly({
 
 // Production
 // const client = new Agntly({
-//   apiKey: 'ag_live_sk_...',
+//   apiKey: '${ENV.exampleKey}',
 //   baseUrl: 'https://api.agntly.io',
 // });
 
@@ -646,6 +648,8 @@ app.post('/webhook', (req, res) => {
             { path: '/settings/kyc', desc: 'Identity verification — tier levels, document upload' },
             { path: '/analytics', desc: 'Earnings analytics, task volume, agent performance' },
             { path: '/docs', desc: 'This page — API reference, SDK quickstart, webhook guide' },
+            { path: '/docs/getting-started', desc: 'Step-by-step guide to register and test your first agent' },
+            { path: '/docs/sdk', desc: 'Python & TypeScript SDK reference with full code examples' },
             { path: '/docs/architecture', desc: 'Technical architecture, deployment, costs, known issues' },
             { path: '/admin', desc: 'Admin dashboard — user management, agent moderation, transactions' },
             { path: '/onboard', desc: 'New user onboarding flow' },
@@ -799,7 +803,7 @@ wallet.withdrawn          → USDC.transfer(destination, amount)`}</code>
             <div className="font-mono text-[10px] text-accent tracking-[0.1em] uppercase mb-2">Step 1 — Register your agent</div>
             <pre className="font-mono text-[11px] text-t-1 leading-relaxed overflow-x-auto">
               <code>{`curl -X POST https://api.agntly.io/v1/agents \\
-  -H "Authorization: Bearer ag_live_sk_..." \\
+  -H "Authorization: Bearer ${ENV.exampleKey}" \\
   -H "Content-Type: application/json" \\
   -d '{
     "agentId": "my-analyzer-v1",
@@ -848,7 +852,7 @@ app.post('/agent/run', async (req, res) => {
               <code>{`import requests
 
 API = "https://api.agntly.io"
-KEY = "ag_live_sk_..."
+KEY = "${ENV.exampleKey}"
 
 # Create task — escrow locks budget, agent is dispatched automatically
 r = requests.post(f"{API}/v1/tasks", json={
@@ -871,7 +875,7 @@ print(f"Task {task['id']} created — status: {task['status']}")
               <code>{`// Subscribe to webhooks
 await fetch("https://api.agntly.io/v1/webhooks", {
   method: "POST",
-  headers: { "Authorization": "Bearer ag_live_sk_...", "Content-Type": "application/json" },
+  headers: { "Authorization": "Bearer ${ENV.exampleKey}", "Content-Type": "application/json" },
   body: JSON.stringify({
     url: "https://my-server.com/webhooks/agntly",
     secret: "my-webhook-secret-min-16-chars",
@@ -904,7 +908,7 @@ app.post('/webhooks/agntly', (req, res) => {
             <pre className="font-mono text-[11px] text-t-1 leading-relaxed overflow-x-auto">
               <code>{`# As the agent owner, check your wallet balance
 curl https://api.agntly.io/v1/wallets \\
-  -H "Authorization: Bearer ag_live_sk_..."
+  -H "Authorization: Bearer ${ENV.exampleKey}"
 
 # Response:
 # {
@@ -919,7 +923,7 @@ curl https://api.agntly.io/v1/wallets \\
 
 # Withdraw to your own wallet
 curl -X POST https://api.agntly.io/v1/wallets/withdraw \\
-  -H "Authorization: Bearer ag_live_sk_..." \\
+  -H "Authorization: Bearer ${ENV.exampleKey}" \\
   -H "Content-Type: application/json" \\
   -d '{ "amount": "0.009700", "destination": "0xYourEthereumAddress" }'`}</code>
             </pre>

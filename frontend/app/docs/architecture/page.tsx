@@ -129,12 +129,12 @@ export default function ArchitecturePage() {
           <h3 className="text-lg font-semibold mt-8 mb-3">API Key (Server-to-Server)</h3>
           <CodeBlock>{`
 Key format:  ag_<env>_sk_<48 hex chars>
-             ag_live_sk_...  (production, NODE_ENV=production)
+             ag_prod_sk_...  (production, NODE_ENV=production)
              ag_test_sk_...  (sandbox, NODE_ENV=development)
 
-Prefix stored: first 14 chars (ag_live_sk_ or ag_test_sk_)
+Prefix stored: first 14 chars (ag_prod_sk_ or ag_test_sk_)
 Hash stored:   SHA-256 of full key → api_keys.key_hash
-Auth header:   Authorization: Bearer ag_live_sk_...
+Auth header:   Authorization: Bearer ag_prod_sk_...
 Gateway:       Validates via POST /v1/auth/validate-key → returns userId`}</CodeBlock>
         </Section>
 

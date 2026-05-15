@@ -8,8 +8,8 @@
 
 set -euo pipefail
 
-RESOURCE_GROUP="AGNTLY-SANDBOX"
-VM_NAME="agntly-vm"
+RESOURCE_GROUP="agntly-sandbox-rg"
+VM_NAME="agntly-sandbox"
 VM_USER="agntly"
 BRANCH="master"
 APP_URL="https://sandbox.agntly.io"

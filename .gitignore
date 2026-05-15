@@ -3,6 +3,8 @@ dist/
 .env
 .env.*
 !.env.example
+*.backup
+ENVIRONMENTS.md
 *.log
 .turbo/
 coverage/
@@ -15,3 +17,4 @@ typechain-types/
 sdk/python/.venv/
 __pycache__/
 *.pyc
+.gstack/

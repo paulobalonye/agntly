@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -9,32 +10,30 @@ export function LoginForm() {
   const [error, setError] = useState('');
   const searchParams = useSearchParams();
 
-  // Store the redirect param in a cookie so verify page can read it after magic link click
-  useEffect(() => {
-    const redirect = searchParams.get('redirect');
-    if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
-      document.cookie = `agntly_redirect=${encodeURIComponent(redirect)}; path=/; max-age=900; samesite=lax`;
-    }
-  }, [searchParams]);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    const redirect = searchParams.get('redirect') ?? '/dashboard';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
+
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      // Call signInWithOtp from the browser so the PKCE code verifier
+      // is stored in browser cookies — required for the callback to work.
+      const supabase = createSupabaseBrowserClient();
+      const { error: supabaseError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(redirect)}`,
+          shouldCreateUser: true,
+        },
       });
-      if (!res.ok) {
-        let message = 'Failed to send magic link';
-        try {
-          const data = await res.json();
-          message = (data as { error?: string }).error ?? message;
-        } catch { /* body was empty or non-JSON */ }
-        throw new Error(message);
+
+      if (supabaseError) {
+        throw new Error(supabaseError.message);
       }
+
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');

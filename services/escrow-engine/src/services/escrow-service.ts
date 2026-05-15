@@ -15,6 +15,16 @@ export class EscrowService {
     amount: string;
     deadline?: Date;
   }): Promise<EscrowRow> {
+    // Verify sender wallet has sufficient balance (direct DB query — shared database)
+    const balanceResult = await this.repo.getWalletBalance(params.fromWalletId);
+    if (balanceResult !== null) {
+      const balance = parseFloat(balanceResult);
+      const amount = parseFloat(params.amount);
+      if (amount > balance) {
+        throw new Error(`Insufficient balance: need ${params.amount} but wallet has ${balanceResult}`);
+      }
+    }
+
     const { fee } = calculateFee(params.amount);
     const txHash = `0x${Buffer.from(generateId('esc')).toString('hex').padEnd(64, '0').slice(0, 64)}`;
 
