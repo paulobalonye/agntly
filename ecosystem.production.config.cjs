@@ -47,7 +47,7 @@ module.exports = {
     {
       name: 'prod-frontend',
       script: '/bin/bash',
-      args: `-c 'set -a && source ${ENV_FILE} && set +a && exec next start -p 3100'`,
+      args: `-c 'set -a && . ${ENV_FILE} && set +a && exec ./node_modules/.bin/next start -p 3100'`,
       cwd: `${APP_DIR}/frontend`,
       env: {
         ...sharedEnv,
