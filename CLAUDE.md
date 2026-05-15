@@ -31,6 +31,26 @@
 - Health check sandbox: https://sandbox.agntly.io
 - Health check production: https://agntly.io
 
+### Self-hosted Supabase
+- Stack dir: /opt/supabase/ (docker compose with override)
+- Kong (API gateway): localhost:8000 → https://auth.agntly.io
+- Supabase URL: https://auth.agntly.io
+- ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE5MDAwMDAwMDB9.-nbKQf4YnID2PGwhL0uvXSMS9qUKyuErxvl0NS5ULPw
+- SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTkwMDAwMDAwMH0.bYB26SPn7rmKLDqRkGpItuLLZcF02sdl-sf98xor3Qk
+- docker-compose.override.yml removes Kong's analytics healthcheck dependency
+- Start: cd /opt/supabase && docker compose up -d
+- Status: docker ps --filter name=supabase
+
+### SSL Certificates
+- agntly.io cert: covers agntly.io, www.agntly.io, api.agntly.io, sandbox.agntly.io, sandbox.api.agntly.io
+- auth.agntly.io cert: covers auth.agntly.io
+- Expires: ~2026-08-13 (auto-renewal via certbot)
+
+### PM2 Startup Persistence
+- Systemd service: pm2-agntly.service (enabled, runs as agntly user)
+- Save list: sudo -u agntly pm2 save
+- Dump file: /home/agntly/.pm2/dump.pm2
+
 ### VM management
 - Run commands: az vm run-command invoke --resource-group agntly-rg --name agntly-vm --command-id RunShellScript --scripts "..."
 - Re-auth if needed: az login --scope https://management.core.windows.net//.default
